@@ -1,12 +1,32 @@
-import type { Metadata } from "next";
+"use client";
+
+import { useEffect } from "react";
+import { useUser } from "@clerk/nextjs";
+import { useRouter } from "next/navigation";
 import NavAuth from "./components/NavAuth";
 
-export const metadata: Metadata = {
-  title: "Vornix Forge — Trader Development Platform",
-  description: "The world's first trader development system. Get assessed, developed, and certified professionally.",
-};
-
 export default function Home() {
+  const { user, isLoaded } = useUser();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (!isLoaded) return;
+
+    if (user) {
+      // User is signed in, check progress and redirect accordingly
+      const onboardingComplete = localStorage.getItem("vornix_onboarding_complete");
+      const assessmentComplete = localStorage.getItem("vornix_assessment_complete");
+
+      if (!onboardingComplete) {
+        router.push("/onboarding");
+      } else if (!assessmentComplete) {
+        router.push("/assessment");
+      } else {
+        router.push("/dashboard");
+      }
+    }
+  }, [user, isLoaded, router]);
+
   return (
     <main style={{ background: "#0A0A0A", color: "#F2F0EB", fontFamily: "'Inter', sans-serif", minHeight: "100vh" }}>
 
@@ -38,7 +58,7 @@ export default function Home() {
         .section { padding: 80px 48px; border-top: 1px solid #1E1E1E; max-width: 1000px; margin: 0 auto; }
         .section-label { font-size: 11px; font-weight: 500; letter-spacing: .12em; text-transform: uppercase; color: #444; margin-bottom: 48px; }
         
-        .problem-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1px; background: #1E1E1E; border: 1px solid #1E1E1E; border-radius: 8px; overflow: hidden; margin-bottom: 40px; }
+        .problem-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1px; background: #1E1E1E; border: 1px solid #1E1E1E; border-radius: 8px; overflow: hidden; }
         .problem-card { background: #0F0F0F; padding: 28px; font-size: 14px; color: #666; line-height: 1.7; font-style: italic; }
         .problem-end { font-family: 'Syne', sans-serif; font-size: 28px; font-weight: 700; color: #F2F0EB; }
         .problem-end span { color: #E8A020; }
