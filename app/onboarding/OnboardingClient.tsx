@@ -141,7 +141,7 @@ export default function OnboardingClient() {
                 <div>
                   <div style={{ fontSize: 13, color: "#AAA" }}>Select all that apply</div>
                   <div className="options">
-                    {["Indian Stocks and F&O", "Forex", "Crypto", "US and Global Stocks", "Commodities"].map((o) => (
+                    {["Indian Stocks and F&O", "Forex", "Crypto", "US and Global Stocks", "Commodities", "Not sure yet — I am still exploring"].map((o) => (
                       <button key={o} className={["option-btn", answers.markets.includes(o) ? "selected" : ""].join(" ")} onClick={() => toggleMarket(o)}>{o}</button>
                     ))}
                   </div>
@@ -161,7 +161,7 @@ export default function OnboardingClient() {
               {step === 5 && (
                 <div>
                   <div className="options">
-                    {["Conservative — capital preservation first", "Moderate — balanced risk and reward", "Aggressive — high risk high reward", "Not sure yet"].map((o) => (
+                    {["Safety first — I never want to lose my money", "Balanced — some losses are okay for good potential gains", "Aggressive — I am comfortable with big swings for bigger returns", "Not sure yet — I need to learn about risk first"].map((o) => (
                       <button key={o} className={["option-btn", answers.risk === o ? "selected" : ""].join(" ")} onClick={() => updateSingle('risk', o)}>{o}</button>
                     ))}
                   </div>
