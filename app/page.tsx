@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import NavAuth from "./components/NavAuth";
 
 export const metadata: Metadata = {
   title: "Vornix Forge — Trader Development Platform",
@@ -82,10 +83,7 @@ export default function Home() {
       {/* Navbar */}
       <nav className="nav">
         <span className="logo">VORNIX FORGE</span>
-        <div className="nav-right">
-          <a href="/sign-in" className="btn-ghost">Login</a>
-          <a href="/sign-up" className="btn-primary">Start Free</a>
-        </div>
+        <NavAuth />
       </nav>
 
       {/* Hero */}
