@@ -217,7 +217,7 @@ export default function DashboardClient() {
               <div className="badge">{levelEntry.name}</div>
             </div>
             <div style={{ marginTop: 16, display: "flex", justifyContent: "flex-end" }}>
-              <UserButton afterSignOutUrl="/sign-in" />
+              <UserButton />
             </div>
           </div>
         </aside>
