@@ -1,4 +1,4 @@
-"use client";
+-"use client";
 import React, { useEffect, useMemo, useState } from "react";
 import { UserButton, useUser } from "@clerk/nextjs";
 import {
@@ -48,25 +48,25 @@ const navItems = [
 ];
 const levelCopy: Record<number, { name: string; description: string; learn: string[]; progress: number }> = {
   1: {
-    name: "Level 1 — Foundation",
+    name: "Level 1 - Foundation",
     description: "You are at the starting line. Focus on market structure, chart basics, and strict risk rules before taking on live complexity.",
     learn: ["What stocks, forex, and crypto are", "Candlestick reading basics", "Simple risk rules and stop losses"],
     progress: 25,
   },
   2: {
-    name: "Level 2 — Beginner",
+    name: "Level 2 - Beginner",
     description: "You know some fundamentals but still need structure. This level builds consistency through guided practice and setup recognition.",
     learn: ["Support and resistance", "Basic simulator execution", "Trading habits and journaling"],
     progress: 50,
   },
   3: {
-    name: "Level 3 — Intermediate",
+    name: "Level 3 - Intermediate",
     description: "You have a workable base. Now the goal is to refine execution, improve risk control, and connect market context to your decisions.",
     learn: ["Setup selection and confirmation", "Risk-reward planning", "Trade review and pattern refinement"],
     progress: 75,
   },
   4: {
-    name: "Level 4 — Advanced",
+    name: "Level 4 - Advanced",
     description: "You show strong command of the basics and can work on specialization, strategy consistency, and professional decision-making.",
     learn: ["Specialized strategy development", "Advanced execution planning", "Portfolio and system optimization"],
     progress: 100,
@@ -311,5 +311,6 @@ export default function DashboardClient() {
     </main>
   );
 }
+
 
 

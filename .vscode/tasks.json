@@ -1,0 +1,76 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "clean-dashboard-utf8",
+			"type": "shell",
+			"command": "powershell",
+			"args": [
+				"-NoProfile",
+				"-ExecutionPolicy",
+				"Bypass",
+				"-Command",
+				"$path = 'D:\\Projects\\vornix-forge\\app\\dashboard\\DashboardClient.tsx'; $content = Get-Content $path -Raw; $content = [regex]::Replace($content, '[^\\u0000-\\u007F]', '-'); Set-Content -Path $path -Value $content -Encoding utf8; Write-Output 'rewritten'"
+			],
+			"isBackground": false,
+			"problemMatcher": [],
+			"group": "build"
+		},
+		{
+			"label": "clean-dashboard-utf8-script",
+			"type": "shell",
+			"command": "powershell",
+			"args": [
+				"-NoProfile",
+				"-ExecutionPolicy",
+				"Bypass",
+				"-File",
+				"scripts\\clean_dashboard_utf8.ps1"
+			],
+			"isBackground": false,
+			"problemMatcher": [],
+			"group": "build"
+		},
+		{
+			"label": "check-dashboard-bytes",
+			"type": "shell",
+			"command": "powershell",
+			"args": [
+				"-NoProfile",
+				"-ExecutionPolicy",
+				"Bypass",
+				"-Command",
+				"$bytes = [System.IO.File]::ReadAllBytes('D:\\Projects\\vornix-forge\\app\\dashboard\\DashboardClient.tsx'); $count = ($bytes | Where-Object { $_ -gt 127 }).Count; Write-Output \"non_ascii=$count\""
+			],
+			"isBackground": false,
+			"problemMatcher": [],
+			"group": "build"
+		},
+		{
+			"label": "check-dashboard-bytes-script",
+			"type": "shell",
+			"command": "powershell",
+			"args": [
+				"-NoProfile",
+				"-ExecutionPolicy",
+				"Bypass",
+				"-File",
+				"scripts\\check_dashboard_bytes.ps1"
+			],
+			"isBackground": false,
+			"problemMatcher": [],
+			"group": "build"
+		},
+		{
+			"label": "clean-dashboard-with-python",
+			"type": "shell",
+			"command": "D:/python/python.exe",
+			"args": [
+				"scripts\\clean_dashboard_utf8.py"
+			],
+			"isBackground": false,
+			"problemMatcher": [],
+			"group": "build"
+		}
+	]
+}
