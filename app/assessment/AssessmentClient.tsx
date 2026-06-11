@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -62,8 +62,8 @@ const knowledgeQuestions: Question[] = [
     topic: "Market Knowledge",
     question: "In the context of Indian markets, what is the NSE?",
     options: [
-      "The National Stock Exchange â€” India's primary stock exchange",
-      "The National Savings Entity â€” a government savings scheme",
+      "The National Stock Exchange — India's primary stock exchange",
+      "The National Savings Entity — a government savings scheme",
       "The Network Security Enforcement body",
       "A cryptocurrency trading platform"
     ],
@@ -148,7 +148,7 @@ const knowledgeQuestions: Question[] = [
     question: "What is a trend?",
     options: [
       "A sudden spike in trading volume",
-      "The general direction of price movement â€” uptrend, downtrend, or sideways",
+      "The general direction of price movement — uptrend, downtrend, or sideways",
       "An unusual price pattern that repeats daily",
       "A recommendation from market analysts"
     ],
@@ -194,12 +194,12 @@ const knowledgeQuestions: Question[] = [
   {
     id: 15,
     topic: "Risk Management",
-    question: "If you have â‚¹50,000 and risk only 1% per trade, what is your maximum loss per trade?",
+    question: "If you have ₹50,000 and risk only 1% per trade, what is your maximum loss per trade?",
     options: [
-      "â‚¹100",
-      "â‚¹500",
-      "â‚¹5,000",
-      "â‚¹50,000"
+      "₹100",
+      "₹500",
+      "₹5,000",
+      "₹50,000"
     ],
     correct: 1
   },
@@ -222,7 +222,7 @@ const knowledgeQuestions: Question[] = [
     question: "What is FOMO in trading?",
     options: [
       "A technical indicator used to predict prices",
-      "Fear Of Missing Out â€” entering trades impulsively due to fear of missing profit",
+      "Fear Of Missing Out — entering trades impulsively due to fear of missing profit",
       "A regulatory requirement for all traders",
       "The feeling after making a profitable trade"
     ],
@@ -296,7 +296,14 @@ export default function AssessmentClient() {
     setLoaded(true);
   }, []);
 
-  useEffect(() => {`r`n    if (loaded) {`r`n      localStorage.setItem(`r`n        STORAGE_KEY,`r`n        JSON.stringify({ answers, practicalAnswers, result })`r`n      );`r`n    }`r`n  }, [answers, practicalAnswers, result, loaded]);
+  useEffect(() => {
+    if (loaded) {
+      localStorage.setItem(
+        STORAGE_KEY,
+        JSON.stringify({ answers, practicalAnswers, result })
+      );
+    }
+  }, [answers, practicalAnswers, result, loaded]);
 
   function selectAnswer(qId: number, optIdx: number) {
     setAnswers((a) => ({ ...a, [qId]: optIdx }));
@@ -328,7 +335,7 @@ export default function AssessmentClient() {
     });
 
     // Practical scoring
-    const correctAnswers = [0, 2, 1]; // Task 1: uptrend (opt 1), Task 2: â‚¹200 (opt 2), Task 3: Exit (opt 1)
+    const correctAnswers = [0, 2, 1]; // Task 1: uptrend (opt 1), Task 2: ₹200 (opt 2), Task 3: Exit (opt 1)
     correctAnswers.forEach((ans, idx) => {
       if (practicalAnswers[idx + 1] === ans) correct++;
     });
@@ -337,7 +344,13 @@ export default function AssessmentClient() {
     return Math.round((correct / totalQuestions) * 100);
   }
 
-  function finishAssessment() {`r`n    const score = calculateScore();`r`n    const level = score <= 40 ? 1 : score <= 60 ? 2 : score <= 80 ? 3 : 4;`r`n    const storedResult = { score, level };`r`n    setResult(storedResult);`r`n    localStorage.setItem(`r`n      STORAGE_KEY,`r`n      JSON.stringify({ answers, practicalAnswers, score, level, result: storedResult })`r`n    );`r`n    setStage("result");`r`n  }
+  function finishAssessment() {
+    const score = calculateScore();
+    const level = score <= 40 ? 1 : score <= 60 ? 2 : score <= 80 ? 3 : 4;
+    const storedResult = { score, level };
+    setResult(storedResult);
+    setStage("result");
+  }
 
   const currentQuestion = knowledgeQuestions[questionIdx];
   const progress = Math.round(
@@ -358,7 +371,7 @@ export default function AssessmentClient() {
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Syne:wght@600;700;800&display=swap');
         .progress { height: 10px; background: #151515; border-radius: 999px; overflow: hidden; }
         .progress-bar { height: 100%; background: ${accent}; transition: width .35s ease; }
-        .option-btn { background: #0F0F0F; border: 1px solid #1E1E1E; color: ${text}; padding: 12px 14px; border-radius: 8px; cursor: pointer; text-align: left; transition: all .2s; width: 100%; text-align: center; }
+        .option-btn { background: #0F0F0F; border: 1px solid #1E1E1E; color: ${text}; padding: 12px 14px; border-radius: 8px; cursor: pointer; text-align: left; transition: all .2s; width: 100%; }
         .option-btn:hover { border-color: ${accent}; }
         .option-btn.selected { background: ${accent}; color: #0A0A0A; border-color: ${accent}; font-weight: 600; }
         .controls { display: flex; gap: 12px; margin-top: 18px; justify-content: flex-end; }
@@ -396,7 +409,7 @@ export default function AssessmentClient() {
                     textAlign: "right"
                   }}
                 >
-                  Part 1: Knowledge Â· Question {questionIdx + 1} of{" "}
+                  Part 1: Knowledge · Question {questionIdx + 1} of{" "}
                   {knowledgeQuestions.length}
                 </div>
               </div>
@@ -470,7 +483,7 @@ export default function AssessmentClient() {
             <div style={{ marginBottom: 24 }}>
               <h1 style={{ fontFamily: "Syne, sans-serif", fontSize: 24, margin: "0 0 12px 0" }}>Assessment</h1>
               <div style={{ fontSize: 12, color: "#888" }}>
-                Part 2: Practical Tasks â€” {Object.keys(practicalAnswers).length} of 3 completed
+                Part 2: Practical Tasks — {Object.keys(practicalAnswers).length} of 3 completed
               </div>
             </div>
 
@@ -536,11 +549,11 @@ export default function AssessmentClient() {
                   }}
                 >
                   <div style={{ fontSize: 13, color: "#AAA" }}>
-                    You have â‚¹10,000 and decide to risk only 2% per trade. What is your maximum loss per trade?
+                    You have ₹10,000 and decide to risk only 2% per trade. What is your maximum loss per trade?
                   </div>
                 </div>
                 <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-                  {["â‚¹50", "â‚¹100", "â‚¹200", "â‚¹500"].map((opt, idx) => (
+                  {["₹50", "₹100", "₹200", "₹500"].map((opt, idx) => (
                     <button
                       key={idx}
                       className={[
@@ -572,15 +585,15 @@ export default function AssessmentClient() {
                   }}
                 >
                   <div style={{ fontSize: 13, color: "#AAA" }}>
-                    You bought a stock at â‚¹100. It has dropped to â‚¹92. You had set a 5% stop loss (exit at â‚¹95). What should you do?
+                    You bought a stock at ₹100. It has dropped to ₹92. You had set a 5% stop loss (exit at ₹95). What should you do?
                   </div>
                 </div>
                 <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
                   {[
-                    "Exit immediately â€” your stop loss has been hit",
+                    "Exit immediately — your stop loss has been hit",
                     "Hold and wait for recovery",
                     "Buy more to average down the price",
-                    "Move your stop loss to â‚¹90 to avoid the loss"
+                    "Move your stop loss to ₹90 to avoid the loss"
                   ].map((opt, idx) => (
                     <button
                       key={idx}
@@ -636,7 +649,7 @@ export default function AssessmentClient() {
                   {result.score}%
                 </div>
                 <div style={{ fontSize: 14, color: "#888" }}>
-                  {levelDescriptions[result.level - 1].range} â€”{" "}
+                  {levelDescriptions[result.level - 1].range} —{" "}
                   {levelDescriptions[result.level - 1].title} Trader
                 </div>
               </div>
@@ -672,7 +685,7 @@ export default function AssessmentClient() {
                 )}
                 {result.level === 2 && (
                   <ul style={{ fontSize: 13, color: "#AAA", lineHeight: 1.8, margin: 0, paddingLeft: 20 }}>
-                    <li>Technical analysis â€” support, resistance, trends</li>
+                    <li>Technical analysis — support, resistance, trends</li>
                     <li>Simulator trading practice</li>
                     <li>Building consistent habits</li>
                     <li>Journal-based improvement</li>
@@ -710,5 +723,3 @@ export default function AssessmentClient() {
     </main>
   );
 }
-
-

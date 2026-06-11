@@ -1,4 +1,4 @@
--"use client";
+"use client";
 import React, { useEffect, useMemo, useState } from "react";
 import { UserButton, useUser } from "@clerk/nextjs";
 import {
@@ -191,13 +191,13 @@ export default function DashboardClient() {
         .sidebar-link.active { color: ${accent}; background: rgba(232, 160, 32, 0.08); }
         .card { background: #0F0F0F; border: 1px solid #1E1E1E; border-radius: 16px; }
         .muted { color: #A3A3A3; }
-        .badge { display: inline-flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: 999px; border: 1px solid rgba(232,160,32,0.35); background: rgba(232,160,32,0.08); color: ${accent}; font-size: 12px; font-weight: 600; }
+        .badge { display: inline-flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: 999px; border: 1px solid rgba(232,160,32,0.35); background: rgba(232,160,32,0.08); color: ${accent}; font-weight: 600; font-size: 12px; }
         .progress-shell { height: 10px; border-radius: 999px; background: #161616; overflow: hidden; }
         .progress-bar { height: 100%; background: ${accent}; transition: width .35s ease; }
         .stat-value { font-family: 'Syne', sans-serif; font-size: 28px; font-weight: 700; color: ${text}; }
       `}</style>
       <div style={{ display: "flex", minHeight: "100vh" }}>
-        <aside style={{ width: sidebarWidth, position: "fixed", inset: 0, borderRight: "1px solid #1E1E1E", background: "#0A0A0A", padding: "28px 20px", display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
+        <aside style={{ width: sidebarWidth, position: "fixed", inset: 0, borderRight: "1px solid #1E1E1E", background: "#0A0A0A", padding: "28px 20px", display: "flex", flexDirection: "column", zIndex: 50 }}>
           <div>
             <div style={{ fontFamily: "Syne, sans-serif", fontSize: 18, letterSpacing: "0.14em", fontWeight: 800, marginBottom: 32 }}>VORNIX FORGE</div>
             <nav style={{ display: "flex", flexDirection: "column", gap: 6 }}>
@@ -311,6 +311,3 @@ export default function DashboardClient() {
     </main>
   );
 }
-
-
-
