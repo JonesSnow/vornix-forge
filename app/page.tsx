@@ -83,8 +83,8 @@ export default function Home() {
       <nav className="nav">
         <span className="logo">VORNIX FORGE</span>
         <div className="nav-right">
-          <a href="/login" className="btn-ghost">Login</a>
-          <a href="/signup" className="btn-primary">Start Free</a>
+          <a href="/sign-in" className="btn-ghost">Login</a>
+          <a href="/sign-up" className="btn-primary">Start Free</a>
         </div>
       </nav>
 
@@ -99,7 +99,7 @@ export default function Home() {
           The world's first structured trader development system. Assessed at entry, developed systematically, certified by competence. Not by time spent.
         </p>
         <div className="hero-actions">
-          <a href="/signup" className="btn-cta">Start My Journey — Free</a>
+          <a href="/sign-up" className="btn-cta">Start My Journey — Free</a>
           <a href="#how-it-works" className="btn-secondary">See how it works →</a>
         </div>
         <p className="hero-note">No credit card. No hidden fees. Free to start.</p>
@@ -189,7 +189,7 @@ export default function Home() {
       <div className="cta-section">
         <h2 className="cta-h2">Stop learning randomly.<br /><span>Start developing professionally.</span></h2>
         <p className="cta-sub">Join traders in India and worldwide building real competence on Vornix Forge.</p>
-        <a href="/signup" className="btn-cta">Join Vornix Forge — Free</a>
+        <a href="/sign-up" className="btn-cta">Join Vornix Forge — Free</a>
         <p className="hero-note" style={{ marginTop: "16px" }}>No credit card. No hidden fees. Free forever to start.</p>
       </div>
 
