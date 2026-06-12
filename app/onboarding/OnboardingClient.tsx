@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { useUser } from "@clerk/nextjs";
 
 type Answers = {
   goal?: string;
@@ -27,9 +28,11 @@ const steps = [
 
 export default function OnboardingClient() {
   const router = useRouter();
+  const { user } = useUser();
   const [step, setStep] = useState(1);
   const [answers, setAnswers] = useState<Answers>({ markets: [] });
   const [loaded, setLoaded] = useState(false);
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     const raw = localStorage.getItem(STORAGE_KEY);
@@ -71,6 +74,38 @@ export default function OnboardingClient() {
     return 100;
   }
 
+  async function submitOnboarding() {
+    setSaving(true);
+    try {
+      const response = await fetch("/api/profile", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          firstName: user?.firstName,
+          lastName: user?.lastName,
+          goal: answers.goal,
+          experienceLevel: answers.experience,
+          markets: answers.markets,
+          dailyTime: answers.time,
+          riskTolerance: answers.risk,
+        }),
+      });
+
+      if (!response.ok) throw new Error("Failed to save profile");
+
+      // Set localStorage as backup
+      localStorage.setItem("vornix_onboarding_complete", "true");
+      router.push("/assessment");
+    } catch (error) {
+      console.error("Error saving onboarding:", error);
+      // Still proceed even if API fails, localStorage is backup
+      localStorage.setItem("vornix_onboarding_complete", "true");
+      router.push("/assessment");
+    } finally {
+      setSaving(false);
+    }
+  }
+
   const StepCard: React.FC<{ title: string; children: React.ReactNode }> = ({ title, children }) => (
     <div style={{ background: "#0F0F0F", padding: 28, borderRadius: 10, maxWidth: 720, width: "100%", boxShadow: "0 6px 20px rgba(0,0,0,0.6)" }}>
       <h2 style={{ fontFamily: "Syne, sans-serif", fontSize: 20, marginBottom: 12, color: text }}>{title}</h2>
@@ -91,6 +126,7 @@ export default function OnboardingClient() {
         .btn { padding: 10px 14px; border-radius:8px; cursor:pointer; font-weight:600; }
         .btn.ghost { background: transparent; color: #888; border: 1px solid #222; }
         .btn.primary { background: ${accent}; color: #0A0A0A; }
+        .btn:disabled { opacity: 0.5; cursor: not-allowed; }
       `}</style>
 
       <div style={{ maxWidth: 920, margin: "0 auto" }}>
@@ -161,7 +197,7 @@ export default function OnboardingClient() {
               {step === 5 && (
                 <div>
                   <div className="options">
-                    {["Safety first — I never want to lose my money", "Balanced — some losses are okay for good potential gains", "Aggressive — I am comfortable with big swings for bigger returns", "Not sure yet — I need to learn about risk first"].map((o) => (
+                    {["Safety first — I never want to lose my money", "Balanced — some losses are okay for good potential gains", "Aggressive — I am comfortable with big swings for bigger returns"].map((o) => (
                       <button key={o} className={["option-btn", answers.risk === o ? "selected" : ""].join(" ")} onClick={() => updateSingle('risk', o)}>{o}</button>
                     ))}
                   </div>
@@ -187,7 +223,14 @@ export default function OnboardingClient() {
 
               <div className="controls">
                 <button className="btn ghost" onClick={() => setStep(5)}>Back</button>
-                <button className="btn primary" onClick={() => router.push('/assessment')}>Start My Assessment</button>
+                <button 
+                  className="btn primary" 
+                  onClick={submitOnboarding}
+                  disabled={saving}
+                  style={{ opacity: saving ? 0.5 : 1 }}
+                >
+                  {saving ? 'Saving...' : 'Start My Assessment'}
+                </button>
               </div>
             </StepCard>
           )}
