@@ -281,6 +281,7 @@ export default function AssessmentClient() {
   const [practicalAnswers, setPracticalAnswers] = useState<Answers>({});
   const [loaded, setLoaded] = useState(false);
   const [result, setResult] = useState<{ score: number; level: number } | null>(null);
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     const raw = localStorage.getItem(STORAGE_KEY);
@@ -335,7 +336,7 @@ export default function AssessmentClient() {
     });
 
     // Practical scoring
-    const correctAnswers = [0, 2, 1]; // Task 1: uptrend (opt 1), Task 2: ₹200 (opt 2), Task 3: Exit (opt 1)
+    const correctAnswers = [0, 2, 1]; // Task 1: uptrend (opt 0), Task 2: ₹200 (opt 2), Task 3: Exit (opt 0)
     correctAnswers.forEach((ans, idx) => {
       if (practicalAnswers[idx + 1] === ans) correct++;
     });
@@ -350,6 +351,35 @@ export default function AssessmentClient() {
     const storedResult = { score, level };
     setResult(storedResult);
     setStage("result");
+  }
+
+  async function submitAssessment() {
+    if (!result) return;
+    
+    setSaving(true);
+    try {
+      const response = await fetch("/api/assessment", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          score: result.score,
+          level: result.level,
+        }),
+      });
+
+      if (!response.ok) throw new Error("Failed to save assessment");
+
+      // Set localStorage as backup
+      localStorage.setItem("vornix_assessment_complete", "true");
+      router.push("/dashboard");
+    } catch (error) {
+      console.error("Error saving assessment:", error);
+      // Still proceed even if API fails, localStorage is backup
+      localStorage.setItem("vornix_assessment_complete", "true");
+      router.push("/dashboard");
+    } finally {
+      setSaving(false);
+    }
   }
 
   const currentQuestion = knowledgeQuestions[questionIdx];
@@ -711,10 +741,11 @@ export default function AssessmentClient() {
 
               <button
                 className="btn primary"
-                onClick={() => router.push("/dashboard")}
-                style={{ width: "100%", padding: "12px", fontSize: 14 }}
+                onClick={submitAssessment}
+                disabled={saving}
+                style={{ width: "100%", padding: "12px", fontSize: 14, opacity: saving ? 0.5 : 1 }}
               >
-                Begin My Journey
+                {saving ? 'Saving...' : 'Begin My Journey'}
               </button>
             </div>
           </>
