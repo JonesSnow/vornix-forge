@@ -11,3 +11,27 @@ generator client {
 datasource db {
   provider = "postgresql"
 }
+
+model Profile {
+  id              String   @id @default(cuid())
+  clerkId         String   @unique
+  firstName       String?
+  lastName        String?
+  goal            String?
+  experienceLevel String?
+  markets         String[] @default([])
+  dailyTime       String?
+  riskTolerance   String?
+  onboardingDone  Boolean  @default(false)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+model Assessment {
+  id        String   @id @default(cuid())
+  clerkId   String   @unique
+  score     Int
+  level     Int
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
