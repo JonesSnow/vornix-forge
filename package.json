@@ -6,7 +6,8 @@
     "dev": "next dev",
     "build": "node --max_old_space_size=4096 node_modules/.bin/next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "postinstall": "prisma generate"
   },
   "dependencies": {
     "@clerk/nextjs": "^7.5.1",

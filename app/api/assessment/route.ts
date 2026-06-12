@@ -13,36 +13,24 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const { firstName, lastName, goal, experienceLevel, markets, dailyTime, riskTolerance } = await req.json();
+    const { score, level } = await req.json();
 
-    const profile = await prisma.profile.upsert({
+    const assessment = await prisma.assessment.upsert({
       where: { clerkId: userId },
       update: {
-        firstName,
-        lastName,
-        goal,
-        experienceLevel,
-        markets,
-        dailyTime,
-        riskTolerance,
-        onboardingDone: true,
+        score,
+        level,
       },
       create: {
         clerkId: userId,
-        firstName,
-        lastName,
-        goal,
-        experienceLevel,
-        markets,
-        dailyTime,
-        riskTolerance,
-        onboardingDone: true,
+        score,
+        level,
       },
     });
 
-    return NextResponse.json(profile);
+    return NextResponse.json(assessment);
   } catch (error) {
-    console.error("Profile API error:", error);
+    console.error("Assessment API error:", error);
     return NextResponse.json(
       { error: "Internal server error" },
       { status: 500 }
