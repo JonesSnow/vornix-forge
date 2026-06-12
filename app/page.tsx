@@ -13,17 +13,42 @@ export default function Home() {
     if (!isLoaded) return;
 
     if (user) {
-      // User is signed in, check progress and redirect accordingly
-      const onboardingComplete = localStorage.getItem("vornix_onboarding_complete");
-      const assessmentComplete = localStorage.getItem("vornix_assessment_complete");
+      // User is signed in, check progress from database
+      const checkUserStatus = async () => {
+        try {
+          const res = await fetch("/api/user-status");
+          if (!res.ok) throw new Error("Failed to fetch user status");
+          
+          const { onboardingDone, assessmentDone } = await res.json();
 
-      if (!onboardingComplete) {
-        router.push("/onboarding");
-      } else if (!assessmentComplete) {
-        router.push("/assessment");
-      } else {
-        router.push("/dashboard");
-      }
+          // Fallback to localStorage if database check fails
+          const localOnboarding = localStorage.getItem("vornix_onboarding_complete");
+          const localAssessment = localStorage.getItem("vornix_assessment_complete");
+
+          if (!onboardingDone && !localOnboarding) {
+            router.push("/onboarding");
+          } else if (!assessmentDone && !localAssessment) {
+            router.push("/assessment");
+          } else {
+            router.push("/dashboard");
+          }
+        } catch (error) {
+          console.error("Error checking user status:", error);
+          // Fallback to localStorage
+          const onboardingComplete = localStorage.getItem("vornix_onboarding_complete");
+          const assessmentComplete = localStorage.getItem("vornix_assessment_complete");
+
+          if (!onboardingComplete) {
+            router.push("/onboarding");
+          } else if (!assessmentComplete) {
+            router.push("/assessment");
+          } else {
+            router.push("/dashboard");
+          }
+        }
+      };
+
+      checkUserStatus();
     }
   }, [user, isLoaded, router]);
 
