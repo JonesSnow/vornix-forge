@@ -13,5 +13,5 @@ export type AssessmentStorage = {
   result?: AssessmentResult;
 };
 
-export { type Question, type PracticalTask } from "@/constants/content/assessment-questions";
-export { type LevelDescription } from "@/constants/content/assessment-levels";
+export { type Question, type PracticalTask } from "@/lib/constants/content/assessment-questions";
+export { type LevelDescription } from "@/lib/constants/content/assessment-levels";
