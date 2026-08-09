@@ -7,7 +7,8 @@
     "build": "node --max_old_space_size=4096 node_modules/.bin/next build",
     "start": "next start",
     "lint": "eslint",
-    "postinstall": "prisma generate"
+    "postinstall": "prisma generate",
+    "seed": "tsx prisma/seed.ts"
   },
   "dependencies": {
     "@clerk/nextjs": "^7.5.1",
@@ -27,6 +28,7 @@
     "eslint": "^9",
     "eslint-config-next": "16.2.9",
     "tailwindcss": "^4",
+    "tsx": "^4.23.11",
     "typescript": "^5"
   }
 }
