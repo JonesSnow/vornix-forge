@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
 import { prisma } from "@/lib/prisma";
+import { logger } from "@/lib/utils";
 
 export async function GET(req: NextRequest) {
   try {
@@ -27,7 +28,7 @@ export async function GET(req: NextRequest) {
       level: assessment?.level ?? null,
     });
   } catch (error) {
-    console.error("User status API error:", error);
+    logger.error("User status API error:", error);
     return NextResponse.json(
       { error: "Internal server error" },
       { status: 500 }

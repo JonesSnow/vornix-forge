@@ -10,34 +10,25 @@ import {
   ResponsiveContainer,
   Tooltip,
 } from "recharts";
-type OnboardingAnswers = {
-  goal?: string;
-  experience?: string;
-  markets?: string[];
-  time?: string;
-  risk?: string;
-};
-type AssessmentResult = {
-  score: number;
-  level: number;
-};
-type AssessmentStorage = {
-  answers?: Record<number, number>;
-  practicalAnswers?: Record<number, number>;
-  score?: number;
-  level?: number;
-  result?: AssessmentResult;
-};
-type DashboardState = {
-  modulesCompleted: number;
-};
-const bg = "#0A0A0A";
-const text = "#F2F0EB";
-const accent = "#E8A020";
+import {
+  colors,
+  STORAGE_KEYS,
+} from "@/lib/constants";
+import {
+  navItems,
+  skillLabels,
+  levelCopy,
+  nextModules,
+} from "@/lib/constants/content/dashboard-content";
+import type { OnboardingAnswers, AssessmentResult, AssessmentStorage, DashboardState } from "@/types";
+
+const bg = colors.bg.primary;
+const text = colors.text.primary;
+const accent = colors.accent.primary;
 const sidebarWidth = 280;
-const ONBOARDING_KEY = "vornix_onboarding_answers";
-const ASSESSMENT_KEY = "vornix_assessment";
-const DASHBOARD_KEY = "vornix_dashboard_state";
+const ONBOARDING_KEY = STORAGE_KEYS.onboardingAnswers;
+const ASSESSMENT_KEY = STORAGE_KEYS.assessment;
+const DASHBOARD_KEY = STORAGE_KEYS.dashboard;
 const navItems = [
   { label: "Dashboard", href: "/dashboard" },
   { label: "Learn", href: "/learn" },
@@ -45,33 +36,7 @@ const navItems = [
   { label: "Journal", href: "/journal" },
   { label: "Progress", href: "/progress" },
   { label: "Community", href: "/community" },
-];
-const levelCopy: Record<number, { name: string; description: string; learn: string[]; progress: number }> = {
-  1: {
-    name: "Level 1 - Foundation",
-    description: "You are at the starting line. Focus on market structure, chart basics, and strict risk rules before taking on live complexity.",
-    learn: ["What stocks, forex, and crypto are", "Candlestick reading basics", "Simple risk rules and stop losses"],
-    progress: 25,
-  },
-  2: {
-    name: "Level 2 - Beginner",
-    description: "You know some fundamentals but still need structure. This level builds consistency through guided practice and setup recognition.",
-    learn: ["Support and resistance", "Basic simulator execution", "Trading habits and journaling"],
-    progress: 50,
-  },
-  3: {
-    name: "Level 3 - Intermediate",
-    description: "You have a workable base. Now the goal is to refine execution, improve risk control, and connect market context to your decisions.",
-    learn: ["Setup selection and confirmation", "Risk-reward planning", "Trade review and pattern refinement"],
-    progress: 75,
-  },
-  4: {
-    name: "Level 4 - Advanced",
-    description: "You show strong command of the basics and can work on specialization, strategy consistency, and professional decision-making.",
-    learn: ["Specialized strategy development", "Advanced execution planning", "Portfolio and system optimization"],
-    progress: 100,
-  },
-};
+] as const;
 const skillLabels = [
   "Technical Analysis",
   "Fundamental Analysis",
@@ -92,30 +57,9 @@ function getDisplayName(user: ReturnType<typeof useUser>["user"]) {
   const email = user?.primaryEmailAddress?.emailAddress?.split("@")[0];
   return user?.fullName || user?.firstName || user?.username || email || "Signed-in user";
 }
-function getNextModule(level: number) {
-  const modules: Record<number, { title: string; description: string; time: string }> = {
-    1: {
-      title: "Module 1.1: Market Basics",
-      description: "Learn how stocks, forex, and crypto markets work before moving into chart reading and risk control.",
-      time: "15 min",
-    },
-    2: {
-      title: "Module 2.1: Support and Resistance",
-      description: "Build the habit of identifying structure on charts and using it to plan better entries and exits.",
-      time: "20 min",
-    },
-    3: {
-      title: "Module 3.1: Trade Planning",
-      description: "Improve setup selection, trade journaling, and risk-reward discipline with repeatable planning.",
-      time: "25 min",
-    },
-    4: {
-      title: "Module 4.1: Strategy Refinement",
-      description: "Focus on execution quality, optimization, and consistency for a professional trading workflow.",
-      time: "30 min",
-    },
-  };
-  return modules[level] ?? modules[1];
+function getDisplayName(user: ReturnType<typeof useUser>["user"]) {
+  const email = user?.primaryEmailAddress?.emailAddress?.split("@")[0];
+  return user?.fullName || user?.firstName || user?.username || email || "Signed-in user";
 }
 export default function DashboardClient() {
   const { user } = useUser();
@@ -172,7 +116,7 @@ export default function DashboardClient() {
     () => skillLabels.map((subject) => ({ subject, value: assessmentScore })),
     [assessmentScore]
   );
-  const nextModule = getNextModule(currentLevel);
+  const nextModule = nextModules[currentLevel] ?? nextModules[1];
   const levelCompletion = assessmentScore;
   if (!mounted) {
     return (

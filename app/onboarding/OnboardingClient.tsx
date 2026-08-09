@@ -3,28 +3,25 @@
 import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useUser } from "@clerk/nextjs";
+import { colors, STORAGE_KEYS } from "@/lib/constants";
+import {
+  onboardingSteps,
+  goalOptions,
+  experienceOptions,
+  marketOptions,
+  timeOptions,
+  riskOptions,
+} from "@/lib/constants/content/onboarding-steps";
+import type { OnboardingAnswers } from "@/types";
+import { logger } from "@/lib/utils";
 
-type Answers = {
-  goal?: string;
-  experience?: string;
-  markets: string[];
-  time?: string;
-  risk?: string;
-};
+const STORAGE_KEY = STORAGE_KEYS.onboardingAnswers;
 
-const STORAGE_KEY = "vornix_onboarding_answers";
+const accent = colors.accent.primary;
+const bg = colors.bg.primary;
+const text = colors.text.primary;
 
-const accent = "#E8A020";
-const bg = "#0A0A0A";
-const text = "#F2F0EB";
-
-const steps = [
-  "What is your trading goal?",
-  "What is your current experience level?",
-  "Which markets interest you most?",
-  "How much time can you dedicate daily?",
-  "How would you describe your risk tolerance?",
-];
+const steps = onboardingSteps;
 
 export default function OnboardingClient() {
   const router = useRouter();
@@ -58,7 +55,7 @@ export default function OnboardingClient() {
     if (step > 1) setStep((s) => s - 1);
   }
 
-  function updateSingle<K extends keyof Answers>(key: K, value: any) {
+  function updateSingle<K extends keyof OnboardingAnswers>(key: K, value: OnboardingAnswers[K]) {
     setAnswers((a) => ({ ...a, [key]: value }));
   }
 
@@ -94,12 +91,12 @@ export default function OnboardingClient() {
       if (!response.ok) throw new Error("Failed to save profile");
 
       // Set localStorage as backup
-      localStorage.setItem("vornix_onboarding_complete", "true");
+      localStorage.setItem(STORAGE_KEYS.onboardingComplete, "true");
       router.push("/assessment");
     } catch (error) {
-      console.error("Error saving onboarding:", error);
+      logger.error("Error saving onboarding:", error);
       // Still proceed even if API fails, localStorage is backup
-      localStorage.setItem("vornix_onboarding_complete", "true");
+      localStorage.setItem(STORAGE_KEYS.onboardingComplete, "true");
       router.push("/assessment");
     } finally {
       setSaving(false);
@@ -146,12 +143,7 @@ export default function OnboardingClient() {
               {step === 1 && (
                 <div>
                   <div className="options">
-                    {[
-                      "Build a full-time income from trading",
-                      "Supplement my existing income",
-                      "Learn trading as a skill",
-                      "Manage my own investments better",
-                    ].map((o) => (
+                    {goalOptions.map((o) => (
                       <button key={o} className={["option-btn", answers.goal === o ? "selected" : ""].join(" ")} onClick={() => updateSingle('goal', o)}>{o}</button>
                     ))}
                   </div>
@@ -161,12 +153,7 @@ export default function OnboardingClient() {
               {step === 2 && (
                 <div>
                   <div className="options">
-                    {[
-                      "Complete beginner — never traded",
-                      "Beginner — know basics but never traded real money",
-                      "Intermediate — traded but inconsistently",
-                      "Experienced — trading regularly but want structure",
-                    ].map((o) => (
+                    {experienceOptions.map((o) => (
                       <button key={o} className={["option-btn", answers.experience === o ? "selected" : ""].join(" ")} onClick={() => updateSingle('experience', o)}>{o}</button>
                     ))}
                   </div>
@@ -177,7 +164,7 @@ export default function OnboardingClient() {
                 <div>
                   <div style={{ fontSize: 13, color: "#AAA" }}>Select all that apply</div>
                   <div className="options">
-                    {["Indian Stocks and F&O", "Forex", "Crypto", "US and Global Stocks", "Commodities", "Not sure yet — I am still exploring"].map((o) => (
+                    {marketOptions.map((o) => (
                       <button key={o} className={["option-btn", answers.markets.includes(o) ? "selected" : ""].join(" ")} onClick={() => toggleMarket(o)}>{o}</button>
                     ))}
                   </div>
@@ -187,7 +174,7 @@ export default function OnboardingClient() {
               {step === 4 && (
                 <div>
                   <div className="options">
-                    {["Less than 30 minutes", "30 minutes to 1 hour", "1 to 2 hours", "More than 2 hours"].map((o) => (
+                    {timeOptions.map((o) => (
                       <button key={o} className={["option-btn", answers.time === o ? "selected" : ""].join(" ")} onClick={() => updateSingle('time', o)}>{o}</button>
                     ))}
                   </div>
@@ -197,7 +184,7 @@ export default function OnboardingClient() {
               {step === 5 && (
                 <div>
                   <div className="options">
-                    {["Safety first — I never want to lose my money", "Balanced — some losses are okay for good potential gains", "Aggressive — I am comfortable with big swings for bigger returns"].map((o) => (
+                    {riskOptions.map((o) => (
                       <button key={o} className={["option-btn", answers.risk === o ? "selected" : ""].join(" ")} onClick={() => updateSingle('risk', o)}>{o}</button>
                     ))}
                   </div>

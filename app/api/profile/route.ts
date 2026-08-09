@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
 import { prisma } from "@/lib/prisma";
+import type { OnboardingAnswers } from "@/types";
+import { logger } from "@/lib/utils";
 
 export async function POST(req: NextRequest) {
   try {
@@ -13,7 +15,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const { firstName, lastName, goal, experienceLevel, markets, dailyTime, riskTolerance } = await req.json();
+    const { firstName, lastName, goal, experienceLevel, markets, dailyTime, riskTolerance }: OnboardingAnswers = await req.json();
 
     const profile = await prisma.profile.upsert({
       where: { clerkId: userId },
@@ -42,7 +44,7 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json(profile);
   } catch (error) {
-    console.error("Profile API error:", error);
+    logger.error("Profile API error:", error);
     return NextResponse.json(
       { error: "Internal server error" },
       { status: 500 }

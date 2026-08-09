@@ -4,6 +4,8 @@ import { useEffect } from "react";
 import { useUser } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
 import NavAuth from "./components/NavAuth";
+import { STORAGE_KEYS } from "@/lib/constants";
+import { logger } from "@/lib/utils";
 
 export default function Home() {
   const { user, isLoaded } = useUser();
@@ -22,8 +24,8 @@ export default function Home() {
           const { onboardingDone, assessmentDone } = await res.json();
 
           // Fallback to localStorage if database check fails
-          const localOnboarding = localStorage.getItem("vornix_onboarding_complete");
-          const localAssessment = localStorage.getItem("vornix_assessment_complete");
+          const localOnboarding = localStorage.getItem(STORAGE_KEYS.onboardingComplete);
+          const localAssessment = localStorage.getItem(STORAGE_KEYS.assessmentComplete);
 
           if (!onboardingDone && !localOnboarding) {
             router.push("/onboarding");
@@ -32,11 +34,11 @@ export default function Home() {
           } else {
             router.push("/dashboard");
           }
-        } catch (error) {
-          console.error("Error checking user status:", error);
-          // Fallback to localStorage
-          const onboardingComplete = localStorage.getItem("vornix_onboarding_complete");
-          const assessmentComplete = localStorage.getItem("vornix_assessment_complete");
+         } catch (error) {
+           logger.error("Error checking user status:", error);
+           // Fallback to localStorage
+          const onboardingComplete = localStorage.getItem(STORAGE_KEYS.onboardingComplete);
+          const assessmentComplete = localStorage.getItem(STORAGE_KEYS.assessmentComplete);
 
           if (!onboardingComplete) {
             router.push("/onboarding");

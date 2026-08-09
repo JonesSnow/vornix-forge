@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
 import { prisma } from "@/lib/prisma";
+import type { AssessmentResult } from "@/types";
+import { logger } from "@/lib/utils";
 
 export async function POST(req: NextRequest) {
   try {
@@ -13,7 +15,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const { score, level } = await req.json();
+    const { score, level }: AssessmentResult = await req.json();
 
     const assessment = await prisma.assessment.upsert({
       where: { clerkId: userId },
@@ -30,7 +32,7 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json(assessment);
   } catch (error) {
-    console.error("Assessment API error:", error);
+    logger.error("Assessment API error:", error);
     return NextResponse.json(
       { error: "Internal server error" },
       { status: 500 }
