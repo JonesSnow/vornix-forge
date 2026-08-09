@@ -27,7 +27,7 @@ export default function OnboardingClient() {
   const router = useRouter();
   const { user } = useUser();
   const [step, setStep] = useState(1);
-  const [answers, setAnswers] = useState<Answers>({ markets: [] });
+  const [answers, setAnswers] = useState<OnboardingAnswers>({ markets: [] });
   const [loaded, setLoaded] = useState(false);
   const [saving, setSaving] = useState(false);
 
