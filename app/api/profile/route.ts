@@ -15,29 +15,25 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const { firstName, lastName, goal, experienceLevel, markets, dailyTime, riskTolerance }: OnboardingAnswers = await req.json();
+    const { goal, experience, markets, time, risk }: OnboardingAnswers = await req.json();
 
     const profile = await prisma.profile.upsert({
       where: { clerkId: userId },
       update: {
-        firstName,
-        lastName,
         goal,
-        experienceLevel,
+        experienceLevel: experience,
         markets,
-        dailyTime,
-        riskTolerance,
+        dailyTime: time,
+        riskTolerance: risk,
         onboardingDone: true,
       },
       create: {
         clerkId: userId,
-        firstName,
-        lastName,
         goal,
-        experienceLevel,
+        experienceLevel: experience,
         markets,
-        dailyTime,
-        riskTolerance,
+        dailyTime: time,
+        riskTolerance: risk,
         onboardingDone: true,
       },
     });
