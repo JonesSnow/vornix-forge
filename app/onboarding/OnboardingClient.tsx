@@ -12,7 +12,7 @@ import {
   timeOptions,
   riskOptions,
 } from "@/lib/constants/content/onboarding-steps";
-import type { OnboardingAnswers } from "@/types";
+import type { OnboardingAnswers } from "@/lib/types";
 import { logger } from "@/lib/utils";
 
 const STORAGE_KEY = STORAGE_KEYS.onboardingAnswers;

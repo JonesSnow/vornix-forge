@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { colors, STORAGE_KEYS } from "@/lib/constants";
 import { knowledgeQuestions, practicalTasks, correctAnswers } from "@/lib/constants/content/assessment-questions";
 import { levelDescriptions } from "@/lib/constants/content/assessment-levels";
-import type { Question, AssessmentAnswers, AssessmentResult } from "@/types";
+import type { Question, AssessmentAnswers, AssessmentResult } from "@/lib/types";
 import { logger } from "@/lib/utils";
 
 const STORAGE_KEY = STORAGE_KEYS.assessment;

@@ -20,7 +20,7 @@ import {
   levelCopy,
   nextModules,
 } from "@/lib/constants/content/dashboard-content";
-import type { OnboardingAnswers, AssessmentResult, AssessmentStorage, DashboardState } from "@/types";
+import type { OnboardingAnswers, AssessmentResult, AssessmentStorage, DashboardState } from "@/lib/types";
 
 const bg = colors.bg.primary;
 const text = colors.text.primary;
