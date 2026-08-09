@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
 import { prisma } from "@/lib/prisma";
-import type { OnboardingAnswers } from "@/types";
+import type { OnboardingAnswers } from "@/lib/types";
 import { logger } from "@/lib/utils";
 
 export async function POST(req: NextRequest) {
