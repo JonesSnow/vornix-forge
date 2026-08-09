@@ -29,33 +29,11 @@ const sidebarWidth = 280;
 const ONBOARDING_KEY = STORAGE_KEYS.onboardingAnswers;
 const ASSESSMENT_KEY = STORAGE_KEYS.assessment;
 const DASHBOARD_KEY = STORAGE_KEYS.dashboard;
-const navItems = [
-  { label: "Dashboard", href: "/dashboard" },
-  { label: "Learn", href: "/learn" },
-  { label: "Simulator", href: "/simulator" },
-  { label: "Journal", href: "/journal" },
-  { label: "Progress", href: "/progress" },
-  { label: "Community", href: "/community" },
-] as const;
-const skillLabels = [
-  "Technical Analysis",
-  "Fundamental Analysis",
-  "Risk Management",
-  "Psychology",
-  "Chart Reading",
-  "Strategy",
-  "Execution",
-  "Market Knowledge",
-];
 function getLevelFromScore(score: number) {
   if (score <= 40) return 1;
   if (score <= 60) return 2;
   if (score <= 80) return 3;
   return 4;
-}
-function getDisplayName(user: ReturnType<typeof useUser>["user"]) {
-  const email = user?.primaryEmailAddress?.emailAddress?.split("@")[0];
-  return user?.fullName || user?.firstName || user?.username || email || "Signed-in user";
 }
 function getDisplayName(user: ReturnType<typeof useUser>["user"]) {
   const email = user?.primaryEmailAddress?.emailAddress?.split("@")[0];
