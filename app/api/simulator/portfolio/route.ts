@@ -100,27 +100,41 @@ export async function POST(req: NextRequest) {
     if (orderType === "limit") {
       entryPrice = Number(limitPrice);
     } else {
-      const yahooUrl = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(symbol)}?interval=1d&range=1d`;
-      const res = await fetch(yahooUrl, {
-        headers: {
-          "User-Agent": "Mozilla/5.0",
-        },
-      });
+      const yahooUrl = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(symbol)}?interval=1d&range=1d&includePrePost=false`;
 
-      if (!res.ok) {
+      let marketData: { chart?: { result?: Array<{ meta?: { regularMarketPrice?: number } }> } };
+
+      try {
+        const res = await fetch(yahooUrl, {
+          headers: {
+            "User-Agent": "Mozilla/5.0",
+            "Accept": "application/json",
+          },
+        });
+
+        if (!res.ok) {
+          console.error(`Yahoo Finance API returned ${res.status} for symbol ${symbol}`);
+          return NextResponse.json(
+            { error: "Market data provider returned an error. Please try again or use limit order." },
+            { status: 502 }
+          );
+        }
+
+        marketData = await res.json();
+      } catch (error) {
+        console.error(`Yahoo Finance fetch failed for symbol ${symbol}:`, error);
         return NextResponse.json(
-          { error: "Failed to fetch market price" },
+          { error: "Unable to reach market data provider. Please try again or use limit order." },
           { status: 502 }
         );
       }
 
-      const data = await res.json();
-      const result = data?.chart?.result?.[0];
-      const meta = result?.meta;
+      const meta = marketData?.chart?.result?.[0]?.meta;
 
       if (!meta?.regularMarketPrice) {
+        console.error(`Yahoo Finance response missing regularMarketPrice for symbol ${symbol}`);
         return NextResponse.json(
-          { error: "Market price unavailable" },
+          { error: "Market price unavailable for this symbol. Please try again or use limit order." },
           { status: 502 }
         );
       }

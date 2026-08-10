@@ -61,6 +61,7 @@ export default function SimulatorClient({ userId }: SimulatorClientProps) {
   const [placingTrade, setPlacingTrade] = useState(false);
   const [tradeError, setTradeError] = useState<string | null>(null);
   const [tradeSuccess, setTradeSuccess] = useState<string | null>(null);
+  const [chartError, setChartError] = useState<string | null>(null);
 
   const [symbol, setSymbol] = useState(SYMBOLS[0].value);
   const [side, setSide] = useState<"buy" | "sell">("buy");
@@ -164,27 +165,47 @@ export default function SimulatorClient({ userId }: SimulatorClientProps) {
       if (!seriesRef.current) return;
 
       try {
-        const res = await fetch(`https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(symbol)}?interval=1d&range=3mo`);
-        if (!res.ok) return;
+        const url = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(symbol)}?interval=1d&range=3mo`;
+        const res = await fetch(url);
+
+        if (!res.ok) {
+          const text = await res.text();
+          console.error(`Yahoo Finance chart API returned ${res.status} for ${symbol}:`, text);
+          setChartError("Chart data unavailable");
+          return;
+        }
 
         const data = await res.json();
+        console.log(`Yahoo Finance chart response for ${symbol}:`, data);
+
         const result = data?.chart?.result?.[0];
         const timestamps = result?.timestamp;
         const quote = result?.indicators?.quote?.[0];
 
-        if (!timestamps || !quote) return;
+        if (!timestamps || !quote) {
+          console.error(`Yahoo Finance chart response missing data for ${symbol}:`, data);
+          setChartError("Chart data unavailable");
+          return;
+        }
 
-        const candlestickData: CandlestickData<Time>[] = timestamps.map((t: number, i: number) => ({
-          time: Math.floor(t / 1000) as Time,
-          open: quote.open[i],
-          high: quote.high[i],
-          low: quote.low[i],
-          close: quote.close[i],
-        }));
+        const candlestickData: CandlestickData<Time>[] = timestamps.map((t: number, i: number) => {
+          const date = new Date(t * 1000);
+          const timeStr = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+
+          return {
+            time: timeStr as Time,
+            open: quote.open[i],
+            high: quote.high[i],
+            low: quote.low[i],
+            close: quote.close[i],
+          };
+        });
 
         seriesRef.current.setData(candlestickData);
+        setChartError(null);
       } catch (e) {
-        console.error("Failed to fetch chart data:", e);
+        console.error(`Failed to fetch chart data for ${symbol}:`, e);
+        setChartError("Chart data unavailable");
       }
     }
 
@@ -413,7 +434,23 @@ export default function SimulatorClient({ userId }: SimulatorClientProps) {
             </p>
           </header>
 
-          <div className="sim-top" style={{ height: 400, marginBottom: 24 }}>
+          <div className="sim-top" style={{ height: 400, marginBottom: 24, position: "relative" }}>
+            {chartError && (
+              <div style={{
+                position: "absolute",
+                inset: 0,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                color: colors.text.muted,
+                fontSize: 14,
+                zIndex: 10,
+                background: "#0F0F0F",
+                borderRadius: 16,
+              }}>
+                {chartError}
+              </div>
+            )}
             <div ref={chartContainerRef} style={{ width: "100%", height: "100%" }} />
           </div>
 
