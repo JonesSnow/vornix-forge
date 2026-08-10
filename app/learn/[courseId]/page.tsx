@@ -7,7 +7,7 @@ import CourseClient from "./CourseClient";
 export default async function CoursePage({
   params,
 }: {
-  params: { courseId: string };
+  params: Promise<{ courseId: string }>;
 }) {
   const { userId } = await auth();
 
@@ -15,29 +15,31 @@ export default async function CoursePage({
     redirect("/sign-in");
   }
 
+  const { courseId } = await params;
+
   const course = await prisma.course.findUnique({
-    where: { id: params.courseId },
+    where: { id: courseId },
     include: {
       modules: {
         where: { isActive: true },
         orderBy: { order: "asc" },
-          include: {
-            lessons: {
-              where: { isActive: true },
-              orderBy: { order: "asc" },
-              select: {
-                id: true,
-                moduleId: true,
-                title: true,
-                content: true,
-                type: true,
-                order: true,
-                duration: true,
-                isActive: true,
-                createdAt: true,
-              },
+        include: {
+          lessons: {
+            where: { isActive: true },
+            orderBy: { order: "asc" },
+            select: {
+              id: true,
+              moduleId: true,
+              title: true,
+              content: true,
+              type: true,
+              order: true,
+              duration: true,
+              isActive: true,
+              createdAt: true,
             },
           },
+        },
       },
     },
   });
@@ -59,5 +61,5 @@ export default async function CoursePage({
     })),
   };
 
-  return <CourseClient courseId={params.courseId} initialCourse={serializedCourse} />;
+  return <CourseClient courseId={courseId} initialCourse={serializedCourse} />;
 }
