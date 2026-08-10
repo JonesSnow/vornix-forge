@@ -412,6 +412,10 @@ export default function SimulatorClient({ userId }: SimulatorClientProps) {
             </p>
           </header>
 
+          <div className="sim-top" style={{ height: 400, marginBottom: 24 }}>
+            <div ref={chartContainerRef} style={{ width: "100%", height: "100%" }} />
+          </div>
+
           <div className="sim-bottom">
             <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
               <div className="card" style={{ padding: 24 }}>
@@ -523,11 +527,11 @@ export default function SimulatorClient({ userId }: SimulatorClientProps) {
                   </div>
                   <div>
                     <div className="muted" style={{ fontSize: 12, marginBottom: 6 }}>Total Trades</div>
-                    <div style={{ fontFamily: "Syne, sans-serif", fontSize: 20, fontWeight: 700 }}>{portfolio?.trades.length ?? 0}</div>
+                    <div style={{ fontFamily: "Syne, sans-serif", fontSize: 20, fontWeight: 700 }}>{String(portfolio?.trades.length ?? 0)}</div>
                   </div>
                   <div>
                     <div className="muted" style={{ fontSize: 12, marginBottom: 6 }}>Open Positions</div>
-                    <div style={{ fontFamily: "Syne, sans-serif", fontSize: 20, fontWeight: 700 }}>{openTrades.length}</div>
+                    <div style={{ fontFamily: "Syne, sans-serif", fontSize: 20, fontWeight: 700 }}>{String(openTrades.length)}</div>
                   </div>
                 </div>
               </div>

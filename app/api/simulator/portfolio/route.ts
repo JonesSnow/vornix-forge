@@ -13,8 +13,13 @@ export async function GET() {
       );
     }
 
-    const portfolio = await prisma.simulatorPortfolio.findUnique({
+    const portfolio = await prisma.simulatorPortfolio.upsert({
       where: { clerkId: userId },
+      update: {},
+      create: {
+        clerkId: userId,
+        balance: 500000,
+      },
       include: {
         trades: {
           where: { status: "open" },
@@ -22,22 +27,6 @@ export async function GET() {
         },
       },
     });
-
-    if (!portfolio) {
-      const newPortfolio = await prisma.simulatorPortfolio.create({
-        data: {
-          clerkId: userId,
-          balance: 500000,
-        },
-        include: {
-          trades: {
-            where: { status: "open" },
-            orderBy: { openedAt: "desc" },
-          },
-        },
-      });
-      return NextResponse.json({ portfolio: newPortfolio });
-    }
 
     return NextResponse.json({ portfolio });
   } catch (error) {
