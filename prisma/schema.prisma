@@ -74,9 +74,12 @@ model Lesson {
 }
 
 model Progress {
-  id        String   @id @default(cuid())
-  moduleId  String
-  module    Module   @relation(fields: [moduleId], references: [id])
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id         String    @id @default(cuid())
+  clerkId    String
+  moduleId   String
+  completed  Boolean   @default(false)
+  completedAt DateTime?
+  module     Module    @relation(fields: [moduleId], references: [id])
+
+  @@unique([clerkId, moduleId])
 }
