@@ -25,6 +25,8 @@ model Profile {
   onboardingDone  Boolean  @default(false)
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
+  simulatorPortfolio SimulatorPortfolio?
+  simulatorTrades    SimulatorTrade[]
 }
 
 model Assessment {
@@ -82,4 +84,33 @@ model Progress {
   module     Module    @relation(fields: [moduleId], references: [id])
 
   @@unique([clerkId, moduleId])
+}
+
+model SimulatorPortfolio {
+  id        String   @id @default(cuid())
+  clerkId   String   @unique
+  balance   Float    @default(500000)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  profile   Profile  @relation(fields: [clerkId], references: [clerkId])
+  trades    SimulatorTrade[]
+}
+
+model SimulatorTrade {
+  id          String    @id @default(cuid())
+  clerkId     String
+  symbol      String
+  side        String
+  quantity    Float
+  entryPrice  Float
+  exitPrice   Float?
+  stopLoss    Float?
+  takeProfit  Float?
+  status      String    @default("open")
+  pnl         Float?
+  openedAt    DateTime  @default(now())
+  closedAt    DateTime?
+  profile     Profile   @relation(fields: [clerkId], references: [clerkId])
+  portfolio   SimulatorPortfolio @relation(fields: [portfolioId], references: [id])
+  portfolioId String
 }
