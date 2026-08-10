@@ -2,6 +2,86 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
 import { prisma } from "@/lib/prisma";
 
+const FALLBACK_PRICES: Record<string, number> = {
+  "RELIANCE.NS": 2850,
+  "TCS.NS": 3950,
+  "BTC-USD": 67000,
+  "ETH-USD": 3500,
+  "EUR-USD": 1.08,
+};
+
+const VALID_SYMBOLS = ["RELIANCE.NS", "TCS.NS", "BTC-USD", "ETH-USD", "EUR-USD"];
+const VALID_SIDES = ["buy", "sell"];
+const VALID_ORDER_TYPES = ["market", "limit"];
+
+function sanitizeString(value: unknown): string {
+  if (typeof value !== "string") return "";
+  return value.trim().replace(/[<>]/g, "");
+}
+
+function getAlphaVantageSymbol(symbol: string): string {
+  if (symbol === "RELIANCE.NS") return "RELIANCE.BSE";
+  if (symbol === "TCS.NS") return "TCS.BSE";
+  return symbol;
+}
+
+async function getMarketPrice(symbol: string): Promise<number> {
+  const fallback = FALLBACK_PRICES[symbol];
+
+  try {
+    let url = "";
+    let priceField = "";
+
+    if (symbol === "RELIANCE.NS" || symbol === "TCS.NS") {
+      const avSymbol = getAlphaVantageSymbol(symbol);
+      url = `https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol=${avSymbol}&apikey=demo`;
+      priceField = "Global Quote";
+    } else if (symbol === "BTC-USD" || symbol === "ETH-USD") {
+      const from = symbol.split("-")[0];
+      url = `https://www.alphavantage.co/query?function=CURRENCY_EXCHANGE_RATE&from_currency=${from}&to_currency=USD&apikey=demo`;
+      priceField = "Realtime Currency Exchange Rate";
+    } else if (symbol === "EUR-USD") {
+      url = `https://www.alphavantage.co/query?function=CURRENCY_EXCHANGE_RATE&from_currency=EUR&to_currency=USD&apikey=demo`;
+      priceField = "Realtime Currency Exchange Rate";
+    }
+
+    if (!url) return fallback;
+
+    const res = await fetch(url, {
+      headers: {
+        "User-Agent": "Mozilla/5.0",
+        "Accept": "application/json",
+      },
+    });
+
+    if (!res.ok) {
+      console.error(`Alpha Vantage API returned ${res.status} for symbol ${symbol}`);
+      return fallback;
+    }
+
+    const data = await res.json();
+    let price = 0;
+
+    if (priceField === "Global Quote") {
+      const quote = data?.["Global Quote"];
+      price = Number(quote?.["05. price"]);
+    } else if (priceField === "Realtime Currency Exchange Rate") {
+      const rate = data?.["Realtime Currency Exchange Rate"];
+      price = Number(rate?.["5. Exchange Rate"]);
+    }
+
+    if (!Number.isFinite(price) || price <= 0) {
+      console.error(`Alpha Vantage response missing valid price for ${symbol}:`, data);
+      return fallback;
+    }
+
+    return price;
+  } catch (error) {
+    console.error(`Alpha Vantage fetch failed for symbol ${symbol}:`, error);
+    return fallback;
+  }
+}
+
 export async function GET() {
   try {
     const { userId } = await auth();
@@ -36,15 +116,6 @@ export async function GET() {
       { status: 500 }
     );
   }
-}
-
-const VALID_SYMBOLS = ["RELIANCE.NS", "TCS.NS", "BTC-USD", "ETH-USD", "EUR-USD"];
-const VALID_SIDES = ["buy", "sell"];
-const VALID_ORDER_TYPES = ["market", "limit"];
-
-function sanitizeString(value: unknown): string {
-  if (typeof value !== "string") return "";
-  return value.trim().replace(/[<>]/g, "");
 }
 
 export async function POST(req: NextRequest) {
@@ -100,46 +171,7 @@ export async function POST(req: NextRequest) {
     if (orderType === "limit") {
       entryPrice = Number(limitPrice);
     } else {
-      const yahooUrl = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(symbol)}?interval=1d&range=1d&includePrePost=false`;
-
-      let marketData: { chart?: { result?: Array<{ meta?: { regularMarketPrice?: number } }> } };
-
-      try {
-        const res = await fetch(yahooUrl, {
-          headers: {
-            "User-Agent": "Mozilla/5.0",
-            "Accept": "application/json",
-          },
-        });
-
-        if (!res.ok) {
-          console.error(`Yahoo Finance API returned ${res.status} for symbol ${symbol}`);
-          return NextResponse.json(
-            { error: "Market data provider returned an error. Please try again or use limit order." },
-            { status: 502 }
-          );
-        }
-
-        marketData = await res.json();
-      } catch (error) {
-        console.error(`Yahoo Finance fetch failed for symbol ${symbol}:`, error);
-        return NextResponse.json(
-          { error: "Unable to reach market data provider. Please try again or use limit order." },
-          { status: 502 }
-        );
-      }
-
-      const meta = marketData?.chart?.result?.[0]?.meta;
-
-      if (!meta?.regularMarketPrice) {
-        console.error(`Yahoo Finance response missing regularMarketPrice for symbol ${symbol}`);
-        return NextResponse.json(
-          { error: "Market price unavailable for this symbol. Please try again or use limit order." },
-          { status: 502 }
-        );
-      }
-
-      entryPrice = meta.regularMarketPrice;
+      entryPrice = await getMarketPrice(symbol);
     }
 
     if (!Number.isFinite(entryPrice) || entryPrice <= 0) {

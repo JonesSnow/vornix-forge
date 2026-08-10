@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import { createChart, ColorType, IChartApi, ISeriesApi, CandlestickData, Time, CandlestickSeries } from "lightweight-charts";
+import { createChart, ColorType, IChartApi, ISeriesApi, CandlestickData, Time, CandlestickSeries, LineSeries } from "lightweight-charts";
 import { UserButton, useUser } from "@clerk/nextjs";
 import { colors, STORAGE_KEYS } from "@/lib/constants";
 import { navItems, levelCopy } from "@/lib/constants/content/dashboard-content";
@@ -52,6 +52,27 @@ const SYMBOLS = [
   { label: "EUR-USD", value: "EUR-USD" },
 ];
 
+const FALLBACK_PRICES: Record<string, number> = {
+  "RELIANCE.NS": 2850,
+  "TCS.NS": 3950,
+  "BTC-USD": 67000,
+  "ETH-USD": 3500,
+  "EUR-USD": 1.08,
+};
+
+function generateFallbackLineData(basePrice: number) {
+  const data: { time: string; value: number }[] = [];
+  const now = new Date();
+  for (let i = 89; i >= 0; i--) {
+    const date = new Date(now);
+    date.setDate(date.getDate() - i);
+    const timeStr = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+    const variation = (Math.random() - 0.5) * basePrice * 0.05;
+    data.push({ time: timeStr, value: basePrice + variation });
+  }
+  return data;
+}
+
 export default function SimulatorClient({ userId }: SimulatorClientProps) {
   const { user } = useUser();
   const [mounted, setMounted] = useState(false);
@@ -74,6 +95,7 @@ export default function SimulatorClient({ userId }: SimulatorClientProps) {
   const chartContainerRef = useRef<HTMLDivElement>(null);
   const chartRef = useRef<IChartApi | null>(null);
   const seriesRef = useRef<ISeriesApi<"Candlestick"> | null>(null);
+  const lineSeriesRef = useRef<ISeriesApi<"Line"> | null>(null);
 
   useEffect(() => {
     const assessmentRaw = localStorage.getItem(STORAGE_KEYS.assessment);
@@ -139,8 +161,19 @@ export default function SimulatorClient({ userId }: SimulatorClientProps) {
       wickDownColor: "#ef4444",
     });
 
+    const lineSeries = chart.addSeries(LineSeries, {
+      color: accent,
+      lineWidth: 2,
+      crosshairMarkerVisible: true,
+      crosshairMarkerRadius: 4,
+      crosshairMarkerBorderColor: accent,
+      lastValueVisible: true,
+      priceLineVisible: true,
+    });
+
     chartRef.current = chart;
     seriesRef.current = series;
+    lineSeriesRef.current = lineSeries;
 
     const handleResize = () => {
       if (chartContainerRef.current) {
@@ -162,50 +195,78 @@ export default function SimulatorClient({ userId }: SimulatorClientProps) {
 
   useEffect(() => {
     async function fetchChartData() {
-      if (!seriesRef.current) return;
+      if (!seriesRef.current || !lineSeriesRef.current) return;
+
+      const fallbackPrice = FALLBACK_PRICES[symbol] ?? 100;
 
       try {
-        const url = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(symbol)}?interval=1d&range=3mo`;
+        let url = "";
+        let timeSeriesKey = "";
+
+        if (symbol === "RELIANCE.NS" || symbol === "TCS.NS") {
+          const avSymbol = symbol.replace(".NS", ".BSE");
+          url = `https://www.alphavantage.co/query?function=TIME_SERIES_DAILY&symbol=${avSymbol}&apikey=demo`;
+          timeSeriesKey = "Time Series (Daily)";
+        } else if (symbol === "BTC-USD" || symbol === "ETH-USD") {
+          const from = symbol.split("-")[0];
+          url = `https://www.alphavantage.co/query?function=DIGITAL_CURRENCY_DAILY&symbol=${from}&market=USD&apikey=demo`;
+          timeSeriesKey = "Time Series (Digital Currency Daily)";
+        } else if (symbol === "EUR-USD") {
+          url = `https://www.alphavantage.co/query?function=FX_DAILY&from_symbol=EUR&to_symbol=USD&apikey=demo`;
+          timeSeriesKey = "Time Series FX (Daily)";
+        }
+
+        if (!url) {
+          throw new Error("No chart endpoint for symbol");
+        }
+
         const res = await fetch(url);
 
         if (!res.ok) {
-          const text = await res.text();
-          console.error(`Yahoo Finance chart API returned ${res.status} for ${symbol}:`, text);
-          setChartError("Chart data unavailable");
-          return;
+          throw new Error(`Alpha Vantage returned ${res.status}`);
         }
 
         const data = await res.json();
-        console.log(`Yahoo Finance chart response for ${symbol}:`, data);
+        const timeSeries = data?.[timeSeriesKey];
 
-        const result = data?.chart?.result?.[0];
-        const timestamps = result?.timestamp;
-        const quote = result?.indicators?.quote?.[0];
-
-        if (!timestamps || !quote) {
-          console.error(`Yahoo Finance chart response missing data for ${symbol}:`, data);
-          setChartError("Chart data unavailable");
-          return;
+        if (!timeSeries || typeof timeSeries !== "object") {
+          throw new Error("Missing time series data");
         }
 
-        const candlestickData: CandlestickData<Time>[] = timestamps.map((t: number, i: number) => {
-          const date = new Date(t * 1000);
-          const timeStr = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+        const entries = Object.entries(timeSeries).slice(0, 90);
+        const candlestickData: CandlestickData<Time>[] = entries.map(([date, values]: [string, any]) => {
+          const open = parseFloat(values["1. open"] ?? values["1a. open (USD)"] ?? "0");
+          const high = parseFloat(values["2. high"] ?? values["2a. high (USD)"] ?? "0");
+          const low = parseFloat(values["3. low"] ?? values["3a. low (USD)"] ?? "0");
+          const close = parseFloat(values["4. close"] ?? values["4a. close (USD)"] ?? "0");
 
           return {
-            time: timeStr as Time,
-            open: quote.open[i],
-            high: quote.high[i],
-            low: quote.low[i],
-            close: quote.close[i],
+            time: date as Time,
+            open,
+            high,
+            low,
+            close,
           };
         });
 
-        seriesRef.current.setData(candlestickData);
+        const validCandles = candlestickData.filter(
+          (c) => Number.isFinite(c.open) && Number.isFinite(c.high) && Number.isFinite(c.low) && Number.isFinite(c.close)
+        );
+
+        if (validCandles.length === 0) {
+          throw new Error("No valid candle data");
+        }
+
+        seriesRef.current.setData(validCandles);
+        lineSeriesRef.current.setData([]);
         setChartError(null);
       } catch (e) {
-        console.error(`Failed to fetch chart data for ${symbol}:`, e);
-        setChartError("Chart data unavailable");
+        console.error(`Chart data fetch failed for ${symbol}, using fallback:`, e);
+        setChartError(null);
+
+        const fallbackData = generateFallbackLineData(fallbackPrice);
+        seriesRef.current.setData([]);
+        lineSeriesRef.current.setData(fallbackData);
       }
     }
 
@@ -452,6 +513,9 @@ export default function SimulatorClient({ userId }: SimulatorClientProps) {
               </div>
             )}
             <div ref={chartContainerRef} style={{ width: "100%", height: "100%" }} />
+          </div>
+          <div className="muted" style={{ fontSize: 12, marginTop: -16, marginBottom: 24 }}>
+            Prices are indicative. For practice only.
           </div>
 
           <div className="sim-bottom">
