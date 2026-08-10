@@ -149,16 +149,14 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const portfolio = await prisma.simulatorPortfolio.findUnique({
+    const portfolio = await prisma.simulatorPortfolio.upsert({
       where: { clerkId: userId },
+      update: {},
+      create: {
+        clerkId: userId,
+        balance: 500000,
+      },
     });
-
-    if (!portfolio) {
-      return NextResponse.json(
-        { error: "Portfolio not found" },
-        { status: 404 }
-      );
-    }
 
     const positionValue = entryPrice * quantity;
 

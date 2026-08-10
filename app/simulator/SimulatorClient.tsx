@@ -104,6 +104,7 @@ export default function SimulatorClient({ userId }: SimulatorClientProps) {
   }, []);
 
   useEffect(() => {
+    if (!mounted) return;
     if (!chartContainerRef.current) return;
 
     const chart = createChart(chartContainerRef.current, {
@@ -156,7 +157,7 @@ export default function SimulatorClient({ userId }: SimulatorClientProps) {
       window.removeEventListener("resize", handleResize);
       chart.remove();
     };
-  }, []);
+  }, [mounted]);
 
   useEffect(() => {
     async function fetchChartData() {
@@ -527,11 +528,11 @@ export default function SimulatorClient({ userId }: SimulatorClientProps) {
                   </div>
                   <div>
                     <div className="muted" style={{ fontSize: 12, marginBottom: 6 }}>Total Trades</div>
-                    <div style={{ fontFamily: "Syne, sans-serif", fontSize: 20, fontWeight: 700 }}>{String(portfolio?.trades.length ?? 0)}</div>
+                    <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 20, fontWeight: 700 }}>{portfolio?.trades.length ?? 0}</div>
                   </div>
                   <div>
                     <div className="muted" style={{ fontSize: 12, marginBottom: 6 }}>Open Positions</div>
-                    <div style={{ fontFamily: "Syne, sans-serif", fontSize: 20, fontWeight: 700 }}>{String(openTrades.length)}</div>
+                    <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 20, fontWeight: 700 }}>{openTrades.length}</div>
                   </div>
                 </div>
               </div>
