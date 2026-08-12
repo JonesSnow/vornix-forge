@@ -13,6 +13,15 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    await prisma.profile.upsert({
+      where: { clerkId: userId },
+      create: {
+        clerkId: userId,
+        onboardingDone: false,
+      },
+      update: {},
+    });
+
     const body = await req.json();
     const tradeId = typeof body.tradeId === "string" ? body.tradeId.trim() : "";
 

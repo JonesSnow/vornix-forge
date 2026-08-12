@@ -33,6 +33,15 @@ export async function GET() {
       );
     }
 
+    await prisma.profile.upsert({
+      where: { clerkId: userId },
+      create: {
+        clerkId: userId,
+        onboardingDone: false,
+      },
+      update: {},
+    });
+
     const portfolio = await prisma.simulatorPortfolio.upsert({
       where: { clerkId: userId },
       update: {},
@@ -68,6 +77,15 @@ export async function POST(req: NextRequest) {
         { status: 401 }
       );
     }
+
+    await prisma.profile.upsert({
+      where: { clerkId: userId },
+      create: {
+        clerkId: userId,
+        onboardingDone: false,
+      },
+      update: {},
+    });
 
     const body = await req.json();
     const symbol = sanitizeString(body.symbol);
