@@ -38,6 +38,8 @@ type Portfolio = {
   id: string;
   balance: number;
   trades: Trade[];
+  openPositions?: Trade[];
+  tradeHistory?: Trade[];
 };
 
 type SimulatorClientProps = {
@@ -282,13 +284,13 @@ export default function SimulatorClient({ userId }: SimulatorClientProps) {
   }, [user]);
 
   const openTrades = useMemo(
-    () => portfolio?.trades.filter((t) => t.status === "open") ?? [],
-    [portfolio?.trades]
+    () => portfolio?.openPositions ?? portfolio?.trades.filter((t) => t.status === "open") ?? [],
+    [portfolio?.openPositions, portfolio?.trades]
   );
 
   const closedTrades = useMemo(
-    () => (portfolio?.trades.filter((t) => t.status === "closed").slice(0, 10) ?? []),
-    [portfolio?.trades]
+    () => (portfolio?.tradeHistory ?? portfolio?.trades.filter((t) => t.status === "closed") ?? []).slice(0, 10),
+    [portfolio?.tradeHistory, portfolio?.trades]
   );
 
   const totalPnl = useMemo(
@@ -586,21 +588,26 @@ export default function SimulatorClient({ userId }: SimulatorClientProps) {
                           <th>Side</th>
                           <th>Qty</th>
                           <th>Entry</th>
+                          <th>Current</th>
                           <th>Action</th>
                         </tr>
                       </thead>
                       <tbody>
-                        {openTrades.map((trade) => (
-                          <tr key={trade.id}>
-                            <td style={{ fontWeight: 600 }}>{trade.symbol}</td>
-                            <td style={{ color: trade.side === "buy" ? "#4ade80" : "#ef4444", textTransform: "uppercase", fontWeight: 600 }}>{trade.side}</td>
-                            <td>{trade.quantity}</td>
-                            <td>₹{trade.entryPrice.toFixed(2)}</td>
-                            <td>
-                              <button className="btn btn-close" style={{ padding: "6px 12px", fontSize: 12 }} onClick={() => handleClosePosition(trade.id)}>Close</button>
-                            </td>
-                          </tr>
-                        ))}
+                        {openTrades.map((trade) => {
+                          const currentPrice = FALLBACK_PRICES[trade.symbol] ?? trade.entryPrice;
+                          return (
+                            <tr key={trade.id}>
+                              <td style={{ fontWeight: 600 }}>{trade.symbol}</td>
+                              <td style={{ color: trade.side === "buy" ? "#4ade80" : "#ef4444", textTransform: "uppercase", fontWeight: 600 }}>{trade.side}</td>
+                              <td>{trade.quantity}</td>
+                              <td>₹{trade.entryPrice.toFixed(2)}</td>
+                              <td className="muted">₹{currentPrice.toFixed(2)}</td>
+                              <td>
+                                <button className="btn btn-close" style={{ padding: "6px 12px", fontSize: 12 }} onClick={() => handleClosePosition(trade.id)}>Close</button>
+                              </td>
+                            </tr>
+                          );
+                        })}
                       </tbody>
                     </table>
                   </div>

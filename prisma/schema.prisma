@@ -28,6 +28,8 @@ model Profile {
   simulatorPortfolio SimulatorPortfolio?
   simulatorTrades    SimulatorTrade[]
   journals           Journal[]
+  communityPosts     CommunityPost[]
+  postLikes          PostLike[]
 }
 
 model Assessment {
@@ -126,4 +128,24 @@ model Journal {
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
   profile       Profile  @relation(fields: [clerkId], references: [clerkId])
+}
+
+model CommunityPost {
+  id        String   @id @default(cuid())
+  clerkId   String
+  content   String
+  likes     Int      @default(0)
+  createdAt DateTime @default(now())
+  profile   Profile  @relation(fields: [clerkId], references: [clerkId])
+  postLikes PostLike[]
+}
+
+model PostLike {
+  id        String   @id @default(cuid())
+  clerkId   String
+  postId    String
+  post      CommunityPost @relation(fields: [postId], references: [id])
+  profile   Profile  @relation(fields: [clerkId], references: [clerkId])
+
+  @@unique([clerkId, postId])
 }

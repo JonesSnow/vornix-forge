@@ -50,14 +50,24 @@ export async function GET() {
         balance: 500000,
       },
       include: {
-        trades: {
-          where: { status: "open" },
-          orderBy: { openedAt: "desc" },
-        },
+        trades: true,
       },
     });
 
-    return NextResponse.json({ portfolio });
+    const openPositions = portfolio.trades.filter((t) => t.status === "open");
+    const tradeHistory = portfolio.trades
+      .filter((t) => t.status === "closed")
+      .sort((a, b) => new Date(b.closedAt ?? b.openedAt).getTime() - new Date(a.closedAt ?? a.openedAt).getTime())
+      .slice(0, 10);
+
+    return NextResponse.json({
+      portfolio: {
+        ...portfolio,
+        trades: undefined,
+      },
+      openPositions,
+      tradeHistory,
+    });
   } catch (error) {
     console.error("Portfolio API error:", error);
     return NextResponse.json(

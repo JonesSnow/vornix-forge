@@ -1,4 +1,5 @@
 "use client";
+
 import React, { useEffect, useMemo, useState } from "react";
 import { UserButton, useUser } from "@clerk/nextjs";
 import {
@@ -29,22 +30,36 @@ const sidebarWidth = 280;
 const ONBOARDING_KEY = STORAGE_KEYS.onboardingAnswers;
 const ASSESSMENT_KEY = STORAGE_KEYS.assessment;
 const DASHBOARD_KEY = STORAGE_KEYS.dashboard;
+
 function getLevelFromScore(score: number) {
   if (score <= 40) return 1;
   if (score <= 60) return 2;
   if (score <= 80) return 3;
   return 4;
 }
-function getDisplayName(user: ReturnType<typeof useUser>["user"]) {
-  const email = user?.primaryEmailAddress?.emailAddress?.split("@")[0];
-  return user?.fullName || user?.firstName || user?.username || email || "Signed-in user";
-}
+
+type DashboardSummary = {
+  profile: { id: string; clerkId: string; onboardingDone: boolean };
+  assessment: { score: number; level: number } | null;
+  modulesCompleted: number;
+  openPositions: Array<{ id: string; symbol: string; side: string; status: string }>;
+  tradeHistory: Array<{ id: string; symbol: string; side: string; status: string; pnl: number | null }>;
+  totalPnl: number;
+  winRate: number;
+  journalCount: number;
+  radarData: Array<{ skill: string; value: number }>;
+  currentLevel: number;
+  balance: number;
+};
+
 export default function DashboardClient() {
   const { user } = useUser();
   const [mounted, setMounted] = useState(false);
   const [onboarding, setOnboarding] = useState<OnboardingAnswers | null>(null);
   const [assessment, setAssessment] = useState<AssessmentStorage | null>(null);
   const [dashboardState, setDashboardState] = useState<DashboardState | null>(null);
+  const [summary, setSummary] = useState<DashboardSummary | null>(null);
+
   useEffect(() => {
     const onboardingRaw = localStorage.getItem(ONBOARDING_KEY);
     if (onboardingRaw) {
@@ -78,24 +93,49 @@ export default function DashboardClient() {
     }
     setMounted(true);
   }, []);
+
   useEffect(() => {
     if (dashboardState) {
       localStorage.setItem(DASHBOARD_KEY, JSON.stringify(dashboardState));
     }
   }, [dashboardState]);
-  const profileName = useMemo(() => getDisplayName(user), [user]);
-  const assessmentScore = assessment?.result?.score ?? assessment?.score ?? 0;
-  const currentLevel = assessment?.result?.level ?? assessment?.level ?? getLevelFromScore(assessmentScore);
+
+  useEffect(() => {
+    async function fetchSummary() {
+      try {
+        const res = await fetch("/api/dashboard/summary");
+        if (res.ok) {
+          const data = await res.json();
+          setSummary(data);
+        }
+      } catch (e) {
+        console.error("Failed to fetch dashboard summary:", e);
+      }
+    }
+    fetchSummary();
+  }, []);
+
+  const profileName = useMemo(() => {
+    const email = user?.primaryEmailAddress?.emailAddress?.split("@")[0];
+    return user?.fullName || user?.firstName || user?.username || email || "Signed-in user";
+  }, [user]);
+  const assessmentScore = summary?.assessment?.score ?? assessment?.result?.score ?? assessment?.score ?? 0;
+  const currentLevel = summary?.currentLevel ?? assessment?.result?.level ?? assessment?.level ?? getLevelFromScore(assessmentScore);
   const levelEntry = levelCopy[currentLevel] ?? levelCopy[1];
   const specialisationGoal = onboarding?.goal ?? "No onboarding profile saved yet.";
-  const modulesCompleted = dashboardState?.modulesCompleted ?? 0;
+  const modulesCompleted = summary?.modulesCompleted ?? dashboardState?.modulesCompleted ?? 0;
   const daysActive = 1;
-  const radarData = useMemo(
-    () => skillLabels.map((subject) => ({ subject, value: assessmentScore })),
-    [assessmentScore]
-  );
+
+  const radarData = useMemo(() => {
+    if (summary?.radarData && summary.radarData.length > 0) {
+      return summary.radarData.map((item) => ({ subject: item.skill, value: item.value }));
+    }
+    return skillLabels.map((subject) => ({ subject, value: assessmentScore }));
+  }, [summary?.radarData, assessmentScore]);
+
   const nextModule = nextModules[currentLevel] ?? nextModules[1];
-  const levelCompletion = assessmentScore;
+  const levelCompletion = modulesCompleted > 0 ? Math.min((modulesCompleted / 4) * 100, 100) : 0;
+
   if (!mounted) {
     return (
       <main style={{ minHeight: "100vh", background: bg, color: text, display: "grid", placeItems: "center", fontFamily: "Inter, sans-serif" }}>
@@ -103,6 +143,7 @@ export default function DashboardClient() {
       </main>
     );
   }
+
   return (
     <main style={{ minHeight: "100vh", background: bg, color: text, fontFamily: "Inter, sans-serif" }}>
       <style>{`
@@ -184,7 +225,7 @@ export default function DashboardClient() {
                 <div className="progress-shell">
                   <div className="progress-bar" style={{ width: `${levelCompletion}%` }} />
                 </div>
-                <div className="muted" style={{ marginTop: 8, fontSize: 12 }}>{levelCompletion}% of current level completed</div>
+                <div className="muted" style={{ marginTop: 8, fontSize: 12 }}>{Math.round(levelCompletion)}% of current level completed</div>
               </div>
             </section>
             <section style={{ display: "grid", gridTemplateColumns: "1.2fr .8fr", gap: 24, marginBottom: 24 }}>
@@ -223,9 +264,29 @@ export default function DashboardClient() {
             </section>
             <section className="card" style={{ padding: 28, marginBottom: 24 }}>
               <div className="muted" style={{ fontSize: 13, marginBottom: 14 }}>Recent Activity</div>
-              <div style={{ border: "1px dashed #333", borderRadius: 14, padding: 28, color: "#8D8D8D", textAlign: "center" }}>
-                No activity yet. Complete your first module to get started.
-              </div>
+              {summary && (summary.openPositions.length > 0 || summary.tradeHistory.length > 0 || summary.journalCount > 0) ? (
+                <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                  {summary.openPositions.length > 0 && (
+                    <div style={{ padding: "12px 16px", borderRadius: 12, background: "#111111", border: "1px solid #1E1E1E", fontSize: 14 }}>
+                      📈 {summary.openPositions.length} open position{summary.openPositions.length !== 1 ? "s" : ""} in simulator
+                    </div>
+                  )}
+                  {summary.tradeHistory.length > 0 && (
+                    <div style={{ padding: "12px 16px", borderRadius: 12, background: "#111111", border: "1px solid #1E1E1E", fontSize: 14 }}>
+                      📊 {summary.tradeHistory.length} closed trade{summary.tradeHistory.length !== 1 ? "s" : ""} — P&L: ₹{summary.totalPnl.toFixed(2)}
+                    </div>
+                  )}
+                  {summary.journalCount > 0 && (
+                    <div style={{ padding: "12px 16px", borderRadius: 12, background: "#111111", border: "1px solid #1E1E1E", fontSize: 14 }}>
+                      📝 {summary.journalCount} journal entries
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div style={{ border: "1px dashed #333", borderRadius: 14, padding: 28, color: "#8D8D8D", textAlign: "center" }}>
+                  No activity yet. Complete your first module to get started.
+                </div>
+              )}
             </section>
           </div>
         </section>
