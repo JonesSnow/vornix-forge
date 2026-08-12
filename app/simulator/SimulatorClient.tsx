@@ -132,67 +132,78 @@ export default function SimulatorClient({ userId }: SimulatorClientProps) {
     if (!mounted) return;
     if (!chartContainerRef.current) return;
 
-    const chart = createChart(chartContainerRef.current, {
-      layout: {
-        background: { type: ColorType.Solid, color: "#0F0F0F" },
-        textColor: "#F2F0EB",
-      },
-      grid: {
-        vertLines: { color: "#1E1E1E" },
-        horzLines: { color: "#1E1E1E" },
-      },
-      crosshair: {
-        mode: 1,
-      },
-      rightPriceScale: {
-        borderColor: "#1E1E1E",
-      },
-      timeScale: {
-        borderColor: "#1E1E1E",
-        timeVisible: true,
-        secondsVisible: false,
-      },
-    });
+    let chart: any = null;
+    let series: any = null;
+    let lineSeries: any = null;
 
-    const series = chart.addSeries(CandlestickSeries, {
-      upColor: "#4ade80",
-      downColor: "#ef4444",
-      borderUpColor: "#4ade80",
-      borderDownColor: "#ef4444",
-      wickUpColor: "#4ade80",
-      wickDownColor: "#ef4444",
-    });
+    try {
+      chart = createChart(chartContainerRef.current, {
+        layout: {
+          background: { type: ColorType.Solid, color: "#0F0F0F" },
+          textColor: "#F2F0EB",
+        },
+        grid: {
+          vertLines: { color: "#1E1E1E" },
+          horzLines: { color: "#1E1E1E" },
+        },
+        crosshair: {
+          mode: 1,
+        },
+        rightPriceScale: {
+          borderColor: "#1E1E1E",
+        },
+        timeScale: {
+          borderColor: "#1E1E1E",
+          timeVisible: true,
+          secondsVisible: false,
+        },
+      });
 
-    const lineSeries = chart.addSeries(LineSeries, {
-      color: accent,
-      lineWidth: 2,
-      crosshairMarkerVisible: true,
-      crosshairMarkerRadius: 4,
-      crosshairMarkerBorderColor: accent,
-      lastValueVisible: true,
-      priceLineVisible: true,
-    });
+      series = chart.addSeries(CandlestickSeries, {
+        upColor: "#4ade80",
+        downColor: "#ef4444",
+        borderUpColor: "#4ade80",
+        borderDownColor: "#ef4444",
+        wickUpColor: "#4ade80",
+        wickDownColor: "#ef4444",
+      });
 
-    chartRef.current = chart;
-    seriesRef.current = series;
-    lineSeriesRef.current = lineSeries;
+      lineSeries = chart.addSeries(LineSeries, {
+        color: accent,
+        lineWidth: 2,
+        crosshairMarkerVisible: true,
+        crosshairMarkerRadius: 4,
+        crosshairMarkerBorderColor: accent,
+        lastValueVisible: true,
+        priceLineVisible: true,
+      });
 
-    const handleResize = () => {
-      if (chartContainerRef.current) {
-        chart.applyOptions({
-          width: chartContainerRef.current.clientWidth,
-          height: chartContainerRef.current.clientHeight || 400,
-        });
-      }
-    };
+      chartRef.current = chart;
+      seriesRef.current = series;
+      lineSeriesRef.current = lineSeries;
 
-    handleResize();
-    window.addEventListener("resize", handleResize);
+      const handleResize = () => {
+        if (chartContainerRef.current && chart) {
+          chart.applyOptions({
+            width: chartContainerRef.current.clientWidth,
+            height: chartContainerRef.current.clientHeight || 400,
+          });
+        }
+      };
 
-    return () => {
-      window.removeEventListener("resize", handleResize);
-      chart.remove();
-    };
+      handleResize();
+      window.addEventListener("resize", handleResize);
+
+      return () => {
+        window.removeEventListener("resize", handleResize);
+        if (chart) {
+          chart.remove();
+        }
+      };
+    } catch (e) {
+      console.error("Chart initialization error:", e);
+      setChartError("Failed to initialize chart");
+    }
   }, [mounted]);
 
   useEffect(() => {
