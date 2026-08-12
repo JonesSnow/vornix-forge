@@ -111,7 +111,12 @@ export async function POST(req: NextRequest) {
 
     try {
       const anthropicKey = process.env.ANTHROPIC_API_KEY;
-      if (anthropicKey) {
+
+      if (!anthropicKey) {
+        console.error("ANTHROPIC_API_KEY not set");
+      } else {
+        console.log("Calling Claude API for journal entry:", entry.id);
+
         const response = await fetch("https://api.anthropic.com/v1/messages", {
           method: "POST",
           headers: {
@@ -131,20 +136,29 @@ export async function POST(req: NextRequest) {
           }),
         });
 
-        if (response.ok) {
-          const data = await response.json();
-          const feedback = data?.content?.[0]?.text;
-          if (feedback) {
-            aiFeedback = feedback;
-            await prisma.journal.update({
-              where: { id: entry.id },
-              data: { aiFeedback: feedback },
-            });
-          }
+        console.log("Claude response status:", response.status);
+
+        if (!response.ok) {
+          const errorText = await response.text();
+          console.error("Claude API error response:", errorText);
+        }
+
+        const data = await response.json();
+        console.log("Claude response body:", JSON.stringify(data));
+
+        const feedback = data?.content?.[0]?.text;
+        if (feedback) {
+          aiFeedback = feedback;
+          await prisma.journal.update({
+            where: { id: entry.id },
+            data: { aiFeedback: feedback },
+          });
+        } else {
+          console.error("Claude response missing content.text:", JSON.stringify(data));
         }
       }
     } catch (aiError) {
-      console.error("AI feedback error:", aiError);
+      console.error("Claude API error:", aiError);
     }
 
     return NextResponse.json(
