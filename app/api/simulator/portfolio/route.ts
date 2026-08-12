@@ -44,27 +44,23 @@ export async function GET() {
 
     const portfolio = await prisma.simulatorPortfolio.upsert({
       where: { clerkId: userId },
+      create: { clerkId: userId, balance: 500000 },
       update: {},
-      create: {
-        clerkId: userId,
-        balance: 500000,
-      },
-      include: {
-        trades: true,
-      },
     });
 
-    const openPositions = portfolio.trades.filter((t) => t.status === "open");
-    const tradeHistory = portfolio.trades
-      .filter((t) => t.status === "closed")
-      .sort((a, b) => new Date(b.closedAt ?? b.openedAt).getTime() - new Date(a.closedAt ?? a.openedAt).getTime())
-      .slice(0, 10);
+    const openPositions = await prisma.simulatorTrade.findMany({
+      where: { clerkId: userId, status: "open" },
+      orderBy: { openedAt: "desc" },
+    });
+
+    const tradeHistory = await prisma.simulatorTrade.findMany({
+      where: { clerkId: userId, status: "closed" },
+      orderBy: { closedAt: "desc" },
+      take: 10,
+    });
 
     return NextResponse.json({
-      portfolio: {
-        ...portfolio,
-        trades: undefined,
-      },
+      balance: portfolio.balance,
       openPositions,
       tradeHistory,
     });

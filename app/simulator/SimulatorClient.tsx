@@ -117,7 +117,12 @@ export default function SimulatorClient({ userId }: SimulatorClientProps) {
         const res = await fetch("/api/simulator/portfolio");
         if (res.ok) {
           const data = await res.json();
-          setPortfolio(data.portfolio);
+          setPortfolio({
+            id: "",
+            balance: data.balance,
+            openPositions: data.openPositions ?? [],
+            tradeHistory: data.tradeHistory ?? [],
+          });
         }
       } catch (e) {
         console.error("Failed to fetch portfolio:", e);
@@ -133,7 +138,12 @@ export default function SimulatorClient({ userId }: SimulatorClientProps) {
       const res = await fetch("/api/simulator/portfolio");
       if (res.ok) {
         const data = await res.json();
-        setPortfolio(data.portfolio);
+        setPortfolio({
+          id: "",
+          balance: data.balance,
+          openPositions: data.openPositions ?? [],
+          tradeHistory: data.tradeHistory ?? [],
+        });
       }
     } catch (e) {
       console.error("Failed to refresh portfolio:", e);
