@@ -117,10 +117,10 @@ export async function POST(req: NextRequest) {
       } else {
         console.log("Calling Claude API for journal entry:", entry.id);
 
-        const response = await fetch("https://api.anthropic.com/v1/messages", {
+        const anthropicResponse = await fetch("https://api.anthropic.com/v1/messages", {
           method: "POST",
           headers: {
-            "x-api-key": anthropicKey,
+            "x-api-key": process.env.ANTHROPIC_API_KEY!,
             "anthropic-version": "2023-06-01",
             "content-type": "application/json",
           },
@@ -130,30 +130,24 @@ export async function POST(req: NextRequest) {
             messages: [
               {
                 role: "user",
-                content: `You are a professional trading coach. A trader has written this journal entry: "${content}". Give them specific, actionable feedback in 3-4 sentences. Focus on mindset, risk management, and improvement areas. Be direct and constructive.`,
+                content: `You are a professional trading coach. A trader wrote this journal entry: "${content}". Give specific actionable feedback in 3-4 sentences focusing on mindset, risk management, and improvement.`,
               },
             ],
           }),
         });
 
-        console.log("Claude response status:", response.status);
-
-        const responseText = await response.text();
-
-        if (!response.ok) {
-          console.error("Claude API error response:", responseText);
-          throw new Error("Claude API failed: " + response.status);
+        const responseText = await anthropicResponse.text();
+        if (!anthropicResponse.ok) {
+          console.error("Claude API error:", responseText);
+          throw new Error("Claude API failed: " + anthropicResponse.status);
         }
 
         const data = JSON.parse(responseText);
-        console.log("Claude response body:", JSON.stringify(data));
-
-        const feedback = data.content?.[0]?.text ?? null;
-        if (feedback) {
-          aiFeedback = feedback;
+        const aiFeedback = data.content?.[0]?.text ?? null;
+        if (aiFeedback) {
           await prisma.journal.update({
             where: { id: entry.id },
-            data: { aiFeedback: feedback },
+            data: { aiFeedback },
           });
         } else {
           console.error("Claude response missing content.text:", JSON.stringify(data));
