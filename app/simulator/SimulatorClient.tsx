@@ -128,6 +128,18 @@ export default function SimulatorClient({ userId }: SimulatorClientProps) {
     fetchPortfolio();
   }, []);
 
+  const refreshPortfolio = async () => {
+    try {
+      const res = await fetch("/api/simulator/portfolio");
+      if (res.ok) {
+        const data = await res.json();
+        setPortfolio(data.portfolio);
+      }
+    } catch (e) {
+      console.error("Failed to refresh portfolio:", e);
+    }
+  };
+
   useEffect(() => {
     if (!mounted) return;
     if (!chartContainerRef.current) return;
@@ -352,11 +364,7 @@ export default function SimulatorClient({ userId }: SimulatorClientProps) {
         setLimitPrice("");
         setStopLoss("");
         setTakeProfit("");
-        const portfolioRes = await fetch("/api/simulator/portfolio");
-        if (portfolioRes.ok) {
-          const portfolioData = await portfolioRes.json();
-          setPortfolio(portfolioData.portfolio);
-        }
+        await refreshPortfolio();
       }
     } catch (e) {
       setTradeError("Network error");
@@ -379,11 +387,7 @@ export default function SimulatorClient({ userId }: SimulatorClientProps) {
         setTradeError(data.error || "Failed to close position");
       } else {
         setTradeSuccess("Position closed");
-        const portfolioRes = await fetch("/api/simulator/portfolio");
-        if (portfolioRes.ok) {
-          const portfolioData = await portfolioRes.json();
-          setPortfolio(portfolioData.portfolio);
-        }
+        await refreshPortfolio();
       }
     } catch (e) {
       setTradeError("Network error");

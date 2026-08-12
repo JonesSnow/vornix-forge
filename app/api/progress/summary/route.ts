@@ -38,8 +38,13 @@ export async function GET() {
       orderBy: { completedAt: "desc" },
     });
 
-    const portfolio = await prisma.simulatorPortfolio.findUnique({
+    const portfolio = await prisma.simulatorPortfolio.upsert({
       where: { clerkId: userId },
+      update: {},
+      create: {
+        clerkId: userId,
+        balance: 500000,
+      },
       include: {
         trades: {
           select: {

@@ -60,21 +60,22 @@ export default function CommunityClient({ userId }: CommunityClientProps) {
   }, []);
 
   useEffect(() => {
-    async function fetchPosts() {
-      try {
-        const res = await fetch("/api/community");
-        if (res.ok) {
-          const data = await res.json();
-          setPosts(Array.isArray(data.posts) ? data.posts : []);
-        }
-      } catch (e) {
-        console.error("Failed to fetch community posts:", e);
-      } finally {
-        setLoading(false);
-      }
-    }
     fetchPosts();
   }, []);
+
+  async function fetchPosts() {
+    try {
+      const res = await fetch("/api/community");
+      if (res.ok) {
+        const data = await res.json();
+        setPosts(Array.isArray(data.posts) ? data.posts : []);
+      }
+    } catch (e) {
+      console.error("Failed to fetch community posts:", e);
+    } finally {
+      setLoading(false);
+    }
+  }
 
   const assessmentScore = assessment?.result?.score ?? assessment?.score ?? 0;
   const currentLevel = assessment?.result?.level ?? assessment?.level ?? getLevelFromScore(assessmentScore);
@@ -105,7 +106,7 @@ export default function CommunityClient({ userId }: CommunityClientProps) {
       } else {
         setSuccess("Posted!");
         setContent("");
-        setPosts((prev) => [data.post, ...prev]);
+        await fetchPosts();
       }
     } catch (e) {
       setError("Network error");
