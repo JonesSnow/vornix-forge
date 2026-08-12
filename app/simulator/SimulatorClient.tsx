@@ -37,7 +37,7 @@ type Trade = {
 type Portfolio = {
   id: string;
   balance: number;
-  trades: Trade[];
+  trades?: Trade[];
   openPositions?: Trade[];
   tradeHistory?: Trade[];
 };
@@ -295,26 +295,26 @@ export default function SimulatorClient({ userId }: SimulatorClientProps) {
   }, [user]);
 
   const openTrades = useMemo(
-    () => portfolio?.openPositions ?? portfolio?.trades.filter((t) => t.status === "open") ?? [],
-    [portfolio?.openPositions, portfolio?.trades]
+    () => portfolio?.openPositions ?? [],
+    [portfolio?.openPositions]
   );
 
   const closedTrades = useMemo(
-    () => (portfolio?.tradeHistory ?? portfolio?.trades.filter((t) => t.status === "closed") ?? []).slice(0, 10),
-    [portfolio?.tradeHistory, portfolio?.trades]
+    () => (portfolio?.tradeHistory ?? []).slice(0, 10),
+    [portfolio?.tradeHistory]
   );
 
   const totalPnl = useMemo(
-    () => portfolio?.trades.reduce((acc, t) => acc + (t.pnl ?? 0), 0) ?? 0,
-    [portfolio?.trades]
+    () => (portfolio?.openPositions ?? []).reduce((acc, t) => acc + (t.pnl ?? 0), 0) + (portfolio?.tradeHistory ?? []).reduce((acc, t) => acc + (t.pnl ?? 0), 0),
+    [portfolio?.openPositions, portfolio?.tradeHistory]
   );
 
   const winRate = useMemo(() => {
-    const closed = portfolio?.trades.filter((t) => t.status === "closed") ?? [];
+    const closed = portfolio?.tradeHistory ?? [];
     if (closed.length === 0) return 0;
     const wins = closed.filter((t) => (t.pnl ?? 0) > 0).length;
     return Math.round((wins / closed.length) * 100);
-  }, [portfolio?.trades]);
+  }, [portfolio?.tradeHistory]);
 
   async function handlePlaceOrder(e: React.FormEvent) {
     e.preventDefault();
@@ -647,7 +647,7 @@ export default function SimulatorClient({ userId }: SimulatorClientProps) {
                   </div>
                   <div>
                     <div className="muted" style={{ fontSize: 12, marginBottom: 6 }}>Total Trades</div>
-                    <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 20, fontWeight: 700 }}>{portfolio?.trades.length ?? 0}</div>
+                    <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 20, fontWeight: 700 }}>{(portfolio?.openPositions?.length ?? 0) + (portfolio?.tradeHistory?.length ?? 0)}</div>
                   </div>
                   <div>
                     <div className="muted" style={{ fontSize: 12, marginBottom: 6 }}>Open Positions</div>
