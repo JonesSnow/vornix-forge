@@ -46,7 +46,7 @@ export default function JournalClient({ userId }: JournalClientProps) {
   const [entries, setEntries] = useState<JournalEntry[]>([]);
   const [assessment, setAssessment] = useState<AssessmentStorage | null>(null);
   const [loading, setLoading] = useState(true);
-  const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
 
   useEffect(() => {
     const assessmentRaw = localStorage.getItem(STORAGE_KEYS.assessment);
@@ -93,7 +93,7 @@ export default function JournalClient({ userId }: JournalClientProps) {
       });
       if (res.ok) {
         setEntries((prev) => prev.filter((e) => e.id !== entryId));
-        if (expandedId === entryId) setExpandedId(null);
+        if (selectedId === entryId) setSelectedId(null);
       }
     } catch (e) {
       console.error("Failed to delete entry:", e);
@@ -224,15 +224,15 @@ export default function JournalClient({ userId }: JournalClientProps) {
             ) : (
               <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
                 {entries.map((entry) => {
-                  const isExpanded = expandedId === entry.id;
+                  const isSelected = selectedId === entry.id;
                   const moodEmoji = MOOD_EMOJI[entry.mood] || "📝";
                   const preview = entry.content.length > 160 ? entry.content.slice(0, 160) + "..." : entry.content;
 
                   return (
                     <div
                       key={entry.id}
-                      className={`entry-card ${isExpanded ? "expanded" : ""}`}
-                      onClick={() => setExpandedId(isExpanded ? null : entry.id)}
+                      className={`entry-card ${isSelected ? "expanded" : ""}`}
+                      onClick={() => setSelectedId(isSelected ? null : entry.id)}
                     >
                       <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 12 }}>
                         <div style={{ flex: 1, minWidth: 0 }}>
@@ -242,7 +242,7 @@ export default function JournalClient({ userId }: JournalClientProps) {
                             {entry.aiFeedback && <span className="ai-badge">AI Feedback</span>}
                           </div>
                           <p className="muted" style={{ fontSize: 14, lineHeight: 1.6, margin: 0 }}>
-                            {isExpanded ? entry.content : preview}
+                            {preview}
                           </p>
                           <div className="muted" style={{ fontSize: 12, marginTop: 10 }}>
                             {new Date(entry.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric", hour: "2-digit", minute: "2-digit" })}
@@ -261,12 +261,24 @@ export default function JournalClient({ userId }: JournalClientProps) {
                           </button>
                         </div>
                       </div>
-                      {isExpanded && entry.aiFeedback && (
-                        <div style={{ marginTop: 20, padding: 20, borderRadius: 12, background: "rgba(232, 160, 32, 0.04)", border: "1px solid rgba(232,160,32,0.15)" }}>
+                      {isSelected && (
+                        <div style={{ marginTop: 20, paddingTop: 20, borderTop: "1px solid #1E1E1E" }}>
                           <div style={{ fontSize: 12, fontWeight: 700, color: accent, marginBottom: 10, textTransform: "uppercase", letterSpacing: "0.08em" }}>
-                            AI Coach Feedback
+                            Entry
                           </div>
-                          <p style={{ fontSize: 14, lineHeight: 1.7, margin: 0, color: text }}>{entry.aiFeedback}</p>
+                          <p style={{ fontSize: 15, lineHeight: 1.8, margin: "0 0 20px 0", color: text, whiteSpace: "pre-wrap" }}>
+                            {entry.content}
+                          </p>
+                          <div style={{ padding: 20, borderRadius: 12, background: "rgba(232, 160, 32, 0.04)", border: "1px solid rgba(232,160,32,0.15)" }}>
+                            <div style={{ fontSize: 12, fontWeight: 700, color: accent, marginBottom: 10, textTransform: "uppercase", letterSpacing: "0.08em" }}>
+                              AI Coach Feedback
+                            </div>
+                            {entry.aiFeedback ? (
+                              <p style={{ fontSize: 14, lineHeight: 1.7, margin: 0, color: text }}>{entry.aiFeedback}</p>
+                            ) : (
+                              <p className="muted" style={{ fontSize: 14, margin: 0 }}>AI feedback is being generated...</p>
+                            )}
+                          </div>
                         </div>
                       )}
                     </div>
