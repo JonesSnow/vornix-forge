@@ -111,6 +111,7 @@ export async function POST(req: NextRequest) {
 
     try {
       const anthropicKey = process.env.ANTHROPIC_API_KEY;
+      console.log("API key prefix:", anthropicKey?.substring(0, 10));
 
       if (!anthropicKey) {
         console.error("ANTHROPIC_API_KEY not set");
@@ -125,7 +126,7 @@ export async function POST(req: NextRequest) {
             "content-type": "application/json",
           },
           body: JSON.stringify({
-            model: "claude-sonnet-4-6",
+            model: "claude-3-5-haiku-20241022",
             max_tokens: 500,
             messages: [
               {
