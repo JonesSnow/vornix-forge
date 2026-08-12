@@ -138,15 +138,17 @@ export async function POST(req: NextRequest) {
 
         console.log("Claude response status:", response.status);
 
+        const responseText = await response.text();
+
         if (!response.ok) {
-          const errorText = await response.text();
-          console.error("Claude API error response:", errorText);
+          console.error("Claude API error response:", responseText);
+          throw new Error("Claude API failed: " + response.status);
         }
 
-        const data = await response.json();
+        const data = JSON.parse(responseText);
         console.log("Claude response body:", JSON.stringify(data));
 
-        const feedback = data?.content?.[0]?.text;
+        const feedback = data.content?.[0]?.text ?? null;
         if (feedback) {
           aiFeedback = feedback;
           await prisma.journal.update({
