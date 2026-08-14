@@ -11,20 +11,13 @@ export async function GET(
 
     if (!userId) {
       return NextResponse.json(
-        { error: "Unauthorized", code: "UNAUTHORIZED" },
+        { error: "Unauthorized" },
         { status: 401 }
       );
     }
 
     const resolvedParams = await params;
-    const courseId = resolvedParams.courseId;
-
-    if (!courseId || typeof courseId !== "string") {
-      return NextResponse.json(
-        { error: "Invalid course ID", code: "VALIDATION_ERROR" },
-        { status: 400 }
-      );
-    }
+    const { courseId } = resolvedParams;
 
     const course = await prisma.course.findUnique({
       where: { id: courseId },
@@ -36,16 +29,11 @@ export async function GET(
             lessons: {
               where: { isActive: true },
               orderBy: { order: "asc" },
-              select: {
-                id: true,
-                title: true,
-                content: true,
-                type: true,
-                order: true,
-                duration: true,
-                isActive: true,
-                createdAt: true,
-              },
+              select: { id: true },
+            },
+            progress: {
+              where: { clerkId: userId },
+              select: { completed: true },
             },
           },
         },
@@ -54,16 +42,32 @@ export async function GET(
 
     if (!course) {
       return NextResponse.json(
-        { error: "Course not found", code: "NOT_FOUND" },
+        { error: "Course not found" },
         { status: 404 }
       );
     }
 
-    return NextResponse.json({ course });
+    const totalLessons = course.modules.reduce((acc, m) => acc + m.lessons.length, 0);
+    const completedModules = course.modules.filter((m) => m.progress.some((p) => p.completed)).length;
+
+    const moduleProgress = course.modules.map((module) => ({
+      id: module.id,
+      title: module.title,
+      completed: module.progress.some((p) => p.completed),
+      totalLessons: module.lessons.length,
+    }));
+
+    return NextResponse.json({
+      courseId,
+      totalModules: course.modules.length,
+      completedModules,
+      totalLessons,
+      moduleProgress,
+    });
   } catch (error) {
-    console.error("Course detail API error:", error);
+    console.error("Course progress API error:", error);
     return NextResponse.json(
-      { error: "Internal server error", code: "INTERNAL_ERROR" },
+      { error: "Internal server error" },
       { status: 500 }
     );
   }

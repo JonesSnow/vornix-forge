@@ -1,15 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
 import { prisma } from "@/lib/prisma";
+import { sanitizeString } from "@/lib/utils/sanitize";
 
 const VALID_SYMBOLS = ["RELIANCE.NS", "TCS.NS", "BTC-USD", "ETH-USD", "EUR-USD"];
 const VALID_SIDES = ["buy", "sell"];
 const VALID_ORDER_TYPES = ["market", "limit"];
-
-function sanitizeString(value: unknown): string {
-  if (typeof value !== "string") return "";
-  return value.trim().replace(/[<>]/g, "");
-}
 
 function getMarketPrice(symbol: string): number {
   const prices: Record<string, number> = {
@@ -28,7 +24,7 @@ export async function GET() {
 
     if (!userId) {
       return NextResponse.json(
-        { error: "Unauthorized" },
+        { error: "Unauthorized", code: "UNAUTHORIZED" },
         { status: 401 }
       );
     }
@@ -67,7 +63,7 @@ export async function GET() {
   } catch (error) {
     console.error("Portfolio API error:", error);
     return NextResponse.json(
-      { error: "Internal server error" },
+      { error: "Internal server error", code: "INTERNAL_ERROR" },
       { status: 500 }
     );
   }
@@ -79,7 +75,7 @@ export async function POST(req: NextRequest) {
 
     if (!userId) {
       return NextResponse.json(
-        { error: "Unauthorized" },
+        { error: "Unauthorized", code: "UNAUTHORIZED" },
         { status: 401 }
       );
     }
@@ -104,28 +100,28 @@ export async function POST(req: NextRequest) {
 
     if (!VALID_SYMBOLS.includes(symbol)) {
       return NextResponse.json(
-        { error: "Invalid symbol" },
+        { error: "Invalid symbol", code: "VALIDATION_ERROR" },
         { status: 400 }
       );
     }
 
     if (!VALID_SIDES.includes(side)) {
       return NextResponse.json(
-        { error: "Invalid side" },
+        { error: "Invalid side", code: "VALIDATION_ERROR" },
         { status: 400 }
       );
     }
 
     if (!VALID_ORDER_TYPES.includes(orderType)) {
       return NextResponse.json(
-        { error: "Invalid order type" },
+        { error: "Invalid order type", code: "VALIDATION_ERROR" },
         { status: 400 }
       );
     }
 
     if (!Number.isFinite(quantity) || quantity <= 0) {
       return NextResponse.json(
-        { error: "Invalid quantity" },
+        { error: "Invalid quantity", code: "VALIDATION_ERROR" },
         { status: 400 }
       );
     }
@@ -134,21 +130,21 @@ export async function POST(req: NextRequest) {
 
     if (!Number.isFinite(entryPrice) || entryPrice <= 0) {
       return NextResponse.json(
-        { error: "Invalid entry price" },
+        { error: "Invalid entry price", code: "VALIDATION_ERROR" },
         { status: 400 }
       );
     }
 
     if (stopLoss !== null && (!Number.isFinite(stopLoss) || stopLoss <= 0)) {
       return NextResponse.json(
-        { error: "Invalid stop loss" },
+        { error: "Invalid stop loss", code: "VALIDATION_ERROR" },
         { status: 400 }
       );
     }
 
     if (takeProfit !== null && (!Number.isFinite(takeProfit) || takeProfit <= 0)) {
       return NextResponse.json(
-        { error: "Invalid take profit" },
+        { error: "Invalid take profit", code: "VALIDATION_ERROR" },
         { status: 400 }
       );
     }
@@ -166,7 +162,7 @@ export async function POST(req: NextRequest) {
 
     if (side === "buy" && portfolio.balance < positionValue) {
       return NextResponse.json(
-        { error: "Insufficient balance" },
+        { error: "Insufficient balance", code: "VALIDATION_ERROR" },
         { status: 400 }
       );
     }
@@ -200,7 +196,7 @@ export async function POST(req: NextRequest) {
   } catch (error) {
     console.error("Trade placement error:", error);
     return NextResponse.json(
-      { error: String(error) },
+      { error: "Internal server error", code: "INTERNAL_ERROR" },
       { status: 500 }
     );
   }

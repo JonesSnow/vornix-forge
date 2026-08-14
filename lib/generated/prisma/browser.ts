@@ -27,3 +27,53 @@ export type Profile = Prisma.ProfileModel
  * 
  */
 export type Assessment = Prisma.AssessmentModel
+/**
+ * Model Course
+ * 
+ */
+export type Course = Prisma.CourseModel
+/**
+ * Model Module
+ * 
+ */
+export type Module = Prisma.ModuleModel
+/**
+ * Model Lesson
+ * 
+ */
+export type Lesson = Prisma.LessonModel
+/**
+ * Model Progress
+ * 
+ */
+export type Progress = Prisma.ProgressModel
+/**
+ * Model LessonProgress
+ * 
+ */
+export type LessonProgress = Prisma.LessonProgressModel
+/**
+ * Model SimulatorPortfolio
+ * 
+ */
+export type SimulatorPortfolio = Prisma.SimulatorPortfolioModel
+/**
+ * Model SimulatorTrade
+ * 
+ */
+export type SimulatorTrade = Prisma.SimulatorTradeModel
+/**
+ * Model Journal
+ * 
+ */
+export type Journal = Prisma.JournalModel
+/**
+ * Model CommunityPost
+ * 
+ */
+export type CommunityPost = Prisma.CommunityPostModel
+/**
+ * Model PostLike
+ * 
+ */
+export type PostLike = Prisma.PostLikeModel

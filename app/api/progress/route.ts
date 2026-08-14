@@ -8,7 +8,7 @@ export async function POST(req: NextRequest) {
 
     if (!userId) {
       return NextResponse.json(
-        { error: "Unauthorized" },
+        { error: "Unauthorized", code: "UNAUTHORIZED" },
         { status: 401 }
       );
     }
@@ -21,14 +21,14 @@ export async function POST(req: NextRequest) {
 
     if (!moduleId || typeof moduleId !== "string") {
       return NextResponse.json(
-        { error: "moduleId is required" },
+        { error: "moduleId is required", code: "VALIDATION_ERROR" },
         { status: 400 }
       );
     }
 
     if (lessonId && typeof lessonId !== "string") {
       return NextResponse.json(
-        { error: "lessonId must be a string" },
+        { error: "lessonId must be a string", code: "VALIDATION_ERROR" },
         { status: 400 }
       );
     }
@@ -40,7 +40,7 @@ export async function POST(req: NextRequest) {
 
     if (!module) {
       return NextResponse.json(
-        { error: "Module not found" },
+        { error: "Module not found", code: "NOT_FOUND" },
         { status: 404 }
       );
     }
@@ -68,7 +68,7 @@ export async function POST(req: NextRequest) {
   } catch (error) {
     console.error("Progress API error:", error);
     return NextResponse.json(
-      { error: "Internal server error" },
+      { error: "Internal server error", code: "INTERNAL_ERROR" },
       { status: 500 }
     );
   }

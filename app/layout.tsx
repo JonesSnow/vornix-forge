@@ -4,7 +4,12 @@ import "./globals.css";
 
 export const metadata: Metadata = {
   title: "Vornix Forge — Trader Development Platform",
-  description: "The world's first trader development system.",
+  description: "The world's first structured trader development system. Assessed at entry, developed systematically, certified by competence.",
+  openGraph: {
+    title: "Vornix Forge — Trader Development Platform",
+    description: "The world's first structured trader development system. Assessed at entry, developed systematically, certified by competence.",
+    images: ["/og-image.png"],
+  },
 };
 
 export default function RootLayout({

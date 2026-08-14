@@ -10,7 +10,7 @@ export async function POST(req: NextRequest) {
     
     if (!userId) {
       return NextResponse.json(
-        { error: "Unauthorized" },
+        { error: "Unauthorized", code: "UNAUTHORIZED" },
         { status: 401 }
       );
     }
@@ -42,7 +42,7 @@ export async function POST(req: NextRequest) {
   } catch (error) {
     logger.error("Profile API error:", error);
     return NextResponse.json(
-      { error: "Internal server error" },
+      { error: "Internal server error", code: "INTERNAL_ERROR" },
       { status: 500 }
     );
   }

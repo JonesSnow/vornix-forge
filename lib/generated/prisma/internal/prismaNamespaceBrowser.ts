@@ -52,7 +52,17 @@ export const AnyNull = runtime.AnyNull
 
 export const ModelName = {
   Profile: 'Profile',
-  Assessment: 'Assessment'
+  Assessment: 'Assessment',
+  Course: 'Course',
+  Module: 'Module',
+  Lesson: 'Lesson',
+  Progress: 'Progress',
+  LessonProgress: 'LessonProgress',
+  SimulatorPortfolio: 'SimulatorPortfolio',
+  SimulatorTrade: 'SimulatorTrade',
+  Journal: 'Journal',
+  CommunityPost: 'CommunityPost',
+  PostLike: 'PostLike'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -99,6 +109,135 @@ export const AssessmentScalarFieldEnum = {
 } as const
 
 export type AssessmentScalarFieldEnum = (typeof AssessmentScalarFieldEnum)[keyof typeof AssessmentScalarFieldEnum]
+
+
+export const CourseScalarFieldEnum = {
+  id: 'id',
+  title: 'title',
+  description: 'description',
+  level: 'level',
+  order: 'order',
+  isActive: 'isActive',
+  createdAt: 'createdAt'
+} as const
+
+export type CourseScalarFieldEnum = (typeof CourseScalarFieldEnum)[keyof typeof CourseScalarFieldEnum]
+
+
+export const ModuleScalarFieldEnum = {
+  id: 'id',
+  courseId: 'courseId',
+  title: 'title',
+  description: 'description',
+  order: 'order',
+  isActive: 'isActive',
+  createdAt: 'createdAt'
+} as const
+
+export type ModuleScalarFieldEnum = (typeof ModuleScalarFieldEnum)[keyof typeof ModuleScalarFieldEnum]
+
+
+export const LessonScalarFieldEnum = {
+  id: 'id',
+  moduleId: 'moduleId',
+  title: 'title',
+  content: 'content',
+  type: 'type',
+  order: 'order',
+  duration: 'duration',
+  isActive: 'isActive',
+  createdAt: 'createdAt'
+} as const
+
+export type LessonScalarFieldEnum = (typeof LessonScalarFieldEnum)[keyof typeof LessonScalarFieldEnum]
+
+
+export const ProgressScalarFieldEnum = {
+  id: 'id',
+  clerkId: 'clerkId',
+  moduleId: 'moduleId',
+  completed: 'completed',
+  completedAt: 'completedAt'
+} as const
+
+export type ProgressScalarFieldEnum = (typeof ProgressScalarFieldEnum)[keyof typeof ProgressScalarFieldEnum]
+
+
+export const LessonProgressScalarFieldEnum = {
+  id: 'id',
+  clerkId: 'clerkId',
+  lessonId: 'lessonId',
+  completed: 'completed',
+  completedAt: 'completedAt',
+  createdAt: 'createdAt'
+} as const
+
+export type LessonProgressScalarFieldEnum = (typeof LessonProgressScalarFieldEnum)[keyof typeof LessonProgressScalarFieldEnum]
+
+
+export const SimulatorPortfolioScalarFieldEnum = {
+  id: 'id',
+  clerkId: 'clerkId',
+  balance: 'balance',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type SimulatorPortfolioScalarFieldEnum = (typeof SimulatorPortfolioScalarFieldEnum)[keyof typeof SimulatorPortfolioScalarFieldEnum]
+
+
+export const SimulatorTradeScalarFieldEnum = {
+  id: 'id',
+  clerkId: 'clerkId',
+  symbol: 'symbol',
+  side: 'side',
+  quantity: 'quantity',
+  entryPrice: 'entryPrice',
+  exitPrice: 'exitPrice',
+  stopLoss: 'stopLoss',
+  takeProfit: 'takeProfit',
+  status: 'status',
+  pnl: 'pnl',
+  openedAt: 'openedAt',
+  closedAt: 'closedAt',
+  portfolioId: 'portfolioId'
+} as const
+
+export type SimulatorTradeScalarFieldEnum = (typeof SimulatorTradeScalarFieldEnum)[keyof typeof SimulatorTradeScalarFieldEnum]
+
+
+export const JournalScalarFieldEnum = {
+  id: 'id',
+  clerkId: 'clerkId',
+  title: 'title',
+  content: 'content',
+  mood: 'mood',
+  aiFeedback: 'aiFeedback',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type JournalScalarFieldEnum = (typeof JournalScalarFieldEnum)[keyof typeof JournalScalarFieldEnum]
+
+
+export const CommunityPostScalarFieldEnum = {
+  id: 'id',
+  clerkId: 'clerkId',
+  content: 'content',
+  likes: 'likes',
+  createdAt: 'createdAt'
+} as const
+
+export type CommunityPostScalarFieldEnum = (typeof CommunityPostScalarFieldEnum)[keyof typeof CommunityPostScalarFieldEnum]
+
+
+export const PostLikeScalarFieldEnum = {
+  id: 'id',
+  clerkId: 'clerkId',
+  postId: 'postId'
+} as const
+
+export type PostLikeScalarFieldEnum = (typeof PostLikeScalarFieldEnum)[keyof typeof PostLikeScalarFieldEnum]
 
 
 export const SortOrder = {

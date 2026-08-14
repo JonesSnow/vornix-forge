@@ -234,6 +234,11 @@ export type ProfileWhereInput = {
   onboardingDone?: Prisma.BoolFilter<"Profile"> | boolean
   createdAt?: Prisma.DateTimeFilter<"Profile"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"Profile"> | Date | string
+  simulatorPortfolio?: Prisma.XOR<Prisma.SimulatorPortfolioNullableScalarRelationFilter, Prisma.SimulatorPortfolioWhereInput> | null
+  simulatorTrades?: Prisma.SimulatorTradeListRelationFilter
+  journals?: Prisma.JournalListRelationFilter
+  communityPosts?: Prisma.CommunityPostListRelationFilter
+  postLikes?: Prisma.PostLikeListRelationFilter
 }
 
 export type ProfileOrderByWithRelationInput = {
@@ -249,6 +254,11 @@ export type ProfileOrderByWithRelationInput = {
   onboardingDone?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
+  simulatorPortfolio?: Prisma.SimulatorPortfolioOrderByWithRelationInput
+  simulatorTrades?: Prisma.SimulatorTradeOrderByRelationAggregateInput
+  journals?: Prisma.JournalOrderByRelationAggregateInput
+  communityPosts?: Prisma.CommunityPostOrderByRelationAggregateInput
+  postLikes?: Prisma.PostLikeOrderByRelationAggregateInput
 }
 
 export type ProfileWhereUniqueInput = Prisma.AtLeast<{
@@ -267,6 +277,11 @@ export type ProfileWhereUniqueInput = Prisma.AtLeast<{
   onboardingDone?: Prisma.BoolFilter<"Profile"> | boolean
   createdAt?: Prisma.DateTimeFilter<"Profile"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"Profile"> | Date | string
+  simulatorPortfolio?: Prisma.XOR<Prisma.SimulatorPortfolioNullableScalarRelationFilter, Prisma.SimulatorPortfolioWhereInput> | null
+  simulatorTrades?: Prisma.SimulatorTradeListRelationFilter
+  journals?: Prisma.JournalListRelationFilter
+  communityPosts?: Prisma.CommunityPostListRelationFilter
+  postLikes?: Prisma.PostLikeListRelationFilter
 }, "id" | "clerkId">
 
 export type ProfileOrderByWithAggregationInput = {
@@ -318,6 +333,11 @@ export type ProfileCreateInput = {
   onboardingDone?: boolean
   createdAt?: Date | string
   updatedAt?: Date | string
+  simulatorPortfolio?: Prisma.SimulatorPortfolioCreateNestedOneWithoutProfileInput
+  simulatorTrades?: Prisma.SimulatorTradeCreateNestedManyWithoutProfileInput
+  journals?: Prisma.JournalCreateNestedManyWithoutProfileInput
+  communityPosts?: Prisma.CommunityPostCreateNestedManyWithoutProfileInput
+  postLikes?: Prisma.PostLikeCreateNestedManyWithoutProfileInput
 }
 
 export type ProfileUncheckedCreateInput = {
@@ -333,6 +353,11 @@ export type ProfileUncheckedCreateInput = {
   onboardingDone?: boolean
   createdAt?: Date | string
   updatedAt?: Date | string
+  simulatorPortfolio?: Prisma.SimulatorPortfolioUncheckedCreateNestedOneWithoutProfileInput
+  simulatorTrades?: Prisma.SimulatorTradeUncheckedCreateNestedManyWithoutProfileInput
+  journals?: Prisma.JournalUncheckedCreateNestedManyWithoutProfileInput
+  communityPosts?: Prisma.CommunityPostUncheckedCreateNestedManyWithoutProfileInput
+  postLikes?: Prisma.PostLikeUncheckedCreateNestedManyWithoutProfileInput
 }
 
 export type ProfileUpdateInput = {
@@ -348,6 +373,11 @@ export type ProfileUpdateInput = {
   onboardingDone?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  simulatorPortfolio?: Prisma.SimulatorPortfolioUpdateOneWithoutProfileNestedInput
+  simulatorTrades?: Prisma.SimulatorTradeUpdateManyWithoutProfileNestedInput
+  journals?: Prisma.JournalUpdateManyWithoutProfileNestedInput
+  communityPosts?: Prisma.CommunityPostUpdateManyWithoutProfileNestedInput
+  postLikes?: Prisma.PostLikeUpdateManyWithoutProfileNestedInput
 }
 
 export type ProfileUncheckedUpdateInput = {
@@ -363,6 +393,11 @@ export type ProfileUncheckedUpdateInput = {
   onboardingDone?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  simulatorPortfolio?: Prisma.SimulatorPortfolioUncheckedUpdateOneWithoutProfileNestedInput
+  simulatorTrades?: Prisma.SimulatorTradeUncheckedUpdateManyWithoutProfileNestedInput
+  journals?: Prisma.JournalUncheckedUpdateManyWithoutProfileNestedInput
+  communityPosts?: Prisma.CommunityPostUncheckedUpdateManyWithoutProfileNestedInput
+  postLikes?: Prisma.PostLikeUncheckedUpdateManyWithoutProfileNestedInput
 }
 
 export type ProfileCreateManyInput = {
@@ -461,6 +496,11 @@ export type ProfileMinOrderByAggregateInput = {
   updatedAt?: Prisma.SortOrder
 }
 
+export type ProfileScalarRelationFilter = {
+  is?: Prisma.ProfileWhereInput
+  isNot?: Prisma.ProfileWhereInput
+}
+
 export type ProfileCreatemarketsInput = {
   set: string[]
 }
@@ -486,6 +526,592 @@ export type DateTimeFieldUpdateOperationsInput = {
   set?: Date | string
 }
 
+export type ProfileCreateNestedOneWithoutSimulatorPortfolioInput = {
+  create?: Prisma.XOR<Prisma.ProfileCreateWithoutSimulatorPortfolioInput, Prisma.ProfileUncheckedCreateWithoutSimulatorPortfolioInput>
+  connectOrCreate?: Prisma.ProfileCreateOrConnectWithoutSimulatorPortfolioInput
+  connect?: Prisma.ProfileWhereUniqueInput
+}
+
+export type ProfileUpdateOneRequiredWithoutSimulatorPortfolioNestedInput = {
+  create?: Prisma.XOR<Prisma.ProfileCreateWithoutSimulatorPortfolioInput, Prisma.ProfileUncheckedCreateWithoutSimulatorPortfolioInput>
+  connectOrCreate?: Prisma.ProfileCreateOrConnectWithoutSimulatorPortfolioInput
+  upsert?: Prisma.ProfileUpsertWithoutSimulatorPortfolioInput
+  connect?: Prisma.ProfileWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.ProfileUpdateToOneWithWhereWithoutSimulatorPortfolioInput, Prisma.ProfileUpdateWithoutSimulatorPortfolioInput>, Prisma.ProfileUncheckedUpdateWithoutSimulatorPortfolioInput>
+}
+
+export type ProfileCreateNestedOneWithoutSimulatorTradesInput = {
+  create?: Prisma.XOR<Prisma.ProfileCreateWithoutSimulatorTradesInput, Prisma.ProfileUncheckedCreateWithoutSimulatorTradesInput>
+  connectOrCreate?: Prisma.ProfileCreateOrConnectWithoutSimulatorTradesInput
+  connect?: Prisma.ProfileWhereUniqueInput
+}
+
+export type ProfileUpdateOneRequiredWithoutSimulatorTradesNestedInput = {
+  create?: Prisma.XOR<Prisma.ProfileCreateWithoutSimulatorTradesInput, Prisma.ProfileUncheckedCreateWithoutSimulatorTradesInput>
+  connectOrCreate?: Prisma.ProfileCreateOrConnectWithoutSimulatorTradesInput
+  upsert?: Prisma.ProfileUpsertWithoutSimulatorTradesInput
+  connect?: Prisma.ProfileWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.ProfileUpdateToOneWithWhereWithoutSimulatorTradesInput, Prisma.ProfileUpdateWithoutSimulatorTradesInput>, Prisma.ProfileUncheckedUpdateWithoutSimulatorTradesInput>
+}
+
+export type ProfileCreateNestedOneWithoutJournalsInput = {
+  create?: Prisma.XOR<Prisma.ProfileCreateWithoutJournalsInput, Prisma.ProfileUncheckedCreateWithoutJournalsInput>
+  connectOrCreate?: Prisma.ProfileCreateOrConnectWithoutJournalsInput
+  connect?: Prisma.ProfileWhereUniqueInput
+}
+
+export type ProfileUpdateOneRequiredWithoutJournalsNestedInput = {
+  create?: Prisma.XOR<Prisma.ProfileCreateWithoutJournalsInput, Prisma.ProfileUncheckedCreateWithoutJournalsInput>
+  connectOrCreate?: Prisma.ProfileCreateOrConnectWithoutJournalsInput
+  upsert?: Prisma.ProfileUpsertWithoutJournalsInput
+  connect?: Prisma.ProfileWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.ProfileUpdateToOneWithWhereWithoutJournalsInput, Prisma.ProfileUpdateWithoutJournalsInput>, Prisma.ProfileUncheckedUpdateWithoutJournalsInput>
+}
+
+export type ProfileCreateNestedOneWithoutCommunityPostsInput = {
+  create?: Prisma.XOR<Prisma.ProfileCreateWithoutCommunityPostsInput, Prisma.ProfileUncheckedCreateWithoutCommunityPostsInput>
+  connectOrCreate?: Prisma.ProfileCreateOrConnectWithoutCommunityPostsInput
+  connect?: Prisma.ProfileWhereUniqueInput
+}
+
+export type ProfileUpdateOneRequiredWithoutCommunityPostsNestedInput = {
+  create?: Prisma.XOR<Prisma.ProfileCreateWithoutCommunityPostsInput, Prisma.ProfileUncheckedCreateWithoutCommunityPostsInput>
+  connectOrCreate?: Prisma.ProfileCreateOrConnectWithoutCommunityPostsInput
+  upsert?: Prisma.ProfileUpsertWithoutCommunityPostsInput
+  connect?: Prisma.ProfileWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.ProfileUpdateToOneWithWhereWithoutCommunityPostsInput, Prisma.ProfileUpdateWithoutCommunityPostsInput>, Prisma.ProfileUncheckedUpdateWithoutCommunityPostsInput>
+}
+
+export type ProfileCreateNestedOneWithoutPostLikesInput = {
+  create?: Prisma.XOR<Prisma.ProfileCreateWithoutPostLikesInput, Prisma.ProfileUncheckedCreateWithoutPostLikesInput>
+  connectOrCreate?: Prisma.ProfileCreateOrConnectWithoutPostLikesInput
+  connect?: Prisma.ProfileWhereUniqueInput
+}
+
+export type ProfileUpdateOneRequiredWithoutPostLikesNestedInput = {
+  create?: Prisma.XOR<Prisma.ProfileCreateWithoutPostLikesInput, Prisma.ProfileUncheckedCreateWithoutPostLikesInput>
+  connectOrCreate?: Prisma.ProfileCreateOrConnectWithoutPostLikesInput
+  upsert?: Prisma.ProfileUpsertWithoutPostLikesInput
+  connect?: Prisma.ProfileWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.ProfileUpdateToOneWithWhereWithoutPostLikesInput, Prisma.ProfileUpdateWithoutPostLikesInput>, Prisma.ProfileUncheckedUpdateWithoutPostLikesInput>
+}
+
+export type ProfileCreateWithoutSimulatorPortfolioInput = {
+  id?: string
+  clerkId: string
+  firstName?: string | null
+  lastName?: string | null
+  goal?: string | null
+  experienceLevel?: string | null
+  markets?: Prisma.ProfileCreatemarketsInput | string[]
+  dailyTime?: string | null
+  riskTolerance?: string | null
+  onboardingDone?: boolean
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  simulatorTrades?: Prisma.SimulatorTradeCreateNestedManyWithoutProfileInput
+  journals?: Prisma.JournalCreateNestedManyWithoutProfileInput
+  communityPosts?: Prisma.CommunityPostCreateNestedManyWithoutProfileInput
+  postLikes?: Prisma.PostLikeCreateNestedManyWithoutProfileInput
+}
+
+export type ProfileUncheckedCreateWithoutSimulatorPortfolioInput = {
+  id?: string
+  clerkId: string
+  firstName?: string | null
+  lastName?: string | null
+  goal?: string | null
+  experienceLevel?: string | null
+  markets?: Prisma.ProfileCreatemarketsInput | string[]
+  dailyTime?: string | null
+  riskTolerance?: string | null
+  onboardingDone?: boolean
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  simulatorTrades?: Prisma.SimulatorTradeUncheckedCreateNestedManyWithoutProfileInput
+  journals?: Prisma.JournalUncheckedCreateNestedManyWithoutProfileInput
+  communityPosts?: Prisma.CommunityPostUncheckedCreateNestedManyWithoutProfileInput
+  postLikes?: Prisma.PostLikeUncheckedCreateNestedManyWithoutProfileInput
+}
+
+export type ProfileCreateOrConnectWithoutSimulatorPortfolioInput = {
+  where: Prisma.ProfileWhereUniqueInput
+  create: Prisma.XOR<Prisma.ProfileCreateWithoutSimulatorPortfolioInput, Prisma.ProfileUncheckedCreateWithoutSimulatorPortfolioInput>
+}
+
+export type ProfileUpsertWithoutSimulatorPortfolioInput = {
+  update: Prisma.XOR<Prisma.ProfileUpdateWithoutSimulatorPortfolioInput, Prisma.ProfileUncheckedUpdateWithoutSimulatorPortfolioInput>
+  create: Prisma.XOR<Prisma.ProfileCreateWithoutSimulatorPortfolioInput, Prisma.ProfileUncheckedCreateWithoutSimulatorPortfolioInput>
+  where?: Prisma.ProfileWhereInput
+}
+
+export type ProfileUpdateToOneWithWhereWithoutSimulatorPortfolioInput = {
+  where?: Prisma.ProfileWhereInput
+  data: Prisma.XOR<Prisma.ProfileUpdateWithoutSimulatorPortfolioInput, Prisma.ProfileUncheckedUpdateWithoutSimulatorPortfolioInput>
+}
+
+export type ProfileUpdateWithoutSimulatorPortfolioInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  clerkId?: Prisma.StringFieldUpdateOperationsInput | string
+  firstName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  lastName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  goal?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  experienceLevel?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  markets?: Prisma.ProfileUpdatemarketsInput | string[]
+  dailyTime?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  riskTolerance?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  onboardingDone?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  simulatorTrades?: Prisma.SimulatorTradeUpdateManyWithoutProfileNestedInput
+  journals?: Prisma.JournalUpdateManyWithoutProfileNestedInput
+  communityPosts?: Prisma.CommunityPostUpdateManyWithoutProfileNestedInput
+  postLikes?: Prisma.PostLikeUpdateManyWithoutProfileNestedInput
+}
+
+export type ProfileUncheckedUpdateWithoutSimulatorPortfolioInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  clerkId?: Prisma.StringFieldUpdateOperationsInput | string
+  firstName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  lastName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  goal?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  experienceLevel?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  markets?: Prisma.ProfileUpdatemarketsInput | string[]
+  dailyTime?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  riskTolerance?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  onboardingDone?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  simulatorTrades?: Prisma.SimulatorTradeUncheckedUpdateManyWithoutProfileNestedInput
+  journals?: Prisma.JournalUncheckedUpdateManyWithoutProfileNestedInput
+  communityPosts?: Prisma.CommunityPostUncheckedUpdateManyWithoutProfileNestedInput
+  postLikes?: Prisma.PostLikeUncheckedUpdateManyWithoutProfileNestedInput
+}
+
+export type ProfileCreateWithoutSimulatorTradesInput = {
+  id?: string
+  clerkId: string
+  firstName?: string | null
+  lastName?: string | null
+  goal?: string | null
+  experienceLevel?: string | null
+  markets?: Prisma.ProfileCreatemarketsInput | string[]
+  dailyTime?: string | null
+  riskTolerance?: string | null
+  onboardingDone?: boolean
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  simulatorPortfolio?: Prisma.SimulatorPortfolioCreateNestedOneWithoutProfileInput
+  journals?: Prisma.JournalCreateNestedManyWithoutProfileInput
+  communityPosts?: Prisma.CommunityPostCreateNestedManyWithoutProfileInput
+  postLikes?: Prisma.PostLikeCreateNestedManyWithoutProfileInput
+}
+
+export type ProfileUncheckedCreateWithoutSimulatorTradesInput = {
+  id?: string
+  clerkId: string
+  firstName?: string | null
+  lastName?: string | null
+  goal?: string | null
+  experienceLevel?: string | null
+  markets?: Prisma.ProfileCreatemarketsInput | string[]
+  dailyTime?: string | null
+  riskTolerance?: string | null
+  onboardingDone?: boolean
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  simulatorPortfolio?: Prisma.SimulatorPortfolioUncheckedCreateNestedOneWithoutProfileInput
+  journals?: Prisma.JournalUncheckedCreateNestedManyWithoutProfileInput
+  communityPosts?: Prisma.CommunityPostUncheckedCreateNestedManyWithoutProfileInput
+  postLikes?: Prisma.PostLikeUncheckedCreateNestedManyWithoutProfileInput
+}
+
+export type ProfileCreateOrConnectWithoutSimulatorTradesInput = {
+  where: Prisma.ProfileWhereUniqueInput
+  create: Prisma.XOR<Prisma.ProfileCreateWithoutSimulatorTradesInput, Prisma.ProfileUncheckedCreateWithoutSimulatorTradesInput>
+}
+
+export type ProfileUpsertWithoutSimulatorTradesInput = {
+  update: Prisma.XOR<Prisma.ProfileUpdateWithoutSimulatorTradesInput, Prisma.ProfileUncheckedUpdateWithoutSimulatorTradesInput>
+  create: Prisma.XOR<Prisma.ProfileCreateWithoutSimulatorTradesInput, Prisma.ProfileUncheckedCreateWithoutSimulatorTradesInput>
+  where?: Prisma.ProfileWhereInput
+}
+
+export type ProfileUpdateToOneWithWhereWithoutSimulatorTradesInput = {
+  where?: Prisma.ProfileWhereInput
+  data: Prisma.XOR<Prisma.ProfileUpdateWithoutSimulatorTradesInput, Prisma.ProfileUncheckedUpdateWithoutSimulatorTradesInput>
+}
+
+export type ProfileUpdateWithoutSimulatorTradesInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  clerkId?: Prisma.StringFieldUpdateOperationsInput | string
+  firstName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  lastName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  goal?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  experienceLevel?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  markets?: Prisma.ProfileUpdatemarketsInput | string[]
+  dailyTime?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  riskTolerance?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  onboardingDone?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  simulatorPortfolio?: Prisma.SimulatorPortfolioUpdateOneWithoutProfileNestedInput
+  journals?: Prisma.JournalUpdateManyWithoutProfileNestedInput
+  communityPosts?: Prisma.CommunityPostUpdateManyWithoutProfileNestedInput
+  postLikes?: Prisma.PostLikeUpdateManyWithoutProfileNestedInput
+}
+
+export type ProfileUncheckedUpdateWithoutSimulatorTradesInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  clerkId?: Prisma.StringFieldUpdateOperationsInput | string
+  firstName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  lastName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  goal?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  experienceLevel?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  markets?: Prisma.ProfileUpdatemarketsInput | string[]
+  dailyTime?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  riskTolerance?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  onboardingDone?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  simulatorPortfolio?: Prisma.SimulatorPortfolioUncheckedUpdateOneWithoutProfileNestedInput
+  journals?: Prisma.JournalUncheckedUpdateManyWithoutProfileNestedInput
+  communityPosts?: Prisma.CommunityPostUncheckedUpdateManyWithoutProfileNestedInput
+  postLikes?: Prisma.PostLikeUncheckedUpdateManyWithoutProfileNestedInput
+}
+
+export type ProfileCreateWithoutJournalsInput = {
+  id?: string
+  clerkId: string
+  firstName?: string | null
+  lastName?: string | null
+  goal?: string | null
+  experienceLevel?: string | null
+  markets?: Prisma.ProfileCreatemarketsInput | string[]
+  dailyTime?: string | null
+  riskTolerance?: string | null
+  onboardingDone?: boolean
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  simulatorPortfolio?: Prisma.SimulatorPortfolioCreateNestedOneWithoutProfileInput
+  simulatorTrades?: Prisma.SimulatorTradeCreateNestedManyWithoutProfileInput
+  communityPosts?: Prisma.CommunityPostCreateNestedManyWithoutProfileInput
+  postLikes?: Prisma.PostLikeCreateNestedManyWithoutProfileInput
+}
+
+export type ProfileUncheckedCreateWithoutJournalsInput = {
+  id?: string
+  clerkId: string
+  firstName?: string | null
+  lastName?: string | null
+  goal?: string | null
+  experienceLevel?: string | null
+  markets?: Prisma.ProfileCreatemarketsInput | string[]
+  dailyTime?: string | null
+  riskTolerance?: string | null
+  onboardingDone?: boolean
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  simulatorPortfolio?: Prisma.SimulatorPortfolioUncheckedCreateNestedOneWithoutProfileInput
+  simulatorTrades?: Prisma.SimulatorTradeUncheckedCreateNestedManyWithoutProfileInput
+  communityPosts?: Prisma.CommunityPostUncheckedCreateNestedManyWithoutProfileInput
+  postLikes?: Prisma.PostLikeUncheckedCreateNestedManyWithoutProfileInput
+}
+
+export type ProfileCreateOrConnectWithoutJournalsInput = {
+  where: Prisma.ProfileWhereUniqueInput
+  create: Prisma.XOR<Prisma.ProfileCreateWithoutJournalsInput, Prisma.ProfileUncheckedCreateWithoutJournalsInput>
+}
+
+export type ProfileUpsertWithoutJournalsInput = {
+  update: Prisma.XOR<Prisma.ProfileUpdateWithoutJournalsInput, Prisma.ProfileUncheckedUpdateWithoutJournalsInput>
+  create: Prisma.XOR<Prisma.ProfileCreateWithoutJournalsInput, Prisma.ProfileUncheckedCreateWithoutJournalsInput>
+  where?: Prisma.ProfileWhereInput
+}
+
+export type ProfileUpdateToOneWithWhereWithoutJournalsInput = {
+  where?: Prisma.ProfileWhereInput
+  data: Prisma.XOR<Prisma.ProfileUpdateWithoutJournalsInput, Prisma.ProfileUncheckedUpdateWithoutJournalsInput>
+}
+
+export type ProfileUpdateWithoutJournalsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  clerkId?: Prisma.StringFieldUpdateOperationsInput | string
+  firstName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  lastName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  goal?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  experienceLevel?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  markets?: Prisma.ProfileUpdatemarketsInput | string[]
+  dailyTime?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  riskTolerance?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  onboardingDone?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  simulatorPortfolio?: Prisma.SimulatorPortfolioUpdateOneWithoutProfileNestedInput
+  simulatorTrades?: Prisma.SimulatorTradeUpdateManyWithoutProfileNestedInput
+  communityPosts?: Prisma.CommunityPostUpdateManyWithoutProfileNestedInput
+  postLikes?: Prisma.PostLikeUpdateManyWithoutProfileNestedInput
+}
+
+export type ProfileUncheckedUpdateWithoutJournalsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  clerkId?: Prisma.StringFieldUpdateOperationsInput | string
+  firstName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  lastName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  goal?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  experienceLevel?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  markets?: Prisma.ProfileUpdatemarketsInput | string[]
+  dailyTime?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  riskTolerance?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  onboardingDone?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  simulatorPortfolio?: Prisma.SimulatorPortfolioUncheckedUpdateOneWithoutProfileNestedInput
+  simulatorTrades?: Prisma.SimulatorTradeUncheckedUpdateManyWithoutProfileNestedInput
+  communityPosts?: Prisma.CommunityPostUncheckedUpdateManyWithoutProfileNestedInput
+  postLikes?: Prisma.PostLikeUncheckedUpdateManyWithoutProfileNestedInput
+}
+
+export type ProfileCreateWithoutCommunityPostsInput = {
+  id?: string
+  clerkId: string
+  firstName?: string | null
+  lastName?: string | null
+  goal?: string | null
+  experienceLevel?: string | null
+  markets?: Prisma.ProfileCreatemarketsInput | string[]
+  dailyTime?: string | null
+  riskTolerance?: string | null
+  onboardingDone?: boolean
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  simulatorPortfolio?: Prisma.SimulatorPortfolioCreateNestedOneWithoutProfileInput
+  simulatorTrades?: Prisma.SimulatorTradeCreateNestedManyWithoutProfileInput
+  journals?: Prisma.JournalCreateNestedManyWithoutProfileInput
+  postLikes?: Prisma.PostLikeCreateNestedManyWithoutProfileInput
+}
+
+export type ProfileUncheckedCreateWithoutCommunityPostsInput = {
+  id?: string
+  clerkId: string
+  firstName?: string | null
+  lastName?: string | null
+  goal?: string | null
+  experienceLevel?: string | null
+  markets?: Prisma.ProfileCreatemarketsInput | string[]
+  dailyTime?: string | null
+  riskTolerance?: string | null
+  onboardingDone?: boolean
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  simulatorPortfolio?: Prisma.SimulatorPortfolioUncheckedCreateNestedOneWithoutProfileInput
+  simulatorTrades?: Prisma.SimulatorTradeUncheckedCreateNestedManyWithoutProfileInput
+  journals?: Prisma.JournalUncheckedCreateNestedManyWithoutProfileInput
+  postLikes?: Prisma.PostLikeUncheckedCreateNestedManyWithoutProfileInput
+}
+
+export type ProfileCreateOrConnectWithoutCommunityPostsInput = {
+  where: Prisma.ProfileWhereUniqueInput
+  create: Prisma.XOR<Prisma.ProfileCreateWithoutCommunityPostsInput, Prisma.ProfileUncheckedCreateWithoutCommunityPostsInput>
+}
+
+export type ProfileUpsertWithoutCommunityPostsInput = {
+  update: Prisma.XOR<Prisma.ProfileUpdateWithoutCommunityPostsInput, Prisma.ProfileUncheckedUpdateWithoutCommunityPostsInput>
+  create: Prisma.XOR<Prisma.ProfileCreateWithoutCommunityPostsInput, Prisma.ProfileUncheckedCreateWithoutCommunityPostsInput>
+  where?: Prisma.ProfileWhereInput
+}
+
+export type ProfileUpdateToOneWithWhereWithoutCommunityPostsInput = {
+  where?: Prisma.ProfileWhereInput
+  data: Prisma.XOR<Prisma.ProfileUpdateWithoutCommunityPostsInput, Prisma.ProfileUncheckedUpdateWithoutCommunityPostsInput>
+}
+
+export type ProfileUpdateWithoutCommunityPostsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  clerkId?: Prisma.StringFieldUpdateOperationsInput | string
+  firstName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  lastName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  goal?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  experienceLevel?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  markets?: Prisma.ProfileUpdatemarketsInput | string[]
+  dailyTime?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  riskTolerance?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  onboardingDone?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  simulatorPortfolio?: Prisma.SimulatorPortfolioUpdateOneWithoutProfileNestedInput
+  simulatorTrades?: Prisma.SimulatorTradeUpdateManyWithoutProfileNestedInput
+  journals?: Prisma.JournalUpdateManyWithoutProfileNestedInput
+  postLikes?: Prisma.PostLikeUpdateManyWithoutProfileNestedInput
+}
+
+export type ProfileUncheckedUpdateWithoutCommunityPostsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  clerkId?: Prisma.StringFieldUpdateOperationsInput | string
+  firstName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  lastName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  goal?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  experienceLevel?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  markets?: Prisma.ProfileUpdatemarketsInput | string[]
+  dailyTime?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  riskTolerance?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  onboardingDone?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  simulatorPortfolio?: Prisma.SimulatorPortfolioUncheckedUpdateOneWithoutProfileNestedInput
+  simulatorTrades?: Prisma.SimulatorTradeUncheckedUpdateManyWithoutProfileNestedInput
+  journals?: Prisma.JournalUncheckedUpdateManyWithoutProfileNestedInput
+  postLikes?: Prisma.PostLikeUncheckedUpdateManyWithoutProfileNestedInput
+}
+
+export type ProfileCreateWithoutPostLikesInput = {
+  id?: string
+  clerkId: string
+  firstName?: string | null
+  lastName?: string | null
+  goal?: string | null
+  experienceLevel?: string | null
+  markets?: Prisma.ProfileCreatemarketsInput | string[]
+  dailyTime?: string | null
+  riskTolerance?: string | null
+  onboardingDone?: boolean
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  simulatorPortfolio?: Prisma.SimulatorPortfolioCreateNestedOneWithoutProfileInput
+  simulatorTrades?: Prisma.SimulatorTradeCreateNestedManyWithoutProfileInput
+  journals?: Prisma.JournalCreateNestedManyWithoutProfileInput
+  communityPosts?: Prisma.CommunityPostCreateNestedManyWithoutProfileInput
+}
+
+export type ProfileUncheckedCreateWithoutPostLikesInput = {
+  id?: string
+  clerkId: string
+  firstName?: string | null
+  lastName?: string | null
+  goal?: string | null
+  experienceLevel?: string | null
+  markets?: Prisma.ProfileCreatemarketsInput | string[]
+  dailyTime?: string | null
+  riskTolerance?: string | null
+  onboardingDone?: boolean
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  simulatorPortfolio?: Prisma.SimulatorPortfolioUncheckedCreateNestedOneWithoutProfileInput
+  simulatorTrades?: Prisma.SimulatorTradeUncheckedCreateNestedManyWithoutProfileInput
+  journals?: Prisma.JournalUncheckedCreateNestedManyWithoutProfileInput
+  communityPosts?: Prisma.CommunityPostUncheckedCreateNestedManyWithoutProfileInput
+}
+
+export type ProfileCreateOrConnectWithoutPostLikesInput = {
+  where: Prisma.ProfileWhereUniqueInput
+  create: Prisma.XOR<Prisma.ProfileCreateWithoutPostLikesInput, Prisma.ProfileUncheckedCreateWithoutPostLikesInput>
+}
+
+export type ProfileUpsertWithoutPostLikesInput = {
+  update: Prisma.XOR<Prisma.ProfileUpdateWithoutPostLikesInput, Prisma.ProfileUncheckedUpdateWithoutPostLikesInput>
+  create: Prisma.XOR<Prisma.ProfileCreateWithoutPostLikesInput, Prisma.ProfileUncheckedCreateWithoutPostLikesInput>
+  where?: Prisma.ProfileWhereInput
+}
+
+export type ProfileUpdateToOneWithWhereWithoutPostLikesInput = {
+  where?: Prisma.ProfileWhereInput
+  data: Prisma.XOR<Prisma.ProfileUpdateWithoutPostLikesInput, Prisma.ProfileUncheckedUpdateWithoutPostLikesInput>
+}
+
+export type ProfileUpdateWithoutPostLikesInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  clerkId?: Prisma.StringFieldUpdateOperationsInput | string
+  firstName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  lastName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  goal?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  experienceLevel?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  markets?: Prisma.ProfileUpdatemarketsInput | string[]
+  dailyTime?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  riskTolerance?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  onboardingDone?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  simulatorPortfolio?: Prisma.SimulatorPortfolioUpdateOneWithoutProfileNestedInput
+  simulatorTrades?: Prisma.SimulatorTradeUpdateManyWithoutProfileNestedInput
+  journals?: Prisma.JournalUpdateManyWithoutProfileNestedInput
+  communityPosts?: Prisma.CommunityPostUpdateManyWithoutProfileNestedInput
+}
+
+export type ProfileUncheckedUpdateWithoutPostLikesInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  clerkId?: Prisma.StringFieldUpdateOperationsInput | string
+  firstName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  lastName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  goal?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  experienceLevel?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  markets?: Prisma.ProfileUpdatemarketsInput | string[]
+  dailyTime?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  riskTolerance?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  onboardingDone?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  simulatorPortfolio?: Prisma.SimulatorPortfolioUncheckedUpdateOneWithoutProfileNestedInput
+  simulatorTrades?: Prisma.SimulatorTradeUncheckedUpdateManyWithoutProfileNestedInput
+  journals?: Prisma.JournalUncheckedUpdateManyWithoutProfileNestedInput
+  communityPosts?: Prisma.CommunityPostUncheckedUpdateManyWithoutProfileNestedInput
+}
+
+
+/**
+ * Count Type ProfileCountOutputType
+ */
+
+export type ProfileCountOutputType = {
+  simulatorTrades: number
+  journals: number
+  communityPosts: number
+  postLikes: number
+}
+
+export type ProfileCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  simulatorTrades?: boolean | ProfileCountOutputTypeCountSimulatorTradesArgs
+  journals?: boolean | ProfileCountOutputTypeCountJournalsArgs
+  communityPosts?: boolean | ProfileCountOutputTypeCountCommunityPostsArgs
+  postLikes?: boolean | ProfileCountOutputTypeCountPostLikesArgs
+}
+
+/**
+ * ProfileCountOutputType without action
+ */
+export type ProfileCountOutputTypeDefaultArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the ProfileCountOutputType
+   */
+  select?: Prisma.ProfileCountOutputTypeSelect<ExtArgs> | null
+}
+
+/**
+ * ProfileCountOutputType without action
+ */
+export type ProfileCountOutputTypeCountSimulatorTradesArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.SimulatorTradeWhereInput
+}
+
+/**
+ * ProfileCountOutputType without action
+ */
+export type ProfileCountOutputTypeCountJournalsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.JournalWhereInput
+}
+
+/**
+ * ProfileCountOutputType without action
+ */
+export type ProfileCountOutputTypeCountCommunityPostsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.CommunityPostWhereInput
+}
+
+/**
+ * ProfileCountOutputType without action
+ */
+export type ProfileCountOutputTypeCountPostLikesArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.PostLikeWhereInput
+}
 
 
 export type ProfileSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
@@ -501,6 +1127,12 @@ export type ProfileSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs 
   onboardingDone?: boolean
   createdAt?: boolean
   updatedAt?: boolean
+  simulatorPortfolio?: boolean | Prisma.Profile$simulatorPortfolioArgs<ExtArgs>
+  simulatorTrades?: boolean | Prisma.Profile$simulatorTradesArgs<ExtArgs>
+  journals?: boolean | Prisma.Profile$journalsArgs<ExtArgs>
+  communityPosts?: boolean | Prisma.Profile$communityPostsArgs<ExtArgs>
+  postLikes?: boolean | Prisma.Profile$postLikesArgs<ExtArgs>
+  _count?: boolean | Prisma.ProfileCountOutputTypeDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["profile"]>
 
 export type ProfileSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
@@ -549,10 +1181,26 @@ export type ProfileSelectScalar = {
 }
 
 export type ProfileOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "clerkId" | "firstName" | "lastName" | "goal" | "experienceLevel" | "markets" | "dailyTime" | "riskTolerance" | "onboardingDone" | "createdAt" | "updatedAt", ExtArgs["result"]["profile"]>
+export type ProfileInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  simulatorPortfolio?: boolean | Prisma.Profile$simulatorPortfolioArgs<ExtArgs>
+  simulatorTrades?: boolean | Prisma.Profile$simulatorTradesArgs<ExtArgs>
+  journals?: boolean | Prisma.Profile$journalsArgs<ExtArgs>
+  communityPosts?: boolean | Prisma.Profile$communityPostsArgs<ExtArgs>
+  postLikes?: boolean | Prisma.Profile$postLikesArgs<ExtArgs>
+  _count?: boolean | Prisma.ProfileCountOutputTypeDefaultArgs<ExtArgs>
+}
+export type ProfileIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {}
+export type ProfileIncludeUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {}
 
 export type $ProfilePayload<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   name: "Profile"
-  objects: {}
+  objects: {
+    simulatorPortfolio: Prisma.$SimulatorPortfolioPayload<ExtArgs> | null
+    simulatorTrades: Prisma.$SimulatorTradePayload<ExtArgs>[]
+    journals: Prisma.$JournalPayload<ExtArgs>[]
+    communityPosts: Prisma.$CommunityPostPayload<ExtArgs>[]
+    postLikes: Prisma.$PostLikePayload<ExtArgs>[]
+  }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: string
     clerkId: string
@@ -960,6 +1608,11 @@ readonly fields: ProfileFieldRefs;
  */
 export interface Prisma__ProfileClient<T, Null = never, ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
   readonly [Symbol.toStringTag]: "PrismaPromise"
+  simulatorPortfolio<T extends Prisma.Profile$simulatorPortfolioArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Profile$simulatorPortfolioArgs<ExtArgs>>): Prisma.Prisma__SimulatorPortfolioClient<runtime.Types.Result.GetResult<Prisma.$SimulatorPortfolioPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+  simulatorTrades<T extends Prisma.Profile$simulatorTradesArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Profile$simulatorTradesArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$SimulatorTradePayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  journals<T extends Prisma.Profile$journalsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Profile$journalsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$JournalPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  communityPosts<T extends Prisma.Profile$communityPostsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Profile$communityPostsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$CommunityPostPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  postLikes<T extends Prisma.Profile$postLikesArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Profile$postLikesArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$PostLikePayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
    * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -1018,6 +1671,10 @@ export type ProfileFindUniqueArgs<ExtArgs extends runtime.Types.Extensions.Inter
    */
   omit?: Prisma.ProfileOmit<ExtArgs> | null
   /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.ProfileInclude<ExtArgs> | null
+  /**
    * Filter, which Profile to fetch.
    */
   where: Prisma.ProfileWhereUniqueInput
@@ -1036,6 +1693,10 @@ export type ProfileFindUniqueOrThrowArgs<ExtArgs extends runtime.Types.Extension
    */
   omit?: Prisma.ProfileOmit<ExtArgs> | null
   /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.ProfileInclude<ExtArgs> | null
+  /**
    * Filter, which Profile to fetch.
    */
   where: Prisma.ProfileWhereUniqueInput
@@ -1053,6 +1714,10 @@ export type ProfileFindFirstArgs<ExtArgs extends runtime.Types.Extensions.Intern
    * Omit specific fields from the Profile
    */
   omit?: Prisma.ProfileOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.ProfileInclude<ExtArgs> | null
   /**
    * Filter, which Profile to fetch.
    */
@@ -1102,6 +1767,10 @@ export type ProfileFindFirstOrThrowArgs<ExtArgs extends runtime.Types.Extensions
    */
   omit?: Prisma.ProfileOmit<ExtArgs> | null
   /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.ProfileInclude<ExtArgs> | null
+  /**
    * Filter, which Profile to fetch.
    */
   where?: Prisma.ProfileWhereInput
@@ -1149,6 +1818,10 @@ export type ProfileFindManyArgs<ExtArgs extends runtime.Types.Extensions.Interna
    * Omit specific fields from the Profile
    */
   omit?: Prisma.ProfileOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.ProfileInclude<ExtArgs> | null
   /**
    * Filter, which Profiles to fetch.
    */
@@ -1198,6 +1871,10 @@ export type ProfileCreateArgs<ExtArgs extends runtime.Types.Extensions.InternalA
    */
   omit?: Prisma.ProfileOmit<ExtArgs> | null
   /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.ProfileInclude<ExtArgs> | null
+  /**
    * The data needed to create a Profile.
    */
   data: Prisma.XOR<Prisma.ProfileCreateInput, Prisma.ProfileUncheckedCreateInput>
@@ -1245,6 +1922,10 @@ export type ProfileUpdateArgs<ExtArgs extends runtime.Types.Extensions.InternalA
    * Omit specific fields from the Profile
    */
   omit?: Prisma.ProfileOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.ProfileInclude<ExtArgs> | null
   /**
    * The data needed to update a Profile.
    */
@@ -1312,6 +1993,10 @@ export type ProfileUpsertArgs<ExtArgs extends runtime.Types.Extensions.InternalA
    */
   omit?: Prisma.ProfileOmit<ExtArgs> | null
   /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.ProfileInclude<ExtArgs> | null
+  /**
    * The filter to search for the Profile to update in case it exists.
    */
   where: Prisma.ProfileWhereUniqueInput
@@ -1338,6 +2023,10 @@ export type ProfileDeleteArgs<ExtArgs extends runtime.Types.Extensions.InternalA
    */
   omit?: Prisma.ProfileOmit<ExtArgs> | null
   /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.ProfileInclude<ExtArgs> | null
+  /**
    * Filter which Profile to delete.
    */
   where: Prisma.ProfileWhereUniqueInput
@@ -1358,6 +2047,121 @@ export type ProfileDeleteManyArgs<ExtArgs extends runtime.Types.Extensions.Inter
 }
 
 /**
+ * Profile.simulatorPortfolio
+ */
+export type Profile$simulatorPortfolioArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the SimulatorPortfolio
+   */
+  select?: Prisma.SimulatorPortfolioSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the SimulatorPortfolio
+   */
+  omit?: Prisma.SimulatorPortfolioOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.SimulatorPortfolioInclude<ExtArgs> | null
+  where?: Prisma.SimulatorPortfolioWhereInput
+}
+
+/**
+ * Profile.simulatorTrades
+ */
+export type Profile$simulatorTradesArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the SimulatorTrade
+   */
+  select?: Prisma.SimulatorTradeSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the SimulatorTrade
+   */
+  omit?: Prisma.SimulatorTradeOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.SimulatorTradeInclude<ExtArgs> | null
+  where?: Prisma.SimulatorTradeWhereInput
+  orderBy?: Prisma.SimulatorTradeOrderByWithRelationInput | Prisma.SimulatorTradeOrderByWithRelationInput[]
+  cursor?: Prisma.SimulatorTradeWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.SimulatorTradeScalarFieldEnum | Prisma.SimulatorTradeScalarFieldEnum[]
+}
+
+/**
+ * Profile.journals
+ */
+export type Profile$journalsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the Journal
+   */
+  select?: Prisma.JournalSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the Journal
+   */
+  omit?: Prisma.JournalOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.JournalInclude<ExtArgs> | null
+  where?: Prisma.JournalWhereInput
+  orderBy?: Prisma.JournalOrderByWithRelationInput | Prisma.JournalOrderByWithRelationInput[]
+  cursor?: Prisma.JournalWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.JournalScalarFieldEnum | Prisma.JournalScalarFieldEnum[]
+}
+
+/**
+ * Profile.communityPosts
+ */
+export type Profile$communityPostsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the CommunityPost
+   */
+  select?: Prisma.CommunityPostSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the CommunityPost
+   */
+  omit?: Prisma.CommunityPostOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.CommunityPostInclude<ExtArgs> | null
+  where?: Prisma.CommunityPostWhereInput
+  orderBy?: Prisma.CommunityPostOrderByWithRelationInput | Prisma.CommunityPostOrderByWithRelationInput[]
+  cursor?: Prisma.CommunityPostWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.CommunityPostScalarFieldEnum | Prisma.CommunityPostScalarFieldEnum[]
+}
+
+/**
+ * Profile.postLikes
+ */
+export type Profile$postLikesArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the PostLike
+   */
+  select?: Prisma.PostLikeSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the PostLike
+   */
+  omit?: Prisma.PostLikeOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.PostLikeInclude<ExtArgs> | null
+  where?: Prisma.PostLikeWhereInput
+  orderBy?: Prisma.PostLikeOrderByWithRelationInput | Prisma.PostLikeOrderByWithRelationInput[]
+  cursor?: Prisma.PostLikeWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.PostLikeScalarFieldEnum | Prisma.PostLikeScalarFieldEnum[]
+}
+
+/**
  * Profile without action
  */
 export type ProfileDefaultArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
@@ -1369,4 +2173,8 @@ export type ProfileDefaultArgs<ExtArgs extends runtime.Types.Extensions.Internal
    * Omit specific fields from the Profile
    */
   omit?: Prisma.ProfileOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.ProfileInclude<ExtArgs> | null
 }

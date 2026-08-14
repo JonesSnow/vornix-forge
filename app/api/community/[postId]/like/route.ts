@@ -11,7 +11,7 @@ export async function POST(
 
     if (!userId) {
       return NextResponse.json(
-        { error: "Unauthorized" },
+        { error: "Unauthorized", code: "UNAUTHORIZED" },
         { status: 401 }
       );
     }
@@ -21,7 +21,7 @@ export async function POST(
 
     if (!postId || typeof postId !== "string") {
       return NextResponse.json(
-        { error: "Invalid post ID" },
+        { error: "Invalid post ID", code: "VALIDATION_ERROR" },
         { status: 400 }
       );
     }
@@ -33,7 +33,7 @@ export async function POST(
 
     if (!post) {
       return NextResponse.json(
-        { error: "Post not found" },
+        { error: "Post not found", code: "NOT_FOUND" },
         { status: 404 }
       );
     }
@@ -72,7 +72,7 @@ export async function POST(
   } catch (error) {
     console.error("Like API error:", error);
     return NextResponse.json(
-      { error: "Internal server error" },
+      { error: "Internal server error", code: "INTERNAL_ERROR" },
       { status: 500 }
     );
   }

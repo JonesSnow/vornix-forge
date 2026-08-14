@@ -47,6 +47,7 @@ export default function JournalClient({ userId }: JournalClientProps) {
   const [assessment, setAssessment] = useState<AssessmentStorage | null>(null);
   const [loading, setLoading] = useState(true);
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [moodFilter, setMoodFilter] = useState<string | null>(null);
 
   useEffect(() => {
     const assessmentRaw = localStorage.getItem(STORAGE_KEYS.assessment);
@@ -76,6 +77,13 @@ export default function JournalClient({ userId }: JournalClientProps) {
     }
     fetchEntries();
   }, []);
+
+  const filteredEntries = useMemo(() => {
+    if (!moodFilter) return entries;
+    return entries.filter((e) => e.mood === moodFilter);
+  }, [entries, moodFilter]);
+
+  const MOOD_FILTERS = ["All", "Confident", "Neutral", "Anxious", "Frustrated", "Excited"] as const;
 
   const assessmentScore = assessment?.result?.score ?? assessment?.score ?? 0;
   const currentLevel = assessment?.result?.level ?? assessment?.level ?? getLevelFromScore(assessmentScore);
@@ -205,13 +213,35 @@ export default function JournalClient({ userId }: JournalClientProps) {
               <div>
                 <h1 style={{ fontFamily: "Syne, sans-serif", fontSize: 36, lineHeight: 1.05, margin: 0 }}>Trade Journal</h1>
                 <p className="muted" style={{ marginTop: 8, lineHeight: 1.6 }}>
-                  Reflect on your trades, track your mindset, and get AI-powered feedback.
+                  {filteredEntries.length} {filteredEntries.length === 1 ? "entry" : "entries"} · Reflect on your trades, track your mindset, and get AI-powered feedback.
                 </p>
               </div>
               <a href="/journal/new" className="btn btn-primary" style={{ flexShrink: 0 }}>
                 New Entry
               </a>
             </header>
+
+            <div style={{ display: "flex", gap: 8, marginBottom: 24, flexWrap: "wrap" }}>
+              {MOOD_FILTERS.map((mood) => (
+                <button
+                  key={mood}
+                  onClick={() => setMoodFilter(mood === "All" ? null : mood)}
+                  style={{
+                    padding: "6px 14px",
+                    borderRadius: 999,
+                    border: "1px solid #1E1E1E",
+                    background: moodFilter === (mood === "All" ? null : mood) ? accent : "#111111",
+                    color: moodFilter === (mood === "All" ? null : mood) ? "#0A0A0A" : text,
+                    fontSize: 13,
+                    fontWeight: 600,
+                    cursor: "pointer",
+                    transition: "all .2s ease",
+                  }}
+                >
+                  {mood}
+                </button>
+              ))}
+            </div>
 
             {entries.length === 0 ? (
               <div className="card" style={{ padding: 48, textAlign: "center" }}>

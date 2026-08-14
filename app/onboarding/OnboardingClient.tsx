@@ -30,6 +30,8 @@ export default function OnboardingClient() {
   const [answers, setAnswers] = useState<OnboardingAnswers>({ markets: [] });
   const [loaded, setLoaded] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [animating, setAnimating] = useState(false);
+  const [marketError, setMarketError] = useState(false);
 
   useEffect(() => {
     const raw = localStorage.getItem(STORAGE_KEY);
@@ -48,11 +50,26 @@ export default function OnboardingClient() {
     if (loaded) localStorage.setItem(STORAGE_KEY, JSON.stringify(answers));
   }, [answers, loaded]);
 
-  function next() {
-    if (step < 6) setStep((s) => s + 1);
+  function goTo(newStep: number) {
+    if (newStep === step) return;
+    setAnimating(true);
+    setTimeout(() => {
+      setStep(newStep);
+      setAnimating(false);
+    }, 250);
   }
+
+  function next() {
+    if (step === 3 && answers.markets.length === 0) {
+      setMarketError(true);
+      setTimeout(() => setMarketError(false), 2000);
+      return;
+    }
+    if (step < 6) goTo(step + 1);
+  }
+
   function back() {
-    if (step > 1) setStep((s) => s - 1);
+    if (step > 1) goTo(step - 1);
   }
 
   function updateSingle<K extends keyof OnboardingAnswers>(key: K, value: OnboardingAnswers[K]) {
@@ -62,7 +79,7 @@ export default function OnboardingClient() {
   function toggleMarket(m: string) {
     setAnswers((a) => {
       const exists = a.markets.includes(m);
-      return { ...a, markets: exists ? a.markets.filter(x => x !== m) : [...a.markets, m] };
+      return { ...a, markets: exists ? a.markets.filter((x) => x !== m) : [...a.markets, m] };
     });
   }
 
@@ -90,12 +107,10 @@ export default function OnboardingClient() {
 
       if (!response.ok) throw new Error("Failed to save profile");
 
-      // Set localStorage as backup
       localStorage.setItem(STORAGE_KEYS.onboardingComplete, "true");
       router.push("/assessment");
     } catch (error) {
       logger.error("Error saving onboarding:", error);
-      // Still proceed even if API fails, localStorage is backup
       localStorage.setItem(STORAGE_KEYS.onboardingComplete, "true");
       router.push("/assessment");
     } finally {
@@ -104,11 +119,25 @@ export default function OnboardingClient() {
   }
 
   const StepCard: React.FC<{ title: string; children: React.ReactNode }> = ({ title, children }) => (
-    <div style={{ background: "#0F0F0F", padding: 28, borderRadius: 10, maxWidth: 720, width: "100%", boxShadow: "0 6px 20px rgba(0,0,0,0.6)" }}>
+    <div
+      style={{
+        background: "#0F0F0F",
+        padding: 28,
+        borderRadius: 10,
+        maxWidth: 720,
+        width: "100%",
+        boxShadow: "0 6px 20px rgba(0,0,0,0.6)",
+        opacity: animating ? 0 : 1,
+        transform: animating ? "translateY(12px)" : "translateY(0)",
+        transition: "opacity .25s ease, transform .25s ease",
+      }}
+    >
       <h2 style={{ fontFamily: "Syne, sans-serif", fontSize: 20, marginBottom: 12, color: text }}>{title}</h2>
       {children}
     </div>
   );
+
+  const stepLabels = ["Goal", "Experience", "Markets", "Time", "Risk", "Review"];
 
   return (
     <main style={{ minHeight: "100vh", background: bg, color: text, fontFamily: "'Inter', sans-serif", padding: "48px 16px" }}>
@@ -117,13 +146,21 @@ export default function OnboardingClient() {
         .progress { height: 10px; background: #151515; border-radius: 999px; overflow: hidden; }
         .progress-bar { height: 100%; background: ${accent}; width: ${percent()}%; transition: width .35s ease; }
         .options { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; margin-top: 16px; }
-        .option-btn { background: #0A0A0A; border: 1px solid #1E1E1E; color: ${text}; padding: 12px 14px; border-radius: 8px; cursor: pointer; text-align: left; }
+        .option-btn { background: #0A0A0A; border: 1px solid #1E1E1E; color: ${text}; padding: 12px 14px; border-radius: 8px; cursor: pointer; text-align: left; transition: all .2s ease; }
+        .option-btn:hover { border-color: #2A2A2A; }
         .option-btn.selected { background: ${accent}; color: #0A0A0A; border-color: ${accent}; }
         .controls { display:flex; gap:12px; margin-top:18px; justify-content:flex-end; }
-        .btn { padding: 10px 14px; border-radius:8px; cursor:pointer; font-weight:600; }
+        .btn { padding: 10px 14px; border-radius:8px; cursor:pointer; font-weight:600; border: none; }
         .btn.ghost { background: transparent; color: #888; border: 1px solid #222; }
         .btn.primary { background: ${accent}; color: #0A0A0A; }
         .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+        .spinner { width: 16px; height: 16px; border: 2px solid #0A0A0A; border-top-color: transparent; border-radius: 50%; animation: spin .8s linear infinite; display: inline-block; vertical-align: middle; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .error-msg { color: #ef4444; font-size: 13px; margin-top: 10px; }
+        .summary-row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #1E1E1E; }
+        .summary-row:last-child { border-bottom: none; }
+        .summary-label { color: #888; font-size: 14px; }
+        .summary-value { color: ${text}; font-weight: 600; font-size: 14px; }
       `}</style>
 
       <div style={{ maxWidth: 920, margin: "0 auto" }}>
@@ -133,7 +170,9 @@ export default function OnboardingClient() {
             <div className="progress">
               <div className="progress-bar" style={{ width: `${percent()}%` }} />
             </div>
-            <div style={{ fontSize: 12, color: "#888", marginTop: 6, textAlign: "right" }}>{percent()}% complete</div>
+            <div style={{ fontSize: 12, color: "#888", marginTop: 6, textAlign: "right" }}>
+              {stepLabels[step - 1]} · {percent()}%
+            </div>
           </div>
         </div>
 
@@ -144,7 +183,13 @@ export default function OnboardingClient() {
                 <div>
                   <div className="options">
                     {goalOptions.map((o) => (
-                      <button key={o} className={["option-btn", answers.goal === o ? "selected" : ""].join(" ")} onClick={() => updateSingle('goal', o)}>{o}</button>
+                      <button
+                        key={o}
+                        className={["option-btn", answers.goal === o ? "selected" : ""].join(" ")}
+                        onClick={() => updateSingle("goal", o)}
+                      >
+                        {o}
+                      </button>
                     ))}
                   </div>
                 </div>
@@ -154,7 +199,13 @@ export default function OnboardingClient() {
                 <div>
                   <div className="options">
                     {experienceOptions.map((o) => (
-                      <button key={o} className={["option-btn", answers.experience === o ? "selected" : ""].join(" ")} onClick={() => updateSingle('experience', o)}>{o}</button>
+                      <button
+                        key={o}
+                        className={["option-btn", answers.experience === o ? "selected" : ""].join(" ")}
+                        onClick={() => updateSingle("experience", o)}
+                      >
+                        {o}
+                      </button>
                     ))}
                   </div>
                 </div>
@@ -165,9 +216,16 @@ export default function OnboardingClient() {
                   <div style={{ fontSize: 13, color: "#AAA" }}>Select all that apply</div>
                   <div className="options">
                     {marketOptions.map((o) => (
-                      <button key={o} className={["option-btn", answers.markets.includes(o) ? "selected" : ""].join(" ")} onClick={() => toggleMarket(o)}>{o}</button>
+                      <button
+                        key={o}
+                        className={["option-btn", answers.markets.includes(o) ? "selected" : ""].join(" ")}
+                        onClick={() => toggleMarket(o)}
+                      >
+                        {o}
+                      </button>
                     ))}
                   </div>
+                  {marketError && <div className="error-msg">Please select at least one market</div>}
                 </div>
               )}
 
@@ -175,7 +233,13 @@ export default function OnboardingClient() {
                 <div>
                   <div className="options">
                     {timeOptions.map((o) => (
-                      <button key={o} className={["option-btn", answers.time === o ? "selected" : ""].join(" ")} onClick={() => updateSingle('time', o)}>{o}</button>
+                      <button
+                        key={o}
+                        className={["option-btn", answers.time === o ? "selected" : ""].join(" ")}
+                        onClick={() => updateSingle("time", o)}
+                      >
+                        {o}
+                      </button>
                     ))}
                   </div>
                 </div>
@@ -185,38 +249,66 @@ export default function OnboardingClient() {
                 <div>
                   <div className="options">
                     {riskOptions.map((o) => (
-                      <button key={o} className={["option-btn", answers.risk === o ? "selected" : ""].join(" ")} onClick={() => updateSingle('risk', o)}>{o}</button>
+                      <button
+                        key={o}
+                        className={["option-btn", answers.risk === o ? "selected" : ""].join(" ")}
+                        onClick={() => updateSingle("risk", o)}
+                      >
+                        {o}
+                      </button>
                     ))}
                   </div>
                 </div>
               )}
 
               <div className="controls">
-                <button className="btn ghost" onClick={back} disabled={step === 1} style={{ opacity: step === 1 ? 0.5 : 1 }}>Back</button>
-                <button className="btn primary" onClick={() => { if (step < 5) next(); else setStep(6); }}>
-                  {step < 5 ? 'Next' : 'Review'}
+                <button className="btn ghost" onClick={back} disabled={step === 1} style={{ opacity: step === 1 ? 0.5 : 1 }}>
+                  Back
+                </button>
+                <button className="btn primary" onClick={next}>
+                  {step < 5 ? "Next" : "Review"}
                 </button>
               </div>
             </StepCard>
           ) : (
-            <StepCard title="Summary">
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                <div><strong>Trading goal:</strong> {answers.goal || '—'}</div>
-                <div><strong>Experience:</strong> {answers.experience || '—'}</div>
-                <div><strong>Markets:</strong> {answers.markets.length ? answers.markets.join(', ') : '—'}</div>
-                <div><strong>Daily time:</strong> {answers.time || '—'}</div>
-                <div><strong>Risk tolerance:</strong> {answers.risk || '—'}</div>
+            <StepCard title="Review Your Answers">
+              <div style={{ marginBottom: 20 }}>
+                <div className="summary-row">
+                  <span className="summary-label">Trading goal</span>
+                  <span className="summary-value">{answers.goal || "—"}</span>
+                </div>
+                <div className="summary-row">
+                  <span className="summary-label">Experience</span>
+                  <span className="summary-value">{answers.experience || "—"}</span>
+                </div>
+                <div className="summary-row">
+                  <span className="summary-label">Markets</span>
+                  <span className="summary-value" style={{ textAlign: "right", maxWidth: "60%" }}>
+                    {answers.markets.length ? answers.markets.join(", ") : "—"}
+                  </span>
+                </div>
+                <div className="summary-row">
+                  <span className="summary-label">Daily time</span>
+                  <span className="summary-value">{answers.time || "—"}</span>
+                </div>
+                <div className="summary-row">
+                  <span className="summary-label">Risk tolerance</span>
+                  <span className="summary-value">{answers.risk || "—"}</span>
+                </div>
               </div>
 
               <div className="controls">
-                <button className="btn ghost" onClick={() => setStep(5)}>Back</button>
-                <button 
-                  className="btn primary" 
-                  onClick={submitOnboarding}
-                  disabled={saving}
-                  style={{ opacity: saving ? 0.5 : 1 }}
-                >
-                  {saving ? 'Saving...' : 'Start My Assessment'}
+                <button className="btn ghost" onClick={() => goTo(5)}>
+                  Back
+                </button>
+                <button className="btn primary" onClick={submitOnboarding} disabled={saving}>
+                  {saving ? (
+                    <>
+                      <span className="spinner" /> Saving...
+                    </>
+                  ) : (
+                    "Start My Assessment"
+                  )}
                 </button>
               </div>
             </StepCard>

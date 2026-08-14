@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
 import { prisma } from "@/lib/prisma";
+import { sanitizeString } from "@/lib/utils/sanitize";
+import { checkRateLimit } from "@/lib/utils/rateLimit";
 
 export async function GET() {
   try {
@@ -8,7 +10,7 @@ export async function GET() {
 
     if (!userId) {
       return NextResponse.json(
-        { error: "Unauthorized" },
+        { error: "Unauthorized", code: "UNAUTHORIZED" },
         { status: 401 }
       );
     }
@@ -31,7 +33,7 @@ export async function GET() {
   } catch (error) {
     console.error("Community API error:", error);
     return NextResponse.json(
-      { error: "Internal server error" },
+      { error: "Internal server error", code: "INTERNAL_ERROR" },
       { status: 500 }
     );
   }
@@ -39,19 +41,21 @@ export async function GET() {
 
 const MAX_CONTENT_LENGTH = 1000;
 
-function sanitizeString(value: unknown): string {
-  if (typeof value !== "string") return "";
-  return value.trim().replace(/[<>]/g, "");
-}
-
 export async function POST(req: NextRequest) {
   try {
     const { userId } = await auth();
 
     if (!userId) {
       return NextResponse.json(
-        { error: "Unauthorized" },
+        { error: "Unauthorized", code: "UNAUTHORIZED" },
         { status: 401 }
+      );
+    }
+
+    if (!checkRateLimit(`community:${userId}`, 5, 60 * 60 * 1000)) {
+      return NextResponse.json(
+        { error: "Rate limit exceeded. Max 5 posts per hour.", code: "RATE_LIMIT_EXCEEDED" },
+        { status: 429 }
       );
     }
 
@@ -60,14 +64,21 @@ export async function POST(req: NextRequest) {
 
     if (!content) {
       return NextResponse.json(
-        { error: "Content is required" },
+        { error: "Content is required", code: "VALIDATION_ERROR" },
         { status: 400 }
       );
     }
 
     if (content.length > MAX_CONTENT_LENGTH) {
       return NextResponse.json(
-        { error: `Content must be less than ${MAX_CONTENT_LENGTH} characters` },
+        { error: `Content must be less than ${MAX_CONTENT_LENGTH} characters`, code: "VALIDATION_ERROR" },
+        { status: 400 }
+      );
+    }
+
+    if (content.length < 10) {
+      return NextResponse.json(
+        { error: "Content must be at least 10 characters", code: "VALIDATION_ERROR" },
         { status: 400 }
       );
     }
@@ -101,7 +112,7 @@ export async function POST(req: NextRequest) {
   } catch (error) {
     console.error("Community post creation error:", error);
     return NextResponse.json(
-      { error: "Internal server error" },
+      { error: "Internal server error", code: "INTERNAL_ERROR" },
       { status: 500 }
     );
   }

@@ -108,6 +108,9 @@ export default function LessonClient({
   const [loading, setLoading] = useState(!initialLesson);
   const [completed, setCompleted] = useState(false);
   const [completing, setCompleting] = useState(false);
+  const [completedLessonIds, setCompletedLessonIds] = useState<Set<string>>(new Set());
+  const [showModuleComplete, setShowModuleComplete] = useState(false);
+  const [showCourseComplete, setShowCourseComplete] = useState(false);
 
   useEffect(() => {
     const assessmentRaw = localStorage.getItem(STORAGE_KEYS.assessment);
@@ -139,6 +142,25 @@ export default function LessonClient({
     fetchLesson();
   }, [lessonId, initialLesson]);
 
+  useEffect(() => {
+    async function fetchProgress() {
+      try {
+        const res = await fetch("/api/progress/summary");
+        if (res.ok) {
+          const data = await res.json();
+          const completedLessons = new Set<string>();
+          if (data.completedLessons && Array.isArray(data.completedLessons)) {
+            data.completedLessons.forEach((l: any) => completedLessons.add(l.lessonId));
+          }
+          setCompletedLessonIds(completedLessons);
+        }
+      } catch (e) {
+        console.error("Failed to fetch lesson progress:", e);
+      }
+    }
+    fetchProgress();
+  }, []);
+
   const assessmentScore = assessment?.result?.score ?? assessment?.score ?? 0;
   const currentLevel = assessment?.result?.level ?? assessment?.level ?? getLevelFromScore(assessmentScore);
 
@@ -153,6 +175,8 @@ export default function LessonClient({
   const hasNext = currentIndex < currentModuleLessons.length - 1;
   const previousLesson = hasPrevious ? currentModuleLessons[currentIndex - 1] : null;
   const nextLesson = hasNext ? currentModuleLessons[currentIndex + 1] : null;
+  const isLastInModule = !hasNext;
+  const isLastInCourse = isLastInModule && courseId === lesson?.module.course.id;
 
   const keyConcepts = useMemo(() => {
     if (!lesson?.content) return [];
@@ -168,17 +192,25 @@ export default function LessonClient({
     if (completing || completed || !lesson) return;
     setCompleting(true);
     try {
-      const res = await fetch("/api/progress", {
+      const res = await fetch("/api/lessons/" + lesson.id + "/complete", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ moduleId: lesson.moduleId, lessonId: lesson.id }),
       });
       if (res.ok) {
         setCompleted(true);
-        if (nextLesson) {
+        setCompletedLessonIds((prev) => new Set(prev).add(lesson.id));
+
+        if (isLastInModule) {
+          setShowModuleComplete(true);
+          if (isLastInCourse) {
+            setShowCourseComplete(true);
+          }
+          setTimeout(() => {
+            window.location.href = `/learn/${courseId}`;
+          }, 3000);
+        } else if (nextLesson) {
           setTimeout(() => {
             window.location.href = `/learn/${courseId}/${moduleId}/${nextLesson.id}`;
-          }, 800);
+          }, 1500);
         }
       }
     } catch (e) {
@@ -256,6 +288,12 @@ export default function LessonClient({
         .breadcrumb a:hover { color: ${text}; }
         .breadcrumb span { color: #444; font-size: 13px; }
         .breadcrumb .current { color: ${text}; font-weight: 600; font-size: 13px; }
+        .complete-banner { background: rgba(232, 160, 32, 0.08); border: 1px solid rgba(232,160,32,0.25); border-radius: 12px; padding: 20px 24px; margin-bottom: 24px; text-align: center; }
+        .complete-banner.module { background: rgba(74, 222, 128, 0.08); border-color: rgba(74,222,128,0.25); }
+        .complete-banner.course { background: rgba(232, 160, 32, 0.12); border-color: ${accent}; }
+        .complete-title { font-family: 'Syne', sans-serif; font-size: 18px; font-weight: 700; color: ${accent}; margin-bottom: 6px; }
+        .complete-banner.module .complete-title { color: #4ade80; }
+        .complete-sub { font-size: 13px; color: #888; }
         @media (max-width: 1024px) {
           .lesson-layout { flex-direction: column; }
           .right-panel { display: none; }
@@ -328,6 +366,19 @@ export default function LessonClient({
               <span className="current">{lesson.title}</span>
             </nav>
 
+            {showCourseComplete && (
+              <div className="complete-banner course">
+                <div className="complete-title">Course Complete!</div>
+                <div className="complete-sub">Congratulations! You have finished this course. Redirecting...</div>
+              </div>
+            )}
+            {showModuleComplete && !showCourseComplete && (
+              <div className="complete-banner module">
+                <div className="complete-title">Module Complete!</div>
+                <div className="complete-sub">Great work! Redirecting to course page...</div>
+              </div>
+            )}
+
             <header style={{ marginBottom: 28 }}>
               <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 16, flexWrap: "wrap" }}>
                 <h1 style={{ fontFamily: "Syne, sans-serif", fontSize: 32, lineHeight: 1.15, margin: 0, flex: 1, minWidth: 0 }}>
@@ -369,13 +420,19 @@ export default function LessonClient({
             <nav style={{ display: "flex", flexDirection: "column", gap: 4 }}>
               {currentModuleLessons.map((l) => {
                 const isActive = l.id === lessonId;
+                const isCompleted = completedLessonIds.has(l.id);
                 return (
                   <a
                     key={l.id}
                     href={`/learn/${courseId}/${moduleId}/${l.id}`}
-                    className={`outline-item ${isActive ? "active" : ""}`}
+                    className={`outline-item ${isActive ? "active" : ""} ${isCompleted ? "completed" : ""}`}
                   >
                     <span style={{ flex: 1, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{l.title}</span>
+                    {isCompleted && (
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#4ade80" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
+                        <polyline points="20 6 9 17 4 12"></polyline>
+                      </svg>
+                    )}
                     <span className="muted" style={{ fontSize: 12, flexShrink: 0 }}>{l.duration}m</span>
                   </a>
                 );

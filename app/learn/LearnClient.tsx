@@ -40,12 +40,20 @@ type Course = {
   }>;
 };
 
+type CompletedModule = {
+  id: string;
+  title: string;
+  courseId: string;
+  order: number;
+};
+
 export default function LearnClient() {
   const { user } = useUser();
   const [mounted, setMounted] = useState(false);
   const [courses, setCourses] = useState<Course[]>([]);
   const [assessment, setAssessment] = useState<AssessmentStorage | null>(null);
   const [loading, setLoading] = useState(true);
+  const [completedModules, setCompletedModules] = useState<CompletedModule[]>([]);
 
   useEffect(() => {
     const assessmentRaw = localStorage.getItem(STORAGE_KEYS.assessment);
@@ -62,13 +70,21 @@ export default function LearnClient() {
   useEffect(() => {
     async function fetchCourses() {
       try {
-        const res = await fetch("/api/courses");
-        if (res.ok) {
-          const data = await res.json();
+        const [coursesRes, progressRes] = await Promise.all([
+          fetch("/api/courses"),
+          fetch("/api/progress/summary"),
+        ]);
+
+        if (coursesRes.ok) {
+          const data = await coursesRes.json();
           setCourses(Array.isArray(data.courses) ? data.courses : []);
         }
+        if (progressRes.ok) {
+          const data = await progressRes.json();
+          setCompletedModules(Array.isArray(data.completedModules) ? data.completedModules : []);
+        }
       } catch (e) {
-        console.error("Failed to fetch courses:", e);
+        console.error("Failed to fetch data:", e);
       } finally {
         setLoading(false);
       }
@@ -78,6 +94,8 @@ export default function LearnClient() {
 
   const assessmentScore = assessment?.result?.score ?? assessment?.score ?? 0;
   const currentLevel = assessment?.result?.level ?? assessment?.level ?? getLevelFromScore(assessmentScore);
+
+  const completedModuleIds = useMemo(() => new Set(completedModules.map((m) => m.id)), [completedModules]);
 
   const coursesByLevel = useMemo(() => {
     const grouped: Record<number, Course[]> = {};
@@ -94,6 +112,13 @@ export default function LearnClient() {
     () => Object.keys(coursesByLevel).map(Number).sort((a, b) => a - b),
     [coursesByLevel]
   );
+
+  const getCourseProgress = (course: Course) => {
+    const totalModules = course.modules.length;
+    if (totalModules === 0) return 0;
+    const completed = course.modules.filter((m) => completedModuleIds.has(m.id)).length;
+    return Math.round((completed / totalModules) * 100);
+  };
 
   const profileName = useMemo(() => {
     const email = user?.primaryEmailAddress?.emailAddress?.split("@")[0];
@@ -128,12 +153,14 @@ export default function LearnClient() {
         .card { background: #0F0F0F; border: 1px solid #1E1E1E; border-radius: 16px; }
         .muted { color: #A3A3A3; }
         .badge { display: inline-flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: 999px; border: 1px solid rgba(232,160,32,0.35); background: rgba(232,160,32,0.08); color: ${accent}; font-weight: 600; font-size: 12px; }
-        .progress-shell { height: 10px; border-radius: 999px; background: #161616; overflow: hidden; }
+        .progress-shell { height: 6px; border-radius: 999px; background: #161616; overflow: hidden; }
         .progress-bar { height: 100%; background: ${accent}; transition: width .35s ease; }
         .course-card { background: #0F0F0F; border: 1px solid #1E1E1E; border-radius: 16px; padding: 24px; transition: all .2s ease; cursor: pointer; text-decoration: none; color: inherit; display: block; }
         .course-card:hover { border-color: #2A2A2A; transform: translateY(-2px); }
         .course-card.locked { opacity: 0.5; cursor: not-allowed; }
         .course-card.locked:hover { transform: none; border-color: #1E1E1E; }
+        .continue-btn { display: inline-flex; align-items: center; gap: 8px; padding: 10px 18px; border-radius: 10px; background: ${accent}; color: #0A0A0A; font-weight: 600; font-size: 13px; text-decoration: none; transition: all .2s ease; }
+        .continue-btn:hover { background: #d4941a; }
       `}</style>
       <div style={{ display: "flex", minHeight: "100vh" }}>
         <aside
@@ -239,6 +266,8 @@ export default function LearnClient() {
                     {levelCourses.map((course) => {
                       const unlocked = course.level <= currentLevel;
                       const moduleCount = course.modules.length;
+                      const progress = getCourseProgress(course);
+                      const hasProgress = progress > 0;
 
                       return (
                         <a
@@ -311,10 +340,20 @@ export default function LearnClient() {
                                 Complete Level {course.level - 1} first
                               </span>
                             )}
+                            {unlocked && hasProgress && (
+                              <span style={{ fontSize: 12, color: accent, fontWeight: 600 }}>
+                                {progress}% complete
+                              </span>
+                            )}
                           </div>
                           <div className="progress-shell">
-                            <div className="progress-bar" style={{ width: "0%" }} />
+                            <div className="progress-bar" style={{ width: `${progress}%` }} />
                           </div>
+                          {unlocked && hasProgress && (
+                            <div style={{ marginTop: 14 }}>
+                              <span className="continue-btn">Continue →</span>
+                            </div>
+                          )}
                         </a>
                       );
                     })}

@@ -85,6 +85,9 @@ export default function SimulatorClient({ userId }: SimulatorClientProps) {
   const [tradeError, setTradeError] = useState<string | null>(null);
   const [tradeSuccess, setTradeSuccess] = useState<string | null>(null);
   const [chartError, setChartError] = useState<string | null>(null);
+  const [confirmCloseId, setConfirmCloseId] = useState<string | null>(null);
+  const [closePnl, setClosePnl] = useState<number>(0);
+  const [resetting, setResetting] = useState(false);
 
   const [symbol, setSymbol] = useState(SYMBOLS[0].value);
   const [side, setSide] = useState<"buy" | "sell">("buy");
@@ -227,6 +230,24 @@ export default function SimulatorClient({ userId }: SimulatorClientProps) {
       setChartError("Failed to initialize chart");
     }
   }, [mounted]);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setPortfolio((prev) => {
+        if (!prev || !prev.openPositions) return prev;
+        const updated = prev.openPositions.map((trade) => {
+          const currentPrice = FALLBACK_PRICES[trade.symbol] ?? trade.entryPrice;
+          const pnl =
+            trade.side === "buy"
+              ? (currentPrice - trade.entryPrice) * trade.quantity
+              : (trade.entryPrice - currentPrice) * trade.quantity;
+          return { ...trade, pnl };
+        });
+        return { ...prev, openPositions: updated };
+      });
+    }, 30000);
+    return () => clearInterval(interval);
+  }, []);
 
   useEffect(() => {
     async function fetchChartData() {
@@ -384,6 +405,17 @@ export default function SimulatorClient({ userId }: SimulatorClientProps) {
   }
 
   async function handleClosePosition(tradeId: string) {
+    const trade = openTrades.find((t) => t.id === tradeId);
+    if (!trade) return;
+    
+    const currentPrice = FALLBACK_PRICES[trade.symbol] ?? trade.entryPrice;
+    const pnl = trade.side === "buy"
+      ? (currentPrice - trade.entryPrice) * trade.quantity
+      : (trade.entryPrice - currentPrice) * trade.quantity;
+    
+    const confirmed = confirm(`Close ${trade.symbol} position?\n\nEntry: ₹${trade.entryPrice.toFixed(2)}\nCurrent: ₹${currentPrice.toFixed(2)}\nP&L: ${pnl >= 0 ? "+" : ""}₹${pnl.toFixed(2)}`);
+    if (!confirmed) return;
+    
     try {
       const res = await fetch("/api/simulator/close", {
         method: "POST",
@@ -401,6 +433,29 @@ export default function SimulatorClient({ userId }: SimulatorClientProps) {
       }
     } catch (e) {
       setTradeError("Network error");
+    }
+  }
+
+  async function handleResetPortfolio() {
+    const confirmed = confirm("Reset portfolio? This will clear all trades and reset your balance to ₹500,000.");
+    if (!confirmed) return;
+    
+    setResetting(true);
+    try {
+      const res = await fetch("/api/simulator/reset", {
+        method: "POST",
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setTradeError(data.error || "Failed to reset portfolio");
+      } else {
+        setTradeSuccess("Portfolio reset");
+        await refreshPortfolio();
+      }
+    } catch (e) {
+      setTradeError("Network error");
+    } finally {
+      setResetting(false);
     }
   }
 
@@ -601,7 +656,12 @@ export default function SimulatorClient({ userId }: SimulatorClientProps) {
               </div>
 
               <div className="card" style={{ padding: 24 }}>
-                <div className="muted" style={{ fontSize: 13, marginBottom: 16, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.08em" }}>Open Positions</div>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
+                  <div className="muted" style={{ fontSize: 13, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.08em" }}>Open Positions</div>
+                  <button className="btn btn-close" style={{ padding: "6px 12px", fontSize: 12 }} onClick={handleResetPortfolio} disabled={resetting}>
+                    {resetting ? "Resetting..." : "Reset Portfolio"}
+                  </button>
+                </div>
                 {openTrades.length === 0 ? (
                   <div style={{ color: colors.text.muted, fontSize: 13 }}>No open positions.</div>
                 ) : (
@@ -614,19 +674,31 @@ export default function SimulatorClient({ userId }: SimulatorClientProps) {
                           <th>Qty</th>
                           <th>Entry</th>
                           <th>Current</th>
+                          <th>P&L</th>
+                          <th>Opened</th>
                           <th>Action</th>
                         </tr>
                       </thead>
                       <tbody>
                         {openTrades.map((trade) => {
                           const currentPrice = FALLBACK_PRICES[trade.symbol] ?? trade.entryPrice;
+                          const pnl = trade.side === "buy"
+                            ? (currentPrice - trade.entryPrice) * trade.quantity
+                            : (trade.entryPrice - currentPrice) * trade.quantity;
+                          const isProfitable = pnl >= 0;
                           return (
-                            <tr key={trade.id}>
+                            <tr key={trade.id} style={{ background: isProfitable ? "rgba(74,222,128,0.04)" : "rgba(239,68,68,0.04)" }}>
                               <td style={{ fontWeight: 600 }}>{trade.symbol}</td>
                               <td style={{ color: trade.side === "buy" ? "#4ade80" : "#ef4444", textTransform: "uppercase", fontWeight: 600 }}>{trade.side}</td>
                               <td>{trade.quantity}</td>
                               <td>₹{trade.entryPrice.toFixed(2)}</td>
                               <td className="muted">₹{currentPrice.toFixed(2)}</td>
+                              <td style={{ color: isProfitable ? "#4ade80" : "#ef4444", fontWeight: 600 }}>
+                                {isProfitable ? "+" : ""}₹{pnl.toFixed(2)}
+                              </td>
+                              <td className="muted" style={{ fontSize: 12 }}>
+                                {new Date(trade.openedAt).toLocaleDateString("en-US", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })}
+                              </td>
                               <td>
                                 <button className="btn btn-close" style={{ padding: "6px 12px", fontSize: 12 }} onClick={() => handleClosePosition(trade.id)}>Close</button>
                               </td>

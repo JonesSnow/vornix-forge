@@ -35,6 +35,11 @@ type CommunityClientProps = {
   userId: string;
 };
 
+type DateGroup = {
+  label: string;
+  posts: CommunityPost[];
+};
+
 export default function CommunityClient({ userId }: CommunityClientProps) {
   const { user } = useUser();
   const [mounted, setMounted] = useState(false);
@@ -46,12 +51,17 @@ export default function CommunityClient({ userId }: CommunityClientProps) {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [likedPosts, setLikedPosts] = useState<Set<string>>(new Set());
+  const [currentUserLevel, setCurrentUserLevel] = useState(1);
 
   useEffect(() => {
     const assessmentRaw = localStorage.getItem(STORAGE_KEYS.assessment);
     if (assessmentRaw) {
       try {
-        setAssessment(JSON.parse(assessmentRaw) as AssessmentStorage);
+        const parsed = JSON.parse(assessmentRaw) as AssessmentStorage;
+        setAssessment(parsed);
+        const score = parsed.result?.score ?? parsed.score ?? 0;
+        const level = parsed.result?.level ?? parsed.level ?? getLevelFromScore(score);
+        setCurrentUserLevel(level);
       } catch {
         setAssessment(null);
       }
@@ -86,11 +96,49 @@ export default function CommunityClient({ userId }: CommunityClientProps) {
     return user?.fullName || user?.firstName || user?.username || email || "Signed-in user";
   }, [user]);
 
+  function getDateLabel(dateStr: string): string {
+    const date = new Date(dateStr);
+    const now = new Date();
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const yesterday = new Date(today);
+    yesterday.setDate(yesterday.getDate() - 1);
+    const postDate = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+
+    if (postDate.getTime() === today.getTime()) return "Today";
+    if (postDate.getTime() === yesterday.getTime()) return "Yesterday";
+    return date.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+  }
+
+  const groupedPosts = useMemo(() => {
+    const groups: DateGroup[] = [];
+    const map = new Map<string, CommunityPost[]>();
+
+    posts.forEach((post) => {
+      const label = getDateLabel(post.createdAt);
+      if (!map.has(label)) {
+        map.set(label, []);
+      }
+      map.get(label)!.push(post);
+    });
+
+    map.forEach((posts, label) => {
+      groups.push({ label, posts });
+    });
+
+    return groups;
+  }, [posts]);
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
     setSuccess(null);
     setSubmitting(true);
+
+    if (content.trim().length < 10) {
+      setError("Post must be at least 10 characters");
+      setSubmitting(false);
+      return;
+    }
 
     try {
       const res = await fetch("/api/community", {
@@ -182,6 +230,8 @@ export default function CommunityClient({ userId }: CommunityClientProps) {
         .like-btn { display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 8px; border: 1px solid #1E1E1E; background: transparent; color: ${likedPosts.has('') ? '#4ade80' : '#9A9A9A'}; font-size: 13px; cursor: pointer; transition: all .2s ease; }
         .like-btn:hover { border-color: #4ade80; color: #4ade80; }
         .like-btn.liked { border-color: #4ade80; color: #4ade80; background: rgba(74, 222, 128, 0.08); }
+        .date-group-label { font-family: 'Syne', sans-serif; font-size: 12px; font-weight: 700; color: #444; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 12px; margin-top: 24px; }
+        .date-group-label:first-child { margin-top: 0; }
       `}</style>
       <div style={{ display: "flex", minHeight: "100vh" }}>
         <aside
@@ -243,7 +293,7 @@ export default function CommunityClient({ userId }: CommunityClientProps) {
             <header style={{ marginBottom: 24 }}>
               <h1 style={{ fontFamily: "Syne, sans-serif", fontSize: 36, lineHeight: 1.05, margin: 0 }}>Community</h1>
               <p className="muted" style={{ marginTop: 8, lineHeight: 1.6 }}>
-                Share insights, ask questions, and connect with fellow traders.
+                {posts.length} {posts.length === 1 ? "post" : "posts"} in community · Share insights, ask questions, and connect with fellow traders.
               </p>
             </header>
 
@@ -260,8 +310,8 @@ export default function CommunityClient({ userId }: CommunityClientProps) {
                   required
                 />
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                  <span className="muted" style={{ fontSize: 12 }}>{content.length}/1000</span>
-                  <button type="submit" className="btn btn-primary" disabled={submitting || content.trim().length === 0}>
+                  <span className="muted" style={{ fontSize: 12 }}>{content.length}/1000 · min 10 chars</span>
+                  <button type="submit" className="btn btn-primary" disabled={submitting || content.trim().length < 10}>
                     {submitting ? "Posting..." : "Post"}
                   </button>
                 </div>
@@ -275,41 +325,51 @@ export default function CommunityClient({ userId }: CommunityClientProps) {
                 <div className="muted" style={{ fontSize: 14 }}>Be the first to share something with the community.</div>
               </div>
             ) : (
-              <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-                {posts.map((post) => {
-                  const isLiked = likedPosts.has(post.id);
-                  const authorName = post.profile.firstName || post.profile.lastName
-                    ? `${post.profile.firstName || ""} ${post.profile.lastName || ""}`.trim()
-                    : "Anonymous";
+              <div>
+                {groupedPosts.map((group) => (
+                  <div key={group.label}>
+                    <div className="date-group-label">{group.label}</div>
+                    <div style={{ display: "flex", flexDirection: "column", gap: 16, marginBottom: 24 }}>
+                      {group.posts.map((post) => {
+                        const isLiked = likedPosts.has(post.id);
+                        const authorName = post.profile.firstName || post.profile.lastName
+                          ? `${post.profile.firstName || ""} ${post.profile.lastName || ""}`.trim()
+                          : "Anonymous";
 
-                  return (
-                    <div key={post.id} className="post-card">
-                      <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 12 }}>
-                        <div style={{ width: 32, height: 32, borderRadius: "50%", background: "#1E1E1E", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14, fontWeight: 700, color: accent }}>
-                          {authorName.charAt(0).toUpperCase()}
-                        </div>
-                        <div>
-                          <div style={{ fontSize: 14, fontWeight: 600 }}>{authorName}</div>
-                          <div className="muted" style={{ fontSize: 12 }}>
-                            {new Date(post.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric", hour: "2-digit", minute: "2-digit" })}
+                        return (
+                          <div key={post.id} className="post-card">
+                            <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 12 }}>
+                              <div style={{ width: 32, height: 32, borderRadius: "50%", background: "#1E1E1E", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14, fontWeight: 700, color: accent }}>
+                                {authorName.charAt(0).toUpperCase()}
+                              </div>
+                              <div>
+                                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                                  <div style={{ fontSize: 14, fontWeight: 600 }}>{authorName}</div>
+                                  <span className="badge" style={{ padding: "2px 8px", fontSize: 11 }}>Lvl {currentUserLevel}</span>
+                                </div>
+                                <div className="muted" style={{ fontSize: 12 }}>
+                                  {new Date(post.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric", hour: "2-digit", minute: "2-digit" })}
+                                </div>
+                              </div>
+                            </div>
+                            <p style={{ fontSize: 15, lineHeight: 1.7, margin: "0 0 16px 0", whiteSpace: "pre-wrap" }}>{post.content}</p>
+                            <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                              <button
+                                className={`like-btn ${isLiked ? "liked" : ""}`}
+                                onClick={() => handleLike(post.id)}
+                              >
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill={isLiked ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                  <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+                                </svg>
+                                {post.likes}
+                              </button>
+                            </div>
                           </div>
-                        </div>
-                      </div>
-                      <p style={{ fontSize: 15, lineHeight: 1.7, margin: "0 0 16px 0", whiteSpace: "pre-wrap" }}>{post.content}</p>
-                      <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                        <button
-                          className={`like-btn ${isLiked ? "liked" : ""}`}
-                          onClick={() => handleLike(post.id)}
-                        >
-                          <svg width="14" height="14" viewBox="0 0 24 24" fill={isLiked ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                            <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
-                          </svg>
-                          {post.likes}
-                        </button>
-                      </div>
+                        );
+                      })}
                     </div>
-                  );
-                })}
+                  </div>
+                ))}
               </div>
             )}
           </div>

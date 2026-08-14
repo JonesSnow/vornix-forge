@@ -8,7 +8,7 @@ export async function GET() {
 
     if (!userId) {
       return NextResponse.json(
-        { error: "Unauthorized" },
+        { error: "Unauthorized", code: "UNAUTHORIZED" },
         { status: 401 }
       );
     }
@@ -79,6 +79,11 @@ export async function GET() {
     const score = assessment?.score ?? 0;
     const level = assessment?.level ?? (score <= 40 ? 1 : score <= 60 ? 2 : score <= 80 ? 3 : 4);
 
+    const completedLessons = await prisma.lessonProgress.findMany({
+      where: { clerkId: userId, completed: true },
+      select: { lessonId: true },
+    });
+
     const radarData = [
       { skill: "Technical Analysis", value: Math.min(100, score + 5) },
       { skill: "Fundamental Analysis", value: Math.min(100, score - 5) },
@@ -94,6 +99,7 @@ export async function GET() {
       profile,
       assessment: assessment ? { score: assessment.score, level: assessment.level } : null,
       completedModules,
+      completedLessons,
       openPositions,
       tradeHistory,
       totalPnl,
@@ -106,7 +112,7 @@ export async function GET() {
   } catch (error) {
     console.error("Progress summary API error:", error);
     return NextResponse.json(
-      { error: "Internal server error" },
+      { error: "Internal server error", code: "INTERNAL_ERROR" },
       { status: 500 }
     );
   }

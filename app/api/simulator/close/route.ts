@@ -8,7 +8,7 @@ export async function POST(req: NextRequest) {
 
     if (!userId) {
       return NextResponse.json(
-        { error: "Unauthorized" },
+        { error: "Unauthorized", code: "UNAUTHORIZED" },
         { status: 401 }
       );
     }
@@ -27,7 +27,7 @@ export async function POST(req: NextRequest) {
 
     if (!tradeId) {
       return NextResponse.json(
-        { error: "tradeId is required" },
+        { error: "tradeId is required", code: "VALIDATION_ERROR" },
         { status: 400 }
       );
     }
@@ -38,14 +38,14 @@ export async function POST(req: NextRequest) {
 
     if (!trade || trade.clerkId !== userId) {
       return NextResponse.json(
-        { error: "Trade not found" },
+        { error: "Trade not found", code: "NOT_FOUND" },
         { status: 404 }
       );
     }
 
     if (trade.status !== "open") {
       return NextResponse.json(
-        { error: "Trade is already closed" },
+        { error: "Trade is already closed", code: "VALIDATION_ERROR" },
         { status: 400 }
       );
     }
@@ -59,7 +59,7 @@ export async function POST(req: NextRequest) {
 
     if (!res.ok) {
       return NextResponse.json(
-        { error: "Failed to fetch market price" },
+        { error: "Failed to fetch market price", code: "EXTERNAL_ERROR" },
         { status: 502 }
       );
     }
@@ -70,7 +70,7 @@ export async function POST(req: NextRequest) {
 
     if (!meta?.regularMarketPrice) {
       return NextResponse.json(
-        { error: "Market price unavailable" },
+        { error: "Market price unavailable", code: "EXTERNAL_ERROR" },
         { status: 502 }
       );
     }
@@ -110,7 +110,7 @@ export async function POST(req: NextRequest) {
   } catch (error) {
     console.error("Close trade API error:", error);
     return NextResponse.json(
-      { error: "Internal server error" },
+      { error: "Internal server error", code: "INTERNAL_ERROR" },
       { status: 500 }
     );
   }

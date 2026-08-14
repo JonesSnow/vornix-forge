@@ -57,6 +57,19 @@ type CourseClientProps = {
   initialCourse?: Course;
 };
 
+type CourseProgress = {
+  courseId: string;
+  totalModules: number;
+  completedModules: number;
+  totalLessons: number;
+  moduleProgress: Array<{
+    id: string;
+    title: string;
+    completed: boolean;
+    totalLessons: number;
+  }>;
+};
+
 export default function CourseClient({ courseId, initialCourse }: CourseClientProps) {
   const { user } = useUser();
   const [mounted, setMounted] = useState(false);
@@ -64,6 +77,8 @@ export default function CourseClient({ courseId, initialCourse }: CourseClientPr
   const [assessment, setAssessment] = useState<AssessmentStorage | null>(null);
   const [loading, setLoading] = useState(!initialCourse);
   const [expandedModules, setExpandedModules] = useState<Set<string>>(new Set());
+  const [courseProgress, setCourseProgress] = useState<CourseProgress | null>(null);
+  const [completedLessonIds, setCompletedLessonIds] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     const assessmentRaw = localStorage.getItem(STORAGE_KEYS.assessment);
@@ -94,6 +109,30 @@ export default function CourseClient({ courseId, initialCourse }: CourseClientPr
     }
     fetchCourse();
   }, [courseId, initialCourse]);
+
+  useEffect(() => {
+    async function fetchProgress() {
+      try {
+        const [courseProgressRes, summaryRes] = await Promise.all([
+          fetch(`/api/courses/${courseId}/progress`),
+          fetch("/api/progress/summary"),
+        ]);
+
+        if (courseProgressRes.ok) {
+          const data = await courseProgressRes.json();
+          setCourseProgress(data);
+        }
+        if (summaryRes.ok) {
+          const data = await summaryRes.json();
+          const completed = Array.isArray(data.completedModules) ? data.completedModules : [];
+          setExpandedModules(new Set(completed.map((m: any) => m.id)));
+        }
+      } catch (e) {
+        console.error("Failed to fetch progress:", e);
+      }
+    }
+    fetchProgress();
+  }, [courseId]);
 
   const assessmentScore = assessment?.result?.score ?? assessment?.score ?? 0;
   const currentLevel = assessment?.result?.level ?? assessment?.level ?? getLevelFromScore(assessmentScore);
@@ -151,6 +190,11 @@ export default function CourseClient({ courseId, initialCourse }: CourseClientPr
 
   const levelEntry = levelCopy[course.level] ?? levelCopy[1];
   const totalLessons = course.modules.reduce((acc, m) => acc + m.lessons.length, 0);
+  const overallProgress = courseProgress
+    ? courseProgress.totalModules > 0
+      ? Math.round((courseProgress.completedModules / courseProgress.totalModules) * 100)
+      : 0
+    : 0;
 
   return (
     <main style={{ minHeight: "100vh", background: bg, color: text, fontFamily: "Inter, sans-serif" }}>
@@ -165,6 +209,7 @@ export default function CourseClient({ courseId, initialCourse }: CourseClientPr
         .badge { display: inline-flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: 999px; border: 1px solid rgba(232,160,32,0.35); background: rgba(232,160,32,0.08); color: ${accent}; font-weight: 600; font-size: 12px; }
         .module-accordion { background: #0F0F0F; border: 1px solid #1E1E1E; border-radius: 16px; overflow: hidden; margin-bottom: 16px; transition: border-color .2s ease; }
         .module-accordion:hover { border-color: #2A2A2A; }
+        .module-accordion.completed { border-color: #4ade80; }
         .module-header { padding: 20px 24px; cursor: pointer; display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; transition: background .2s ease; }
         .module-header:hover { background: #111111; }
         .module-body { padding: 0 24px 20px; border-top: 1px solid #1E1E1E; }
@@ -174,6 +219,9 @@ export default function CourseClient({ courseId, initialCourse }: CourseClientPr
         .lesson-row:hover .lesson-arrow { transform: translateX(4px); }
         .lesson-arrow { transition: transform .2s ease; color: ${accent}; }
         .type-badge { display: inline-flex; padding: 4px 10px; border-radius: 8px; border: 1px solid #1E1E1E; background: #111111; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; color: #9A9A9A; }
+        .check-icon { color: #4ade80; flexShrink: 0; }
+        .progress-shell { height: 8px; border-radius: 999px; background: #161616; overflow: hidden; }
+        .progress-bar { height: 100%; background: ${accent}; transition: width .35s ease; }
       `}</style>
       <div style={{ display: "flex", minHeight: "100vh" }}>
         <aside
@@ -243,23 +291,30 @@ export default function CourseClient({ courseId, initialCourse }: CourseClientPr
                 </div>
                 <span className="badge">{levelEntry.name}</span>
               </div>
-              <div style={{ marginTop: 16, display: "flex", gap: 16, flexWrap: "wrap" }}>
+              <div style={{ marginTop: 16, display: "flex", gap: 16, flexWrap: "wrap", alignItems: "center" }}>
                 <span className="muted" style={{ fontSize: 13 }}>
                   {course.modules.length} module{course.modules.length !== 1 ? "s" : ""}
                 </span>
                 <span className="muted" style={{ fontSize: 13 }}>
                   {totalLessons} lesson{totalLessons !== 1 ? "s" : ""}
                 </span>
+                <span style={{ fontSize: 13, color: accent, fontWeight: 600 }}>
+                  {overallProgress}% complete
+                </span>
+              </div>
+              <div className="progress-shell" style={{ marginTop: 12 }}>
+                <div className="progress-bar" style={{ width: `${overallProgress}%` }} />
               </div>
             </header>
 
             <section style={{ display: "flex", flexDirection: "column", gap: 16 }}>
               {course.modules.map((module) => {
                 const isExpanded = expandedModules.has(module.id);
+                const isCompleted = courseProgress?.moduleProgress.find((m) => m.id === module.id)?.completed ?? false;
                 const lessonCount = module.lessons.length;
 
                 return (
-                  <div key={module.id} className="module-accordion">
+                  <div key={module.id} className={`module-accordion ${isCompleted ? "completed" : ""}`}>
                     <div
                       className="module-header"
                       onClick={() => toggleModule(module.id)}
@@ -273,8 +328,15 @@ export default function CourseClient({ courseId, initialCourse }: CourseClientPr
                       }}
                     >
                       <div>
-                        <div style={{ fontFamily: "Syne, sans-serif", fontSize: 18, marginBottom: 6 }}>
-                          {module.title}
+                        <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 6 }}>
+                          <div style={{ fontFamily: "Syne, sans-serif", fontSize: 18 }}>
+                            {module.title}
+                          </div>
+                          {isCompleted && (
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#4ade80" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className="check-icon">
+                              <polyline points="20 6 9 17 4 12"></polyline>
+                            </svg>
+                          )}
                         </div>
                         <p className="muted" style={{ fontSize: 14, lineHeight: 1.6, margin: 0 }}>
                           {module.description}
@@ -283,6 +345,11 @@ export default function CourseClient({ courseId, initialCourse }: CourseClientPr
                           <span className="muted" style={{ fontSize: 13 }}>
                             {lessonCount} lesson{lessonCount !== 1 ? "s" : ""}
                           </span>
+                          {isCompleted && (
+                            <span style={{ fontSize: 12, color: "#4ade80", fontWeight: 600 }}>
+                              Completed
+                            </span>
+                          )}
                         </div>
                       </div>
                       <svg
@@ -314,11 +381,21 @@ export default function CourseClient({ courseId, initialCourse }: CourseClientPr
                             className="lesson-row"
                           >
                             <div>
-                              <div style={{ fontWeight: 600, fontSize: 15 }}>{lesson.title}</div>
+                              <div style={{ display: "flex", alignItems: "center", gap: 8, fontWeight: 600, fontSize: 15 }}>
+                                {lesson.title}
+                                {completedLessonIds.has(lesson.id) && (
+                                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#4ade80" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className="check-icon">
+                                    <polyline points="20 6 9 17 4 12"></polyline>
+                                  </svg>
+                                )}
+                              </div>
                               <div style={{ display: "flex", gap: 10, marginTop: 8, alignItems: "center" }}>
                                 <span className="type-badge">{lesson.type}</span>
                                 <span className="muted" style={{ fontSize: 13 }}>
                                   {lesson.duration} min
+                                </span>
+                                <span className="muted" style={{ fontSize: 12 }}>
+                                  {completedLessonIds.has(lesson.id) ? "Completed" : "Not started"}
                                 </span>
                               </div>
                             </div>

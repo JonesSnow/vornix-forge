@@ -237,23 +237,23 @@ export default function NewJournalClient({ userId }: NewJournalClientProps) {
                 </div>
               </div>
 
-              <div>
-                <label className="muted" style={{ fontSize: 12, fontWeight: 600, display: "block", marginBottom: 8, textTransform: "uppercase", letterSpacing: "0.08em" }}>
-                  Journal Entry
-                </label>
-                <textarea
-                  value={content}
-                  onChange={(e) => setContent(e.target.value)}
-                  className="journal-textarea"
-                  placeholder="What did I trade today?"
-                  required
-                  minLength={100}
-                  maxLength={5000}
-                />
-                <div className="muted" style={{ fontSize: 12, marginTop: 6, textAlign: "right" }}>
-                  {content.length}/5000 characters
-                </div>
-              </div>
+               <div>
+                 <label className="muted" style={{ fontSize: 12, fontWeight: 600, display: "block", marginBottom: 8, textTransform: "uppercase", letterSpacing: "0.08em" }}>
+                   Journal Entry
+                 </label>
+                 <textarea
+                   value={content}
+                   onChange={(e) => setContent(e.target.value)}
+                   className="journal-textarea"
+                   placeholder="What did I trade today?"
+                   required
+                   minLength={100}
+                   maxLength={5000}
+                 />
+                 <div style={{ fontSize: 12, marginTop: 6, textAlign: "right", color: content.length >= 100 ? "#4ade80" : colors.text.muted }}>
+                   {content.length}/5000 characters {content.length >= 100 ? "✓" : `(min 100)`}
+                 </div>
+               </div>
 
               <button type="submit" className="btn btn-primary" disabled={submitting}>
                 {submitting ? "Saving..." : "Save Entry"}

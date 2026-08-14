@@ -89,6 +89,17 @@ model Progress {
   @@unique([clerkId, moduleId])
 }
 
+model LessonProgress {
+  id          String    @id @default(cuid())
+  clerkId     String
+  lessonId    String
+  completed   Boolean   @default(false)
+  completedAt DateTime?
+  createdAt   DateTime  @default(now())
+
+  @@unique([clerkId, lessonId])
+}
+
 model SimulatorPortfolio {
   id        String   @id @default(cuid())
   clerkId   String   @unique

@@ -9,7 +9,7 @@ export async function GET(req: NextRequest) {
     
     if (!userId) {
       return NextResponse.json(
-        { error: "Unauthorized" },
+        { error: "Unauthorized", code: "UNAUTHORIZED" },
         { status: 401 }
       );
     }
@@ -30,7 +30,7 @@ export async function GET(req: NextRequest) {
   } catch (error) {
     logger.error("User status API error:", error);
     return NextResponse.json(
-      { error: "Internal server error" },
+      { error: "Internal server error", code: "INTERNAL_ERROR" },
       { status: 500 }
     );
   }

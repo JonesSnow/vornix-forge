@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
 import { prisma } from "@/lib/prisma";
+import { sanitizeString } from "@/lib/utils/sanitize";
 
 export async function GET() {
   try {
@@ -8,7 +9,7 @@ export async function GET() {
 
     if (!userId) {
       return NextResponse.json(
-        { error: "Unauthorized" },
+        { error: "Unauthorized", code: "UNAUTHORIZED" },
         { status: 401 }
       );
     }
@@ -31,7 +32,7 @@ export async function GET() {
   } catch (error) {
     console.error("Journal API error:", error);
     return NextResponse.json(
-      { error: "Internal server error" },
+      { error: "Internal server error", code: "INTERNAL_ERROR" },
       { status: 500 }
     );
   }
@@ -40,18 +41,13 @@ export async function GET() {
 const MAX_CONTENT_LENGTH = 5000;
 const MOODS = ["Confident", "Neutral", "Anxious", "Frustrated", "Excited"];
 
-function sanitizeString(value: unknown): string {
-  if (typeof value !== "string") return "";
-  return value.trim().replace(/[<>]/g, "");
-}
-
 export async function POST(req: NextRequest) {
   try {
     const { userId } = await auth();
 
     if (!userId) {
       return NextResponse.json(
-        { error: "Unauthorized" },
+        { error: "Unauthorized", code: "UNAUTHORIZED" },
         { status: 401 }
       );
     }
@@ -63,28 +59,28 @@ export async function POST(req: NextRequest) {
 
     if (!title) {
       return NextResponse.json(
-        { error: "Title is required" },
+        { error: "Title is required", code: "VALIDATION_ERROR" },
         { status: 400 }
       );
     }
 
     if (!content || content.length < 100) {
       return NextResponse.json(
-        { error: "Content must be at least 100 characters" },
+        { error: "Content must be at least 100 characters", code: "VALIDATION_ERROR" },
         { status: 400 }
       );
     }
 
     if (content.length > MAX_CONTENT_LENGTH) {
       return NextResponse.json(
-        { error: `Content must be less than ${MAX_CONTENT_LENGTH} characters` },
+        { error: `Content must be less than ${MAX_CONTENT_LENGTH} characters`, code: "VALIDATION_ERROR" },
         { status: 400 }
       );
     }
 
     if (!MOODS.includes(mood)) {
       return NextResponse.json(
-        { error: "Invalid mood" },
+        { error: "Invalid mood", code: "VALIDATION_ERROR" },
         { status: 400 }
       );
     }
@@ -111,13 +107,10 @@ export async function POST(req: NextRequest) {
 
     try {
       const anthropicKey = process.env.ANTHROPIC_API_KEY;
-      console.log("API key prefix:", anthropicKey?.substring(0, 10));
 
       if (!anthropicKey) {
         console.error("ANTHROPIC_API_KEY not set");
       } else {
-        console.log("Calling Claude API for journal entry:", entry.id);
-
         const anthropicResponse = await fetch("https://api.anthropic.com/v1/messages", {
           method: "POST",
           headers: {
@@ -144,11 +137,11 @@ export async function POST(req: NextRequest) {
         }
 
         const data = JSON.parse(responseText);
-        const aiFeedback = data.content?.[0]?.text ?? null;
-        if (aiFeedback) {
+        const aiFeedbackText = data.content?.[0]?.text ?? null;
+        if (aiFeedbackText) {
           await prisma.journal.update({
             where: { id: entry.id },
-            data: { aiFeedback },
+            data: { aiFeedback: aiFeedbackText },
           });
         } else {
           console.error("Claude response missing content.text:", JSON.stringify(data));
@@ -165,7 +158,7 @@ export async function POST(req: NextRequest) {
   } catch (error) {
     console.error("Journal creation error:", error);
     return NextResponse.json(
-      { error: "Internal server error" },
+      { error: "Internal server error", code: "INTERNAL_ERROR" },
       { status: 500 }
     );
   }

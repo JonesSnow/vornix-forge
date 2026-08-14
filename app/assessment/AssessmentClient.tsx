@@ -14,6 +14,19 @@ const bg = colors.bg.primary;
 const text = colors.text.primary;
 const accent = colors.accent.primary;
 
+function formatTime(seconds: number): string {
+  const m = Math.floor(seconds / 60);
+  const s = seconds % 60;
+  return `${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
+}
+
+type CategoryScore = {
+  category: string;
+  total: number;
+  correct: number;
+  wrong: Array<{ question: string; yourAnswer: string; correctAnswer: string }>;
+};
+
 export default function AssessmentClient() {
   const router = useRouter();
   const [stage, setStage] = useState<"knowledge" | "practical" | "result">("knowledge");
@@ -23,6 +36,7 @@ export default function AssessmentClient() {
   const [loaded, setLoaded] = useState(false);
   const [result, setResult] = useState<AssessmentResult | null>(null);
   const [saving, setSaving] = useState(false);
+  const [elapsed, setElapsed] = useState(0);
 
   useEffect(() => {
     const raw = localStorage.getItem(STORAGE_KEY);
@@ -37,6 +51,14 @@ export default function AssessmentClient() {
     }
     setLoaded(true);
   }, []);
+
+  useEffect(() => {
+    if (!loaded) return;
+    const interval = setInterval(() => {
+      setElapsed((e) => e + 1);
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [loaded]);
 
   useEffect(() => {
     if (loaded) {
@@ -67,7 +89,14 @@ export default function AssessmentClient() {
   }
 
   function prevQuestion() {
-    if (questionIdx > 0) setQuestionIdx((i) => i - 1);
+    if (stage === "knowledge") {
+      if (questionIdx > 0) {
+        setQuestionIdx((i) => i - 1);
+      }
+    } else if (stage === "practical") {
+      setStage("knowledge");
+      setQuestionIdx(knowledgeQuestions.length - 1);
+    }
   }
 
   function calculateScore() {
@@ -82,6 +111,35 @@ export default function AssessmentClient() {
 
     const totalQuestions = knowledgeQuestions.length + 3;
     return Math.round((correct / totalQuestions) * 100);
+  }
+
+  function calculateCategoryScores(): CategoryScore[] {
+    const categories: Record<string, { total: number; correct: number; wrong: CategoryScore["wrong"] }> = {};
+
+    knowledgeQuestions.forEach((q) => {
+      if (!categories[q.topic]) {
+        categories[q.topic] = { total: 0, correct: 0, wrong: [] };
+      }
+      categories[q.topic].total++;
+      const userAnswerIdx = answers[q.id];
+      const isCorrect = userAnswerIdx === q.correct;
+      if (isCorrect) {
+        categories[q.topic].correct++;
+      } else {
+        categories[q.topic].wrong.push({
+          question: q.question,
+          yourAnswer: userAnswerIdx !== undefined ? q.options[userAnswerIdx] : "No answer",
+          correctAnswer: q.options[q.correct],
+        });
+      }
+    });
+
+    return Object.entries(categories).map(([category, data]) => ({
+      category,
+      total: data.total,
+      correct: data.correct,
+      wrong: data.wrong,
+    }));
   }
 
   function finishAssessment() {
@@ -108,12 +166,10 @@ export default function AssessmentClient() {
 
       if (!response.ok) throw new Error("Failed to save assessment");
 
-      // Set localStorage as backup
       localStorage.setItem("vornix_assessment_complete", "true");
       router.push("/dashboard");
     } catch (error) {
       logger.error("Error saving assessment:", error);
-      // Still proceed even if API fails, localStorage is backup
       localStorage.setItem(STORAGE_KEYS.assessmentComplete, "true");
       router.push("/dashboard");
     } finally {
@@ -125,6 +181,8 @@ export default function AssessmentClient() {
   const progress = Math.round(
     ((questionIdx + 1) / knowledgeQuestions.length) * 100
   );
+
+  const categoryScores = stage === "result" ? calculateCategoryScores() : [];
 
   return (
     <main
@@ -148,9 +206,29 @@ export default function AssessmentClient() {
         .btn.ghost { background: transparent; color: #888; border: 1px solid #222; }
         .btn.primary { background: ${accent}; color: #0A0A0A; }
         .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+        .timer { font-family: 'Syne', sans-serif; font-size: 14px; color: #888; background: #0F0F0F; padding: 6px 12px; border-radius: 8px; border: 1px solid #1E1E1E; }
+        .category-card { background: #0F0F0F; border: 1px solid #1E1E1E; border-radius: 12px; padding: 20px; margin-bottom: 16px; }
+        .category-title { font-family: 'Syne', sans-serif; font-size: 14px; font-weight: 700; color: ${accent}; margin-bottom: 8px; }
+        .wrong-item { background: #0A0A0A; border: 1px solid #1E1E1E; border-radius: 8px; padding: 12px; margin-bottom: 10px; }
+        .wrong-question { font-size: 13px; color: ${text}; margin-bottom: 8px; }
+        .wrong-answer { font-size: 12px; color: #ef4444; margin-bottom: 4px; }
+        .correct-answer { font-size: 12px; color: #4ade80; }
       `}</style>
 
       <div style={{ maxWidth: 920, margin: "0 auto" }}>
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            gap: 12,
+            marginBottom: 24
+          }}
+        >
+          <h1 style={{ fontFamily: "Syne, sans-serif", fontSize: 24, margin: 0 }}>Assessment</h1>
+          <div className="timer">{formatTime(elapsed)}</div>
+        </div>
+
         {stage === "knowledge" && (
           <>
             <div
@@ -162,7 +240,6 @@ export default function AssessmentClient() {
                 marginBottom: 24
               }}
             >
-              <h1 style={{ fontFamily: "Syne, sans-serif", fontSize: 24, margin: 0 }}>Assessment</h1>
               <div style={{ width: 280 }}>
                 <div className="progress">
                   <div
@@ -250,7 +327,10 @@ export default function AssessmentClient() {
         {stage === "practical" && (
           <>
             <div style={{ marginBottom: 24 }}>
-              <h1 style={{ fontFamily: "Syne, sans-serif", fontSize: 24, margin: "0 0 12px 0" }}>Assessment</h1>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                <h1 style={{ fontFamily: "Syne, sans-serif", fontSize: 24, margin: "0 0 12px 0" }}>Assessment</h1>
+                <div className="timer">{formatTime(elapsed)}</div>
+              </div>
               <div style={{ fontSize: 12, color: "#888" }}>
                 Part 2: Practical Tasks — {Object.keys(practicalAnswers).length} of 3 completed
               </div>
@@ -265,7 +345,6 @@ export default function AssessmentClient() {
                 margin: "0 auto"
               }}
             >
-              {/* Task 1 */}
               <div style={{ marginBottom: 32 }}>
                 <h3 style={{ fontFamily: "Syne, sans-serif", fontSize: 16, marginBottom: 12 }}>
                   Task 1: Chart Pattern Recognition
@@ -303,7 +382,6 @@ export default function AssessmentClient() {
 
               <hr style={{ border: "none", borderTop: "1px solid #1E1E1E", margin: "24px 0" }} />
 
-              {/* Task 2 */}
               <div style={{ marginBottom: 32 }}>
                 <h3 style={{ fontFamily: "Syne, sans-serif", fontSize: 16, marginBottom: 12 }}>
                   Task 2: Position Sizing
@@ -339,7 +417,6 @@ export default function AssessmentClient() {
 
               <hr style={{ border: "none", borderTop: "1px solid #1E1E1E", margin: "24px 0" }} />
 
-              {/* Task 3 */}
               <div style={{ marginBottom: 24 }}>
                 <h3 style={{ fontFamily: "Syne, sans-serif", fontSize: 16, marginBottom: 12 }}>
                   Task 3: Risk Management Scenario
@@ -379,7 +456,7 @@ export default function AssessmentClient() {
               </div>
 
               <div className="controls">
-                <button className="btn ghost" onClick={() => setStage("knowledge")}>
+                <button className="btn ghost" onClick={prevQuestion}>
                   Back
                 </button>
                 <button className="btn primary" onClick={finishAssessment}>
@@ -421,6 +498,9 @@ export default function AssessmentClient() {
                   {levelDescriptions[result.level - 1].range} —{" "}
                   {levelDescriptions[result.level - 1].title} Trader
                 </div>
+                <div style={{ fontSize: 12, color: "#444", marginTop: 6 }}>
+                  Time elapsed: {formatTime(elapsed)}
+                </div>
               </div>
 
               <div
@@ -442,40 +522,26 @@ export default function AssessmentClient() {
 
               <div style={{ marginBottom: 24 }}>
                 <h4 style={{ fontFamily: "Syne, sans-serif", fontSize: 14, marginBottom: 12, color: text }}>
-                  What You'll Learn:
+                  Category Breakdown:
                 </h4>
-                {result.level === 1 && (
-                  <ul style={{ fontSize: 13, color: "#AAA", lineHeight: 1.8, margin: 0, paddingLeft: 20 }}>
-                    <li>Market fundamentals and asset classes</li>
-                    <li>Candlestick chart basics and patterns</li>
-                    <li>Essential risk management rules</li>
-                    <li>Trading psychology foundations</li>
-                  </ul>
-                )}
-                {result.level === 2 && (
-                  <ul style={{ fontSize: 13, color: "#AAA", lineHeight: 1.8, margin: 0, paddingLeft: 20 }}>
-                    <li>Technical analysis — support, resistance, trends</li>
-                    <li>Simulator trading practice</li>
-                    <li>Building consistent habits</li>
-                    <li>Journal-based improvement</li>
-                  </ul>
-                )}
-                {result.level === 3 && (
-                  <ul style={{ fontSize: 13, color: "#AAA", lineHeight: 1.8, margin: 0, paddingLeft: 20 }}>
-                    <li>Advanced chart patterns and strategies</li>
-                    <li>Portfolio construction and diversification</li>
-                    <li>Advanced risk management</li>
-                    <li>System building and backtesting</li>
-                  </ul>
-                )}
-                {result.level === 4 && (
-                  <ul style={{ fontSize: 13, color: "#AAA", lineHeight: 1.8, margin: 0, paddingLeft: 20 }}>
-                    <li>Specialization in your preferred markets</li>
-                    <li>Professional-grade analysis tools</li>
-                    <li>Proprietary strategy development</li>
-                    <li>Advanced edge and optimization</li>
-                  </ul>
-                )}
+                {categoryScores.map((cat) => (
+                  <div key={cat.category} className="category-card">
+                    <div className="category-title">
+                      {cat.category} — {cat.correct}/{cat.total} correct
+                    </div>
+                    {cat.wrong.length > 0 && (
+                      <div style={{ marginTop: 12 }}>
+                        {cat.wrong.map((w, i) => (
+                          <div key={i} className="wrong-item">
+                            <div className="wrong-question">{w.question}</div>
+                            <div className="wrong-answer">Your answer: {w.yourAnswer}</div>
+                            <div className="correct-answer">Correct answer: {w.correctAnswer}</div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                ))}
               </div>
 
               <button

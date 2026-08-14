@@ -11,7 +11,7 @@ export async function GET(
 
     if (!userId) {
       return NextResponse.json(
-        { error: "Unauthorized" },
+        { error: "Unauthorized", code: "UNAUTHORIZED" },
         { status: 401 }
       );
     }
@@ -21,7 +21,7 @@ export async function GET(
 
     if (!lessonId || typeof lessonId !== "string") {
       return NextResponse.json(
-        { error: "Invalid lesson ID" },
+        { error: "Invalid lesson ID", code: "VALIDATION_ERROR" },
         { status: 400 }
       );
     }
@@ -58,7 +58,7 @@ export async function GET(
 
     if (!lesson) {
       return NextResponse.json(
-        { error: "Lesson not found" },
+        { error: "Lesson not found", code: "NOT_FOUND" },
         { status: 404 }
       );
     }
@@ -67,7 +67,7 @@ export async function GET(
   } catch (error) {
     console.error("Lesson API error:", error);
     return NextResponse.json(
-      { error: "Internal server error" },
+      { error: "Internal server error", code: "INTERNAL_ERROR" },
       { status: 500 }
     );
   }

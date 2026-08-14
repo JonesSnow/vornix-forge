@@ -204,16 +204,16 @@ export default function ProgressClient({ userId }: ProgressClientProps) {
               </p>
             </header>
 
-            <section style={{ display: "grid", gridTemplateColumns: "repeat(4, minmax(0, 1fr))", gap: 16, marginBottom: 24 }}>
+             <section style={{ display: "grid", gridTemplateColumns: "repeat(4, minmax(0, 1fr))", gap: 16, marginBottom: 24 }}>
               {[
                 { label: "Current Level", value: `Level ${currentLevel}` },
                 { label: "Modules Completed", value: summary?.completedModules.length ?? 0 },
                 { label: "Journal Entries", value: summary?.journalCount ?? 0 },
-                { label: "Win Rate", value: `${summary?.winRate ?? 0}%` },
+                { label: "Win Rate", value: `${summary?.winRate ?? 0}%`, color: (summary?.winRate ?? 0) > 50 ? "#4ade80" : (summary?.winRate ?? 0) < 50 ? "#ef4444" : text },
               ].map((item) => (
                 <div key={item.label} className="card" style={{ padding: 20 }}>
                   <div className="muted" style={{ fontSize: 13, marginBottom: 12 }}>{item.label}</div>
-                  <div className="stat-value">{item.value}</div>
+                  <div className="stat-value" style={{ color: item.color }}>{item.value}</div>
                 </div>
               ))}
             </section>
@@ -224,7 +224,7 @@ export default function ProgressClient({ userId }: ProgressClientProps) {
                 <h2 style={{ fontFamily: "Syne, sans-serif", fontSize: 24, margin: "0 0 16px 0" }}>Eight-skill profile</h2>
                 <div style={{ width: "100%", height: 320 }}>
                   <ResponsiveContainer>
-                    <RadarChart data={summary?.radarData ?? []}>
+                    <RadarChart data={summary?.radarData ?? []} width={400} height={300}>
                       <PolarGrid stroke="#222" />
                       <PolarAngleAxis dataKey="skill" tick={{ fill: "#F2F0EB", fontSize: 11 }} />
                       <PolarRadiusAxis angle={30} domain={[0, 100]} tick={false} axisLine={false} />
@@ -252,6 +252,18 @@ export default function ProgressClient({ userId }: ProgressClientProps) {
                       <span className="muted" style={{ fontSize: 13 }}>Next:</span>
                       <span className="badge">{(levelCopy[nextLevel] ?? levelCopy[1]).name}</span>
                     </div>
+                  </div>
+                </div>
+
+                <div className="card" style={{ padding: 28 }}>
+                  <div className="muted" style={{ fontSize: 13, marginBottom: 14 }}>Next Milestone</div>
+                  <div style={{ fontSize: 14, lineHeight: 1.7 }}>
+                    {(levelCopy[nextLevel] ?? levelCopy[1]).learn.map((item, i) => (
+                      <div key={i} style={{ display: "flex", gap: 10, marginBottom: 8, alignItems: "flex-start" }}>
+                        <span style={{ color: accent, flexShrink: 0 }}>→</span>
+                        <span>{item}</span>
+                      </div>
+                    ))}
                   </div>
                 </div>
 
