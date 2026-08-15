@@ -385,19 +385,17 @@ export default function AdminClient() {
 
             <div className="bg-[#111111] border border-gray-800 rounded p-4">
               <h3 className="text-sm font-semibold text-gray-400 mb-4">Signups per day (last 30 days)</h3>
-              <div className="h-64">
-                <ResponsiveContainer width="100%" height="100%">
-                  <LineChart data={activityData}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#222" />
-                    <XAxis dataKey="date" stroke="#555" tick={{ fontSize: 10 }} />
-                    <YAxis stroke="#555" tick={{ fontSize: 10 }} />
-                    <Tooltip
-                      contentStyle={{ backgroundColor: "#111", border: "1px solid #333", borderRadius: 4 }}
-                      labelStyle={{ color: "#E8A020" }}
-                    />
-                    <Line type="monotone" dataKey="count" stroke="#E8A020" strokeWidth={2} dot={false} />
-                  </LineChart>
-                </ResponsiveContainer>
+              <div style={{ width: "100%", height: 300 }}>
+                <LineChart data={activityData} width={500} height={300}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#222" />
+                  <XAxis dataKey="date" stroke="#555" tick={{ fontSize: 10 }} />
+                  <YAxis stroke="#555" tick={{ fontSize: 10 }} />
+                  <Tooltip
+                    contentStyle={{ backgroundColor: "#111", border: "1px solid #333", borderRadius: 4 }}
+                    labelStyle={{ color: "#E8A020" }}
+                  />
+                  <Line type="monotone" dataKey="count" stroke="#E8A020" strokeWidth={2} dot={false} />
+                </LineChart>
               </div>
             </div>
           </div>
