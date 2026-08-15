@@ -106,49 +106,46 @@ export async function POST(req: NextRequest) {
     let aiFeedback = null;
 
     try {
-      const anthropicKey = process.env.ANTHROPIC_API_KEY;
+      const groqResponse = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${process.env.GROQ_API_KEY}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          model: "llama-3.3-70b-versatile",
+          max_tokens: 500,
+          messages: [
+            {
+              role: "system",
+              content: "You are a professional trading coach. Give specific, actionable feedback in 3-4 sentences focusing on mindset, risk management, and areas for improvement. Be direct and constructive.",
+            },
+            {
+              role: "user",
+              content: content,
+            },
+          ],
+        }),
+      });
 
-      if (!anthropicKey) {
-        console.error("ANTHROPIC_API_KEY not set");
-      } else {
-        const anthropicResponse = await fetch("https://api.anthropic.com/v1/messages", {
-          method: "POST",
-          headers: {
-            "x-api-key": process.env.ANTHROPIC_API_KEY!,
-            "anthropic-version": "2023-06-01",
-            "content-type": "application/json",
-          },
-          body: JSON.stringify({
-            model: "claude-3-5-haiku-20241022",
-            max_tokens: 500,
-            messages: [
-              {
-                role: "user",
-                content: `You are a professional trading coach. A trader wrote this journal entry: "${content}". Give specific actionable feedback in 3-4 sentences focusing on mindset, risk management, and improvement.`,
-              },
-            ],
-          }),
+      const responseText = await groqResponse.text();
+      if (!groqResponse.ok) {
+        console.error("Groq API error:", responseText);
+        throw new Error("Groq API failed: " + groqResponse.status);
+      }
+
+      const data = JSON.parse(responseText);
+      const aiFeedbackText = data.choices?.[0]?.message?.content ?? null;
+      if (aiFeedbackText) {
+        await prisma.journal.update({
+          where: { id: entry.id },
+          data: { aiFeedback: aiFeedbackText },
         });
-
-        const responseText = await anthropicResponse.text();
-        if (!anthropicResponse.ok) {
-          console.error("Claude API error:", responseText);
-          throw new Error("Claude API failed: " + anthropicResponse.status);
-        }
-
-        const data = JSON.parse(responseText);
-        const aiFeedbackText = data.content?.[0]?.text ?? null;
-        if (aiFeedbackText) {
-          await prisma.journal.update({
-            where: { id: entry.id },
-            data: { aiFeedback: aiFeedbackText },
-          });
-        } else {
-          console.error("Claude response missing content.text:", JSON.stringify(data));
-        }
+      } else {
+        console.error("Groq response missing content:", JSON.stringify(data));
       }
     } catch (aiError) {
-      console.error("Claude API error:", aiError);
+      console.error("Groq API error:", aiError);
     }
 
     return NextResponse.json(
