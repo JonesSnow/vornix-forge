@@ -6,7 +6,6 @@ import { logger } from "@/lib/utils";
 export async function GET(req: NextRequest) {
   try {
     const { userId } = await auth();
-    console.log("ADMIN_CHECK - userId:", userId);
 
     if (!userId) {
       return NextResponse.json(
