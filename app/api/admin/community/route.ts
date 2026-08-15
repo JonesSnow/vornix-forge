@@ -11,14 +11,20 @@ export async function GET(req: NextRequest) {
     }
 
     const search = req.nextUrl.searchParams.get("search")?.toLowerCase() ?? "";
-    const flaggedOnly = req.nextUrl.searchParams.get("flagged") === "true";
+    const filter = req.nextUrl.searchParams.get("filter") ?? "all";
 
     const where: any = {};
     if (search) {
       where.content = { contains: search, mode: "insensitive" };
     }
-    if (flaggedOnly) {
+    if (filter === "reported") {
       where.reports = { gt: 0 };
+    } else if (filter === "today") {
+      where.createdAt = { gte: new Date(new Date().setHours(0, 0, 0, 0)) };
+    } else if (filter === "week") {
+      const weekAgo = new Date();
+      weekAgo.setDate(weekAgo.getDate() - 7);
+      where.createdAt = { gte: weekAgo };
     }
 
     const posts = await prisma.communityPost.findMany({
@@ -31,6 +37,7 @@ export async function GET(req: NextRequest) {
             clerkId: true,
             firstName: true,
             lastName: true,
+            experienceLevel: true,
           },
         },
       },
@@ -51,17 +58,17 @@ export async function DELETE(req: NextRequest) {
     }
 
     const body = await req.json();
-    const { postId } = body;
+    const { postIds } = body;
 
-    if (!postId) {
-      return NextResponse.json({ error: "postId required", code: "VALIDATION_ERROR" }, { status: 400 });
+    if (!postIds || !Array.isArray(postIds)) {
+      return NextResponse.json({ error: "postIds array required", code: "VALIDATION_ERROR" }, { status: 400 });
     }
 
-    await prisma.communityPost.delete({ where: { id: postId } });
+    await prisma.communityPost.deleteMany({ where: { id: { in: postIds } } });
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error("Admin delete post API error:", error);
+    console.error("Admin delete posts API error:", error);
     return NextResponse.json({ error: "Internal server error", code: "INTERNAL_ERROR" }, { status: 500 });
   }
 }

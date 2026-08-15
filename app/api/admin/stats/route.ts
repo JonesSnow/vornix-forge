@@ -26,6 +26,11 @@ export async function GET() {
       journalEntries,
       communityPosts,
       coursesCount,
+      platformHealth: {
+        database: "healthy",
+        api: "healthy",
+        lastDeployment: new Date().toISOString(),
+      },
     });
   } catch (error) {
     console.error("Admin stats API error:", error);

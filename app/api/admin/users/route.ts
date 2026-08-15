@@ -12,7 +12,9 @@ export async function GET(req: NextRequest) {
 
     const search = req.nextUrl.searchParams.get("search")?.toLowerCase() ?? "";
     const page = parseInt(req.nextUrl.searchParams.get("page") ?? "1", 10);
-    const limit = parseInt(req.nextUrl.searchParams.get("limit") ?? "50", 10);
+    const limit = parseInt(req.nextUrl.searchParams.get("limit") ?? "20", 10);
+    const sort = req.nextUrl.searchParams.get("sort") ?? "createdAt";
+    const order = req.nextUrl.searchParams.get("order") === "asc" ? "asc" : "desc";
     const skip = (page - 1) * limit;
 
     const where = search
@@ -24,14 +26,16 @@ export async function GET(req: NextRequest) {
         }
       : {};
 
+    const orderBy: any = { [sort]: order };
+
     const [profiles, total] = await Promise.all([
       prisma.profile.findMany({
         where,
         skip,
         take: limit,
-        orderBy: { createdAt: "desc" },
+        orderBy,
         include: {
-          simulatorTrades: true,
+          simulatorPortfolio: { include: { trades: true } },
           journals: true,
         },
       }),
@@ -46,7 +50,7 @@ export async function GET(req: NextRequest) {
     ]);
 
     const assessmentMap = new Map(assessments.map((a) => [a.clerkId, a]));
-    const progressMap = new Map< string, { completed: number; total: number }>();
+    const progressMap = new Map<string, { completed: number; total: number }>();
     for (const p of progress) {
       const existing = progressMap.get(p.clerkId) ?? { completed: 0, total: 0 };
       existing.total += 1;
@@ -57,6 +61,8 @@ export async function GET(req: NextRequest) {
     const users = profiles.map((p) => {
       const a = assessmentMap.get(p.clerkId);
       const prog = progressMap.get(p.clerkId) ?? { completed: 0, total: 0 };
+      const trades = p.simulatorPortfolio?.trades ?? [];
+      const pnl = trades.reduce((acc, t) => acc + (t.pnl ?? 0), 0);
       return {
         clerkId: p.clerkId,
         name: `${p.firstName ?? ""} ${p.lastName ?? ""}`.trim() || "Unknown",
@@ -64,7 +70,8 @@ export async function GET(req: NextRequest) {
         level: p.experienceLevel ?? "N/A",
         assessmentScore: a?.score ?? 0,
         modulesCompleted: prog.completed,
-        tradesMade: p.simulatorTrades.length,
+        tradesMade: trades.length,
+        pnl,
         journalEntries: p.journals.length,
         joinedDate: p.createdAt,
         lastActive: p.updatedAt,

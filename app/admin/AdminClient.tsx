@@ -74,6 +74,7 @@ type JournalEntry = {
   title: string;
   content: string;
   mood: string;
+  aiFeedback: string | null;
   createdAt: string;
   profile: { firstName: string | null; lastName: string | null };
 };
@@ -95,6 +96,16 @@ export default function AdminClient() {
   const [posts, setPosts] = useState<CommunityPost[]>([]);
   const [simulator, setSimulator] = useState<SimulatorData | null>(null);
   const [journals, setJournals] = useState<JournalEntry[]>([]);
+  const [journalTotal, setJournalTotal] = useState(0);
+  const [journalMoods, setJournalMoods] = useState<string[]>([]);
+
+  const filteredJournals = journals.filter((j) => {
+    const matchesMood = !journalMood || j.mood === journalMood;
+    const matchesSearch = !journalSearch || j.title.toLowerCase().includes(journalSearch.toLowerCase()) || j.content.toLowerCase().includes(journalSearch.toLowerCase());
+    return matchesMood && matchesSearch;
+  });
+
+  const moods = journalMoods.length > 0 ? journalMoods : Array.from(new Set(journals.map((j) => j.mood)));
   const [activityData, setActivityData] = useState<{ date: string; count: number }[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -103,13 +114,18 @@ export default function AdminClient() {
   const [journalMood, setJournalMood] = useState("");
   const [journalSearch, setJournalSearch] = useState("");
   const [flaggedOnly, setFlaggedOnly] = useState(false);
+  const [selectedPosts, setSelectedPosts] = useState<string[]>([]);
+  const [viewPost, setViewPost] = useState<CommunityPost | null>(null);
+  const [viewJournal, setViewJournal] = useState<JournalEntry | null>(null);
   const [selectedUser, setSelectedUser] = useState<any>(null);
+  const [userDetail, setUserDetail] = useState<any>(null);
 
   const [newCourse, setNewCourse] = useState({ title: "", description: "", level: "", order: "" });
   const [newModule, setNewModule] = useState({ courseId: "", title: "", description: "", order: "" });
   const [newLesson, setNewLesson] = useState({ courseId: "", moduleId: "", title: "", content: "", type: "lesson", order: "", duration: "15" });
   const [editingLesson, setEditingLesson] = useState<{ courseId: string; moduleId: string; lessonId: string } | null>(null);
   const [editContent, setEditContent] = useState("");
+  const [confirmAction, setConfirmAction] = useState<{ message: string; onConfirm: () => void } | null>(null);
 
   useEffect(() => {
     fetchData();
@@ -151,6 +167,8 @@ export default function AdminClient() {
       if (journalRes.ok) {
         const data = await journalRes.json();
         setJournals(data.entries);
+        setJournalTotal(data.total);
+        if (data.moods) setJournalMoods(data.moods);
       }
     } catch (e) {
       console.error("Failed to fetch admin data", e);
@@ -228,10 +246,32 @@ export default function AdminClient() {
     fetchData();
   };
 
-  const handleResetAssessment = async (clerkId: string) => {
-    if (!confirm("Reset this user's assessment?")) return;
-    await fetch(`/api/admin/users/${clerkId}`, { method: "DELETE" });
-    fetchData();
+  const handleResetAssessment = (clerkId: string) => {
+    setConfirmAction({
+      message: "Reset this user's assessment? This cannot be undone.",
+      onConfirm: async () => {
+        await fetch(`/api/admin/users/${clerkId}`, { method: "DELETE" });
+        setConfirmAction(null);
+        fetchData();
+        if (userDetail && userDetail.profile?.clerkId === clerkId) {
+          setUserDetail({ ...userDetail, assessment: null });
+        }
+      },
+    });
+  };
+
+  const handleResetPortfolio = (clerkId: string) => {
+    setConfirmAction({
+      message: "Reset this user's portfolio and all trades? This cannot be undone.",
+      onConfirm: async () => {
+        await fetch(`/api/admin/users/${clerkId}/portfolio`, { method: "DELETE" });
+        setConfirmAction(null);
+        fetchData();
+        if (userDetail && userDetail.profile?.clerkId === clerkId) {
+          setUserDetail({ ...userDetail, portfolio: null });
+        }
+      },
+    });
   };
 
   const filteredUsers = users.filter(
@@ -243,14 +283,6 @@ export default function AdminClient() {
     const matchesFlagged = !flaggedOnly || p.reports > 0;
     return matchesSearch && matchesFlagged;
   });
-
-  const filteredJournals = journals.filter((j) => {
-    const matchesMood = !journalMood || j.mood === journalMood;
-    const matchesSearch = !journalSearch || j.content.toLowerCase().includes(journalSearch.toLowerCase()) || j.title.toLowerCase().includes(journalSearch.toLowerCase());
-    return matchesMood && matchesSearch;
-  });
-
-  const moods = Array.from(new Set(journals.map((j) => j.mood)));
 
   return (
     <div className="flex min-h-screen bg-[#0D0D0D] text-gray-200">
@@ -649,6 +681,160 @@ export default function AdminClient() {
           </div>
         )}
       </main>
+
+      {selectedUser && userDetail && (
+        <div className="fixed inset-0 bg-black/50 z-40" onClick={() => { setSelectedUser(null); setUserDetail(null); }}>
+          <div className="absolute right-0 top-0 h-full w-full max-w-2xl bg-[#111111] border-l border-gray-800 overflow-auto" onClick={(e) => e.stopPropagation()}>
+            <div className="p-6 space-y-6">
+              <div className="flex justify-between items-center">
+                <h3 className="text-lg font-bold text-white">User Profile</h3>
+                <button onClick={() => { setSelectedUser(null); setUserDetail(null); }} className="text-gray-400 hover:text-white">✕</button>
+              </div>
+
+              <div className="bg-[#0D0D0D] rounded p-4 space-y-2">
+                <h4 className="text-sm font-semibold text-gray-400 uppercase">Profile</h4>
+                <div className="text-white font-semibold">{userDetail.profile.firstName} {userDetail.profile.lastName}</div>
+                <div className="text-gray-400 text-sm">{userDetail.profile.clerkId}</div>
+                <div className="text-gray-500 text-xs">Joined: {new Date(userDetail.profile.createdAt).toLocaleDateString()}</div>
+                <div className="text-gray-500 text-xs">Last Active: {new Date(userDetail.profile.updatedAt).toLocaleDateString()}</div>
+              </div>
+
+              <div className="bg-[#0D0D0D] rounded p-4 space-y-2">
+                <h4 className="text-sm font-semibold text-gray-400 uppercase">Assessment</h4>
+                {userDetail.assessment ? (
+                  <>
+                    <div className="text-white">Score: {userDetail.assessment.score}</div>
+                    <div className="text-gray-400 text-sm">Level: {userDetail.assessment.level}</div>
+                    <div className="text-gray-500 text-xs">Taken: {new Date(userDetail.assessment.createdAt).toLocaleDateString()}</div>
+                  </>
+                ) : (
+                  <div className="text-gray-500 text-sm">No assessment taken</div>
+                )}
+                <button onClick={() => handleResetAssessment(userDetail.profile.clerkId)} className="mt-2 bg-red-600 text-white px-3 py-1 rounded text-xs hover:bg-red-700">Reset Assessment</button>
+              </div>
+
+              <div className="bg-[#0D0D0D] rounded p-4 space-y-2">
+                <h4 className="text-sm font-semibold text-gray-400 uppercase">Learning Progress</h4>
+                {userDetail.progress && userDetail.progress.length > 0 ? (
+                  <div className="space-y-1">
+                    {userDetail.progress.map((p: any) => (
+                      <div key={p.id} className="flex justify-between text-sm">
+                        <span className="text-white">{p.module.title}</span>
+                        <span className="text-gray-500">{p.completed ? "Completed" : "In Progress"} · {p.completedAt ? new Date(p.completedAt).toLocaleDateString() : "-"}</span>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-gray-500 text-sm">No progress yet</div>
+                )}
+              </div>
+
+              {userDetail.portfolio && (
+                <div className="bg-[#0D0D0D] rounded p-4 space-y-2">
+                  <h4 className="text-sm font-semibold text-gray-400 uppercase">Simulator</h4>
+                  <div className="text-white">Balance: ₹{userDetail.portfolio.balance.toLocaleString()}</div>
+                  <button onClick={() => handleResetPortfolio(userDetail.profile.clerkId)} className="mt-2 bg-red-600 text-white px-3 py-1 rounded text-xs hover:bg-red-700">Reset Portfolio</button>
+                  {userDetail.portfolio.trades && userDetail.portfolio.trades.length > 0 && (
+                    <div className="mt-2">
+                      <p className="text-xs text-gray-500 mb-1">Recent Trades</p>
+                      <div className="space-y-1 max-h-40 overflow-auto">
+                        {userDetail.portfolio.trades.slice(0, 10).map((t: any) => (
+                          <div key={t.id} className="flex justify-between text-xs">
+                            <span className="text-white">{t.symbol} {t.side}</span>
+                            <span className={t.pnl >= 0 ? "text-green-400" : "text-red-400"}>{t.pnl != null ? (t.pnl >= 0 ? "+" : "") + t.pnl.toLocaleString() : "-"}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              <div className="bg-[#0D0D0D] rounded p-4 space-y-2">
+                <h4 className="text-sm font-semibold text-gray-400 uppercase">Journal Entries</h4>
+                {userDetail.journals && userDetail.journals.length > 0 ? (
+                  <div className="space-y-2 max-h-60 overflow-auto">
+                    {userDetail.journals.map((j: any) => (
+                      <div key={j.id} className="border border-gray-800 rounded p-2">
+                        <div className="text-white text-sm">{j.title}</div>
+                        <div className="text-gray-400 text-xs">{j.mood} · {new Date(j.createdAt).toLocaleDateString()}</div>
+                        <div className="text-gray-500 text-xs mt-1 line-clamp-2">{j.content}</div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-gray-500 text-sm">No journal entries</div>
+                )}
+              </div>
+
+              <div className="bg-[#0D0D0D] rounded p-4 space-y-2">
+                <h4 className="text-sm font-semibold text-gray-400 uppercase">Community Posts</h4>
+                {userDetail.communityPosts && userDetail.communityPosts.length > 0 ? (
+                  <div className="space-y-2 max-h-60 overflow-auto">
+                    {userDetail.communityPosts.map((p: any) => (
+                      <div key={p.id} className="border border-gray-800 rounded p-2">
+                        <div className="text-gray-300 text-sm">{p.content}</div>
+                        <div className="text-gray-500 text-xs mt-1">Likes: {p.likes} · {new Date(p.createdAt).toLocaleDateString()}</div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-gray-500 text-sm">No community posts</div>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {viewPost && (
+        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50" onClick={() => setViewPost(null)}>
+          <div className="bg-[#111111] border border-gray-800 rounded p-6 max-w-2xl w-full max-h-[80vh] overflow-auto" onClick={(e) => e.stopPropagation()}>
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-bold text-white">Post by {viewPost.profile.firstName} {viewPost.profile.lastName}</h3>
+              <button onClick={() => setViewPost(null)} className="text-gray-400 hover:text-white">✕</button>
+            </div>
+            <p className="text-gray-300 whitespace-pre-wrap">{viewPost.content}</p>
+            <div className="flex gap-4 mt-4 text-sm text-gray-500">
+              <span>Likes: {viewPost.likes}</span>
+              <span>Reports: {viewPost.reports}</span>
+              <span>{new Date(viewPost.createdAt).toLocaleString()}</span>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {viewJournal && (
+        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50" onClick={() => setViewJournal(null)}>
+          <div className="bg-[#111111] border border-gray-800 rounded p-6 max-w-2xl w-full max-h-[80vh] overflow-auto" onClick={(e) => e.stopPropagation()}>
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-bold text-white">{viewJournal.title}</h3>
+              <button onClick={() => setViewJournal(null)} className="text-gray-400 hover:text-white">✕</button>
+            </div>
+            <div className="text-sm text-gray-400 mb-2">By {viewJournal.profile.firstName} {viewJournal.profile.lastName} · {viewJournal.mood} · {new Date(viewJournal.createdAt).toLocaleDateString()}</div>
+            <p className="text-gray-300 whitespace-pre-wrap mb-4">{viewJournal.content}</p>
+            {viewJournal.aiFeedback && (
+              <div className="bg-[#0D0D0D] border border-gray-800 rounded p-3">
+                <div className="text-xs text-gray-500 uppercase mb-1">AI Feedback</div>
+                <p className="text-gray-300 text-sm">{viewJournal.aiFeedback}</p>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {confirmAction && (
+        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50">
+          <div className="bg-[#111111] border border-gray-800 rounded p-6 max-w-md w-full">
+            <h3 className="text-lg font-bold text-white mb-4">Confirm Action</h3>
+            <p className="text-gray-300 mb-6">{confirmAction.message}</p>
+            <div className="flex gap-3 justify-end">
+              <button onClick={() => setConfirmAction(null)} className="px-4 py-2 bg-gray-800 text-white rounded text-sm hover:bg-gray-700">Cancel</button>
+              <button onClick={confirmAction.onConfirm} className="px-4 py-2 bg-red-600 text-white rounded text-sm hover:bg-red-700">Confirm</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

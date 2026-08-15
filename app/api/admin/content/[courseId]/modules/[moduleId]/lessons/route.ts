@@ -10,7 +10,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ cou
       return NextResponse.json({ error: "Forbidden", code: "FORBIDDEN" }, { status: 403 });
     }
 
-    const { courseId, moduleId } = await params;
+    const { moduleId } = await params;
 
     const body = await req.json();
     const { title, content, type, order, duration } = body;

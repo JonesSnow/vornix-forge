@@ -17,21 +17,41 @@ export async function GET() {
             clerkId: true,
             firstName: true,
             lastName: true,
+            experienceLevel: true,
           },
         },
-        trades: {
-          orderBy: { openedAt: "desc" },
-          take: 20,
-        },
+        trades: { orderBy: { openedAt: "desc" } },
       },
       orderBy: { balance: "desc" },
     });
 
     const totalPortfolioValue = portfolios.reduce((acc, p) => acc + p.balance, 0);
 
-    const allTrades = await prisma.simulatorTrade.findMany({
+    const topTraders = portfolios
+      .map((p) => {
+        const trades = p.trades;
+        const pnl = trades.reduce((acc, t) => acc + (t.pnl ?? 0), 0);
+        const closedTrades = trades.filter((t) => t.status === "closed");
+        const winRate = closedTrades.length > 0
+          ? Math.round((closedTrades.filter((t) => (t.pnl ?? 0) > 0).length / closedTrades.length) * 100)
+          : 0;
+        return {
+          clerkId: p.clerkId,
+          name: `${p.profile.firstName ?? ""} ${p.profile.lastName ?? ""}`.trim() || "Unknown",
+          level: p.profile.experienceLevel ?? "N/A",
+          balance: p.balance,
+          pnl,
+          trades: trades.length,
+          winRate,
+          openPositions: trades.filter((t) => t.status === "open").length,
+        };
+      })
+      .sort((a, b) => b.pnl - a.pnl)
+      .slice(0, 10);
+
+    const recentTrades = await prisma.simulatorTrade.findMany({
       orderBy: { openedAt: "desc" },
-      take: 50,
+      take: 20,
       include: {
         profile: {
           select: {
@@ -42,29 +62,27 @@ export async function GET() {
       },
     });
 
-    const topTraders = portfolios
-      .map((p) => ({
-        clerkId: p.clerkId,
-        name: `${p.profile.firstName ?? ""} ${p.profile.lastName ?? ""}`.trim() || "Unknown",
-        balance: p.balance,
-        pnl: p.trades.reduce((acc, t) => acc + (t.pnl ?? 0), 0),
-        trades: p.trades.length,
-      }))
-      .sort((a, b) => b.pnl - a.pnl)
-      .slice(0, 10);
-
     return NextResponse.json({
       totalPortfolioValue,
       topTraders,
-      recentTrades: allTrades.map((t) => ({
+      recentTrades: recentTrades.map((t) => ({
         id: t.id,
         clerkId: t.clerkId,
         name: `${t.profile.firstName ?? ""} ${t.profile.lastName ?? ""}`.trim() || "Unknown",
         symbol: t.symbol,
         side: t.side,
+        quantity: t.quantity,
+        entryPrice: t.entryPrice,
         pnl: t.pnl,
         status: t.status,
         openedAt: t.openedAt,
+      })),
+      portfolios: portfolios.map((p) => ({
+        clerkId: p.clerkId,
+        name: `${p.profile.firstName ?? ""} ${p.profile.lastName ?? ""}`.trim() || "Unknown",
+        balance: p.balance,
+        openPositions: p.trades.filter((t) => t.status === "open").length,
+        totalPnl: p.trades.reduce((acc, t) => acc + (t.pnl ?? 0), 0),
       })),
     });
   } catch (error) {

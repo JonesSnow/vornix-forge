@@ -12,6 +12,9 @@ export async function GET(req: NextRequest) {
 
     const mood = req.nextUrl.searchParams.get("mood") ?? "";
     const search = req.nextUrl.searchParams.get("search")?.toLowerCase() ?? "";
+    const page = parseInt(req.nextUrl.searchParams.get("page") ?? "1", 10);
+    const limit = parseInt(req.nextUrl.searchParams.get("limit") ?? "50", 10);
+    const skip = (page - 1) * limit;
 
     const where: any = {};
     if (mood) {
@@ -24,22 +27,42 @@ export async function GET(req: NextRequest) {
       ];
     }
 
-    const entries = await prisma.journal.findMany({
-      where,
-      orderBy: { createdAt: "desc" },
-      take: 100,
-      include: {
-        profile: {
-          select: {
-            clerkId: true,
-            firstName: true,
-            lastName: true,
+    const [entries, total] = await Promise.all([
+      prisma.journal.findMany({
+        where,
+        skip,
+        take: limit,
+        orderBy: { createdAt: "desc" },
+        include: {
+          profile: {
+            select: {
+              clerkId: true,
+              firstName: true,
+              lastName: true,
+            },
           },
         },
-      },
+      }),
+      prisma.journal.count({ where }),
+    ]);
+
+    const moods = await prisma.journal.findMany({
+      select: { mood: true },
+      distinct: ["mood"],
     });
 
-    return NextResponse.json({ entries });
+    return NextResponse.json({
+      entries,
+      total,
+      page,
+      limit,
+      moods: moods.map((m) => m.mood),
+      stats: {
+        total,
+        withAiFeedback: entries.filter((e) => !!e.aiFeedback).length,
+        withoutAiFeedback: entries.filter((e) => !e.aiFeedback).length,
+      },
+    });
   } catch (error) {
     console.error("Admin journal API error:", error);
     return NextResponse.json({ error: "Internal server error", code: "INTERNAL_ERROR" }, { status: 500 });
