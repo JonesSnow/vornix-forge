@@ -6,7 +6,20 @@ const isPublicRoute = createRouteMatcher([
   "/sign-up(.*)",
 ]);
 
+const isAdminRoute = createRouteMatcher(["/admin(.*)"]);
+
 export default clerkMiddleware(async (auth, request) => {
+  if (isAdminRoute(request)) {
+    const { userId } = await auth();
+    if (!userId) {
+      return Response.redirect(new URL("/sign-in", request.url));
+    }
+    const { ADMIN_CLERK_IDS } = await import("@/lib/constants");
+    if (!ADMIN_CLERK_IDS.includes(userId)) {
+      return Response.redirect(new URL("/dashboard", request.url));
+    }
+    return;
+  }
   if (!isPublicRoute(request)) {
     await auth.protect();
   }

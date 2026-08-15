@@ -146,8 +146,9 @@ model CommunityPost {
   clerkId   String
   content   String
   likes     Int      @default(0)
+  reports   Int      @default(0)
   createdAt DateTime @default(now())
-  profile   Profile  @relation(fields: [clerkId], references: [clerkId])
+  profile   Profile   @relation(fields: [clerkId], references: [id])
   postLikes PostLike[]
 }
 
