@@ -10,6 +10,7 @@ type Stats = {
   journalEntries: number;
   communityPosts: number;
   coursesCount: number;
+  platformHealth: { database: string; api: string; lastDeployment: string };
 };
 
 type User = {
@@ -66,6 +67,7 @@ type SimulatorData = {
   totalPortfolioValue: number;
   topTraders: any[];
   recentTrades: any[];
+  portfolios: any[];
 };
 
 type JournalEntry = {
@@ -88,6 +90,8 @@ const NAV_ITEMS = [
   { id: "journal", label: "Journal" },
 ];
 
+const activityIcon: Record<string, string> = { signup: "👤", trade: "📈", lesson: "📚", journal: "📝", community: "💬" };
+
 export default function AdminClient() {
   const [view, setView] = useState("overview");
   const [stats, setStats] = useState<Stats | null>(null);
@@ -98,6 +102,7 @@ export default function AdminClient() {
   const [journals, setJournals] = useState<JournalEntry[]>([]);
   const [journalTotal, setJournalTotal] = useState(0);
   const [journalMoods, setJournalMoods] = useState<string[]>([]);
+  const [activities, setActivities] = useState<{ type: string; message: string; timestamp: string; userName?: string }[]>([]);
 
   const filteredJournals = journals.filter((j) => {
     const matchesMood = !journalMood || j.mood === journalMood;
@@ -274,6 +279,19 @@ export default function AdminClient() {
     });
   };
 
+  const openUserDetail = async (clerkId: string) => {
+    const res = await fetch(`/api/admin/users/${clerkId}`);
+    if (res.ok) {
+      const data = await res.json();
+      setUserDetail(data);
+      setSelectedUser(clerkId);
+    }
+  };
+
+  const handleUserSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setUserSearch(e.target.value);
+  };
+
   const filteredUsers = users.filter(
     (u) => u.name.toLowerCase().includes(userSearch.toLowerCase()) || u.email.toLowerCase().includes(userSearch.toLowerCase())
   );
@@ -326,6 +344,44 @@ export default function AdminClient() {
                 </div>
               ))}
             </div>
+
+            {stats.platformHealth && (
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div className="bg-[#111111] border border-gray-800 rounded p-4">
+                  <h3 className="text-sm font-semibold text-gray-400 mb-4">Platform Health</h3>
+                  <div className="space-y-2">
+                    <div className="flex justify-between text-sm"><span className="text-gray-500">Database</span><span className="text-green-400">{stats.platformHealth.database}</span></div>
+                    <div className="flex justify-between text-sm"><span className="text-gray-500">API</span><span className="text-green-400">{stats.platformHealth.api}</span></div>
+                    <div className="flex justify-between text-sm"><span className="text-gray-500">Last Deployment</span><span className="text-gray-300">{new Date(stats.platformHealth.lastDeployment).toLocaleString()}</span></div>
+                  </div>
+                </div>
+                <div className="bg-[#111111] border border-gray-800 rounded p-4">
+                  <h3 className="text-sm font-semibold text-gray-400 mb-4">Quick Actions</h3>
+                  <div className="flex flex-wrap gap-2">
+                    <button onClick={() => setView("users")} className="bg-[#E8A020] text-black px-3 py-1.5 rounded text-sm font-semibold hover:bg-[#d4901a]">View All Users</button>
+                    <button onClick={() => setView("community")} className="bg-[#E8A020] text-black px-3 py-1.5 rounded text-sm font-semibold hover:bg-[#d4901a]">Moderate Community</button>
+                    <button onClick={() => setView("content")} className="bg-[#E8A020] text-black px-3 py-1.5 rounded text-sm font-semibold hover:bg-[#d4901a]">Add Course Content</button>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {activities.length > 0 && (
+              <div className="bg-[#111111] border border-gray-800 rounded p-4">
+                <h3 className="text-sm font-semibold text-gray-400 mb-4">Recent Activity</h3>
+                <div className="space-y-3">
+                  {activities.map((act, i) => (
+                    <div key={i} className="flex items-start gap-3 text-sm">
+                      <span className="text-lg">{activityIcon[act.type] || "•"}</span>
+                      <div className="flex-1">
+                        <p className="text-gray-300">{act.message}</p>
+                        <p className="text-xs text-gray-600">{new Date(act.timestamp).toLocaleString()}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
 
             <div className="bg-[#111111] border border-gray-800 rounded p-4">
               <h3 className="text-sm font-semibold text-gray-400 mb-4">Signups per day (last 30 days)</h3>
@@ -456,12 +512,12 @@ export default function AdminClient() {
                     <option key={c.id} value={c.id}>{c.title}</option>
                   ))}
                 </select>
-                <select className="bg-[#0D0D0D] border border-gray-800 rounded px-3 py-2 text-sm text-white" value={newLesson.moduleId} onChange={(e) => setNewLesson({ ...newLesson, moduleId: e.target.value })}>
-                  <option value="">Select Module</option>
-                  {courses.find((c) => c.id === newLesson.courseId)?.modules.map((m) => (
-                    <option key={m.id} value={m.id}>{m.title}</option>
-                  ))}
-                </select>
+                  <select className="bg-[#0D0D0D] border border-gray-800 rounded px-3 py-2 text-sm text-white" value={newLesson.moduleId} onChange={(e) => setNewLesson({ ...newLesson, moduleId: e.target.value })}>
+                    <option value="">Select Module</option>
+                    {(courses.find((c) => c.id === newLesson.courseId)?.modules ?? []).map((m) => (
+                      <option key={m.id} value={m.id}>{m.title}</option>
+                    ))}
+                  </select>
                 <input className="bg-[#0D0D0D] border border-gray-800 rounded px-3 py-2 text-sm text-white" placeholder="Title" value={newLesson.title} onChange={(e) => setNewLesson({ ...newLesson, title: e.target.value })} />
                 <input className="bg-[#0D0D0D] border border-gray-800 rounded px-3 py-2 text-sm text-white" placeholder="Order" type="number" value={newLesson.order} onChange={(e) => setNewLesson({ ...newLesson, order: e.target.value })} />
                 <textarea className="bg-[#0D0D0D] border border-gray-800 rounded px-3 py-2 text-sm text-white col-span-2" placeholder="Content" rows={4} value={newLesson.content} onChange={(e) => setNewLesson({ ...newLesson, content: e.target.value })} />
@@ -590,7 +646,7 @@ export default function AdminClient() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-800">
-                  {simulator.topTraders.map((t) => (
+                  {(simulator.topTraders ?? []).map((t) => (
                     <tr key={t.clerkId} className="hover:bg-[#1a1a1a]">
                       <td className="px-4 py-2 text-white">{t.name}</td>
                       <td className="px-4 py-2">₹{t.balance.toLocaleString()}</td>
@@ -616,7 +672,7 @@ export default function AdminClient() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-800">
-                  {simulator.recentTrades.map((t) => (
+                  {(simulator.recentTrades ?? []).map((t) => (
                     <tr key={t.id} className="hover:bg-[#1a1a1a]">
                       <td className="px-4 py-2 text-white">{t.name}</td>
                       <td className="px-4 py-2">{t.symbol}</td>
