@@ -71,26 +71,15 @@ export default function AdminClient() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  // Overview
   const [stats, setStats] = useState<Stats | null>(null);
   const [activity, setActivity] = useState<{ message: string; timestamp: string }[]>([]);
-
-  // Users
   const [users, setUsers] = useState<User[]>([]);
   const [userSearch, setUserSearch] = useState("");
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
-
-  // Content
   const [courses, setCourses] = useState<Course[]>([]);
   const [newCourse, setNewCourse] = useState({ title: "", description: "", level: "", order: "" });
-
-  // Community
   const [posts, setPosts] = useState<CommunityPost[]>([]);
-
-  // Simulator
   const [simulator, setSimulator] = useState<SimulatorData | null>(null);
-
-  // Journal
   const [journals, setJournals] = useState<JournalEntry[]>([]);
 
   const fetchJSON = async (url: string) => {
@@ -105,9 +94,7 @@ export default function AdminClient() {
     try {
       const data = await fetchJSON("/api/admin/stats");
       setStats(data);
-      setActivity([
-        { message: "Platform stats loaded", timestamp: new Date().toISOString() },
-      ]);
+      setActivity([{ message: "Platform stats loaded", timestamp: new Date().toISOString() }]);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Failed to load overview");
     } finally {
@@ -231,36 +218,94 @@ export default function AdminClient() {
   );
 
   return (
-    <div className="flex min-h-screen bg-[#0D0D0D] text-gray-200">
-      <aside className="w-56 bg-[#111111] border-r border-gray-800 flex-shrink-0">
-        <div className="p-4 border-b border-gray-800">
-          <h1 className="text-lg font-bold text-[#E8A020]">Vornix Admin</h1>
+    <div style={{ display: "flex", minHeight: "100vh", background: "#0A0A0A", color: "#F2F0EB", fontFamily: "Inter, sans-serif" }}>
+      <aside
+        style={{
+          width: 220,
+          background: "#0A0A0A",
+          borderRight: "1px solid #222222",
+          flexShrink: 0,
+          padding: "24px 16px",
+        }}
+      >
+        <div
+          style={{
+            fontFamily: "Syne, sans-serif",
+            fontSize: 13,
+            letterSpacing: "0.15em",
+            fontWeight: 700,
+            color: "#F2F0EB",
+            marginBottom: 32,
+            padding: "0 12px",
+          }}
+        >
+          VORNIX ADMIN
         </div>
-        <nav className="p-2 space-y-1">
-          {TABS.map((tab) => (
-            <button
-              key={tab.id}
-              onClick={() => setView(tab.id)}
-              className={`w-full text-left px-3 py-2 rounded text-sm ${
-                view === tab.id
-                  ? "bg-[#E8A020] text-black font-semibold"
-                  : "text-gray-400 hover:text-white hover:bg-gray-800"
-              }`}
-            >
-              {tab.label}
-            </button>
-          ))}
+        <nav style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+          {TABS.map((tab) => {
+            const isActive = view === tab.id;
+            return (
+              <button
+                key={tab.id}
+                onClick={() => setView(tab.id)}
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  height: 40,
+                  padding: "0 12px",
+                  borderRadius: 8,
+                  fontSize: 13,
+                  fontWeight: 500,
+                  color: isActive ? "#F2F0EB" : "#A0A0A0",
+                  background: isActive ? "#1A1A1A" : "transparent",
+                  borderLeft: isActive ? "2px solid #E8A020" : "2px solid transparent",
+                  transition: "all 0.15s ease",
+                  cursor: "pointer",
+                }}
+                onMouseEnter={(e) => {
+                  if (!isActive) {
+                    e.currentTarget.style.background = "#1A1A1A";
+                    e.currentTarget.style.color = "#F2F0EB";
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  if (!isActive) {
+                    e.currentTarget.style.background = "transparent";
+                    e.currentTarget.style.color = "#A0A0A0";
+                  }
+                }}
+              >
+                {tab.label}
+              </button>
+            );
+          })}
         </nav>
       </aside>
 
-      <main className="flex-1 p-6 overflow-auto">
-        {loading && <div className="text-gray-500 mb-4">Loading...</div>}
-        {error && <div className="text-red-400 mb-4">{error}</div>}
+      <main style={{ flex: 1, padding: "48px 40px", overflow: "auto" }}>
+        {loading && <div style={{ color: "#888888", marginBottom: 16 }}>Loading...</div>}
+        {error && <div style={{ color: "#EF4444", marginBottom: 16, fontSize: 14 }}>{error}</div>}
 
         {view === "overview" && stats && (
-          <div className="space-y-6">
-            <h2 className="text-xl font-bold text-white">Platform Overview</h2>
-            <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
+          <div>
+            <h2
+              style={{
+                fontFamily: "Syne, sans-serif",
+                fontSize: 24,
+                fontWeight: 700,
+                marginBottom: 28,
+              }}
+            >
+              Platform Overview
+            </h2>
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
+                gap: 16,
+                marginBottom: 32,
+              }}
+            >
               {[
                 { label: "Total Users", value: stats.totalUsers },
                 { label: "Active Today", value: stats.activeToday },
@@ -269,18 +314,66 @@ export default function AdminClient() {
                 { label: "Community Posts", value: stats.communityPosts },
                 { label: "Courses Available", value: stats.coursesCount },
               ].map((stat) => (
-                <div key={stat.label} className="bg-[#111111] border border-gray-800 rounded p-4">
-                  <div className="text-xs text-gray-500 uppercase tracking-wider">{stat.label}</div>
-                  <div className="text-2xl font-bold text-white mt-1">{stat.value.toLocaleString()}</div>
+                <div
+                  key={stat.label}
+                  style={{
+                    background: "#111111",
+                    border: "1px solid #222222",
+                    borderRadius: 12,
+                    padding: 24,
+                  }}
+                >
+                  <div
+                    style={{
+                      fontSize: 11,
+                      fontWeight: 600,
+                      textTransform: "uppercase",
+                      letterSpacing: "0.08em",
+                      color: "#888888",
+                      marginBottom: 10,
+                    }}
+                  >
+                    {stat.label}
+                  </div>
+                  <div
+                    style={{
+                      fontFamily: "Syne, sans-serif",
+                      fontSize: 28,
+                      fontWeight: 700,
+                      color: "#F2F0EB",
+                    }}
+                  >
+                    {stat.value.toLocaleString()}
+                  </div>
                 </div>
               ))}
             </div>
-            <div className="bg-[#111111] border border-gray-800 rounded p-4">
-              <h3 className="text-sm font-semibold text-gray-400 mb-3">Recent Activity</h3>
-              <div className="space-y-2">
+            <div
+              style={{
+                background: "#111111",
+                border: "1px solid #222222",
+                borderRadius: 12,
+                padding: 24,
+              }}
+            >
+              <div
+                style={{
+                  fontSize: 11,
+                  fontWeight: 600,
+                  textTransform: "uppercase",
+                  letterSpacing: "0.08em",
+                  color: "#888888",
+                  marginBottom: 16,
+                }}
+              >
+                Recent Activity
+              </div>
+              <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
                 {activity.map((item, i) => (
-                  <div key={i} className="text-sm text-gray-300">
-                    <span className="text-gray-500">{new Date(item.timestamp).toLocaleString()}</span> — {item.message}
+                  <div key={i} style={{ fontSize: 14, color: "#F2F0EB" }}>
+                    <span style={{ color: "#555555", fontSize: 12 }}>{new Date(item.timestamp).toLocaleString()}</span>
+                    {" — "}
+                    {item.message}
                   </div>
                 ))}
               </div>
@@ -289,25 +382,63 @@ export default function AdminClient() {
         )}
 
         {view === "users" && (
-          <div className="space-y-4">
-            <h2 className="text-xl font-bold text-white">Users</h2>
+          <div>
+            <h2
+              style={{
+                fontFamily: "Syne, sans-serif",
+                fontSize: 24,
+                fontWeight: 700,
+                marginBottom: 24,
+              }}
+            >
+              Users
+            </h2>
             <input
               type="text"
               placeholder="Search users..."
               value={userSearch}
               onChange={(e) => setUserSearch(e.target.value)}
-              className="w-full max-w-md px-3 py-2 bg-[#111111] border border-gray-800 rounded text-white"
+              style={{
+                width: "100%",
+                maxWidth: 400,
+                padding: "10px 16px",
+                background: "#111111",
+                border: "1px solid #222222",
+                borderRadius: 8,
+                color: "#F2F0EB",
+                fontSize: 14,
+                marginBottom: 20,
+                outline: "none",
+              }}
+              onFocus={(e) => (e.currentTarget.style.borderColor = "#E8A020")}
+              onBlur={(e) => (e.currentTarget.style.borderColor = "#222222")}
             />
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
+            <div style={{ overflowX: "auto" }}>
+              <table
+                style={{
+                  width: "100%",
+                  borderCollapse: "collapse",
+                  fontSize: 14,
+                }}
+              >
                 <thead>
-                  <tr className="border-b border-gray-800 text-gray-400">
-                    <th className="text-left py-2">Name</th>
-                    <th className="text-left py-2">Email</th>
-                    <th className="text-left py-2">Level</th>
-                    <th className="text-left py-2">Score</th>
-                    <th className="text-left py-2">Trades</th>
-                    <th className="text-left py-2">Joined</th>
+                  <tr style={{ borderBottom: "1px solid #222222" }}>
+                    {["Name", "Email", "Level", "Score", "Trades", "Joined"].map((h) => (
+                      <th
+                        key={h}
+                        style={{
+                          textAlign: "left",
+                          padding: "10px 12px",
+                          color: "#888888",
+                          fontWeight: 500,
+                          fontSize: 12,
+                          textTransform: "uppercase",
+                          letterSpacing: "0.06em",
+                        }}
+                      >
+                        {h}
+                      </th>
+                    ))}
                   </tr>
                 </thead>
                 <tbody>
@@ -315,78 +446,215 @@ export default function AdminClient() {
                     <tr
                       key={user.clerkId}
                       onClick={() => setSelectedUser(user)}
-                      className={`border-b border-gray-800 cursor-pointer hover:bg-[#111111] ${
-                        selectedUser?.clerkId === user.clerkId ? "bg-[#111111] text-[#E8A020]" : ""
-                      }`}
+                      style={{
+                        borderBottom: "1px solid #222222",
+                        cursor: "pointer",
+                        background: selectedUser?.clerkId === user.clerkId ? "rgba(232, 160, 32, 0.08)" : "transparent",
+                        color: selectedUser?.clerkId === user.clerkId ? "#E8A020" : "#F2F0EB",
+                        transition: "all 0.15s ease",
+                      }}
+                      onMouseEnter={(e) => {
+                        if (selectedUser?.clerkId !== user.clerkId) {
+                          e.currentTarget.style.background = "#111111";
+                        }
+                      }}
+                      onMouseLeave={(e) => {
+                        if (selectedUser?.clerkId !== user.clerkId) {
+                          e.currentTarget.style.background = "transparent";
+                        }
+                      }}
                     >
-                      <td className="py-2">{user.name}</td>
-                      <td className="py-2 text-gray-400">{user.email}</td>
-                      <td className="py-2">{user.level}</td>
-                      <td className="py-2">{user.assessmentScore}</td>
-                      <td className="py-2">{user.tradesMade}</td>
-                      <td className="py-2 text-gray-400">{new Date(user.joinedDate).toLocaleDateString()}</td>
+                      <td style={{ padding: "10px 12px" }}>{user.name}</td>
+                      <td style={{ padding: "10px 12px", color: "#888888" }}>{user.email}</td>
+                      <td style={{ padding: "10px 12px" }}>{user.level}</td>
+                      <td style={{ padding: "10px 12px" }}>{user.assessmentScore}</td>
+                      <td style={{ padding: "10px 12px" }}>{user.tradesMade}</td>
+                      <td style={{ padding: "10px 12px", color: "#888888" }}>
+                        {new Date(user.joinedDate).toLocaleDateString()}
+                      </td>
                     </tr>
                   ))}
                 </tbody>
               </table>
             </div>
             {selectedUser && (
-              <div className="bg-[#111111] border border-gray-800 rounded p-4">
-                <h3 className="font-semibold text-white mb-2">User Details</h3>
-                <pre className="text-xs text-gray-300 overflow-auto">{JSON.stringify(selectedUser, null, 2)}</pre>
+              <div
+                style={{
+                  background: "#111111",
+                  border: "1px solid #222222",
+                  borderRadius: 12,
+                  padding: 24,
+                  marginTop: 20,
+                }}
+              >
+                <div
+                  style={{
+                    fontFamily: "Syne, sans-serif",
+                    fontSize: 14,
+                    fontWeight: 700,
+                    color: "#F2F0EB",
+                    marginBottom: 12,
+                  }}
+                >
+                  User Details
+                </div>
+                <pre
+                  style={{
+                    fontSize: 12,
+                    color: "#A0A0A0",
+                    overflow: "auto",
+                    whiteSpace: "pre-wrap",
+                    wordBreak: "break-word",
+                  }}
+                >
+                  {JSON.stringify(selectedUser, null, 2)}
+                </pre>
               </div>
             )}
           </div>
         )}
 
         {view === "content" && (
-          <div className="space-y-6">
-            <h2 className="text-xl font-bold text-white">Content</h2>
-            <div className="space-y-3">
+          <div>
+            <h2
+              style={{
+                fontFamily: "Syne, sans-serif",
+                fontSize: 24,
+                fontWeight: 700,
+                marginBottom: 24,
+              }}
+            >
+              Content
+            </h2>
+            <div style={{ display: "flex", flexDirection: "column", gap: 12, marginBottom: 28 }}>
               {courses.map((course) => (
-                <div key={course.id} className="bg-[#111111] border border-gray-800 rounded p-4">
-                  <div className="font-semibold text-white">
-                    {course.title} <span className="text-xs text-gray-500">(Level {course.level})</span>
+                <div
+                  key={course.id}
+                  style={{
+                    background: "#111111",
+                    border: "1px solid #222222",
+                    borderRadius: 12,
+                    padding: 24,
+                  }}
+                >
+                  <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 8 }}>
+                    <span
+                      style={{
+                        fontFamily: "Syne, sans-serif",
+                        fontSize: 16,
+                        fontWeight: 700,
+                        color: "#F2F0EB",
+                      }}
+                    >
+                      {course.title}
+                    </span>
+                    <span className="badge">Level {course.level}</span>
                   </div>
-                  <div className="text-sm text-gray-400 mt-1">{course.description}</div>
-                  <div className="text-xs text-gray-500 mt-2">
+                  <div style={{ color: "#A0A0A0", fontSize: 14, lineHeight: 1.7, marginBottom: 10 }}>
+                    {course.description}
+                  </div>
+                  <div style={{ color: "#888888", fontSize: 12 }}>
                     {course.modules.length} modules,{" "}
                     {course.modules.reduce((acc, m) => acc + m.lessons.length, 0)} lessons
                   </div>
                 </div>
               ))}
             </div>
-            <form onSubmit={addCourse} className="bg-[#111111] border border-gray-800 rounded p-4 space-y-3">
-              <h3 className="font-semibold text-white">Add Course</h3>
+            <form
+              onSubmit={addCourse}
+              style={{
+                background: "#111111",
+                border: "1px solid #222222",
+                borderRadius: 12,
+                padding: 28,
+                display: "flex",
+                flexDirection: "column",
+                gap: 14,
+              }}
+            >
+              <div
+                style={{
+                  fontFamily: "Syne, sans-serif",
+                  fontSize: 16,
+                  fontWeight: 700,
+                  color: "#F2F0EB",
+                }}
+              >
+                Add Course
+              </div>
               <input
                 name="title"
                 placeholder="Title"
                 required
-                className="w-full px-3 py-2 bg-[#0D0D0D] border border-gray-800 rounded text-white"
+                style={{
+                  padding: "10px 14px",
+                  background: "#0F0F0F",
+                  border: "1px solid #222222",
+                  borderRadius: 8,
+                  color: "#F2F0EB",
+                  fontSize: 14,
+                  outline: "none",
+                }}
+                onFocus={(e) => (e.currentTarget.style.borderColor = "#E8A020")}
+                onBlur={(e) => (e.currentTarget.style.borderColor = "#222222")}
               />
               <input
                 name="description"
                 placeholder="Description"
                 required
-                className="w-full px-3 py-2 bg-[#0D0D0D] border border-gray-800 rounded text-white"
+                style={{
+                  padding: "10px 14px",
+                  background: "#0F0F0F",
+                  border: "1px solid #222222",
+                  borderRadius: 8,
+                  color: "#F2F0EB",
+                  fontSize: 14,
+                  outline: "none",
+                }}
+                onFocus={(e) => (e.currentTarget.style.borderColor = "#E8A020")}
+                onBlur={(e) => (e.currentTarget.style.borderColor = "#222222")}
               />
-              <div className="grid grid-cols-2 gap-3">
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
                 <input
                   name="level"
                   type="number"
                   placeholder="Level"
                   required
-                  className="px-3 py-2 bg-[#0D0D0D] border border-gray-800 rounded text-white"
+                  style={{
+                    padding: "10px 14px",
+                    background: "#0F0F0F",
+                    border: "1px solid #222222",
+                    borderRadius: 8,
+                    color: "#F2F0EB",
+                    fontSize: 14,
+                    outline: "none",
+                  }}
+                  onFocus={(e) => (e.currentTarget.style.borderColor = "#E8A020")}
+                  onBlur={(e) => (e.currentTarget.style.borderColor = "#222222")}
                 />
                 <input
                   name="order"
                   type="number"
                   placeholder="Order"
                   required
-                  className="px-3 py-2 bg-[#0D0D0D] border border-gray-800 rounded text-white"
+                  style={{
+                    padding: "10px 14px",
+                    background: "#0F0F0F",
+                    border: "1px solid #222222",
+                    borderRadius: 8,
+                    color: "#F2F0EB",
+                    fontSize: 14,
+                    outline: "none",
+                  }}
+                  onFocus={(e) => (e.currentTarget.style.borderColor = "#E8A020")}
+                  onBlur={(e) => (e.currentTarget.style.borderColor = "#222222")}
                 />
               </div>
-              <button type="submit" className="px-4 py-2 bg-[#E8A020] text-black rounded font-semibold">
+              <button
+                type="submit"
+                className="btn-primary"
+                style={{ alignSelf: "flex-start" }}
+              >
                 Add Course
               </button>
             </form>
@@ -394,32 +662,80 @@ export default function AdminClient() {
         )}
 
         {view === "community" && (
-          <div className="space-y-4">
-            <h2 className="text-xl font-bold text-white">Community</h2>
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
+          <div>
+            <h2
+              style={{
+                fontFamily: "Syne, sans-serif",
+                fontSize: 24,
+                fontWeight: 700,
+                marginBottom: 24,
+              }}
+            >
+              Community
+            </h2>
+            <div style={{ overflowX: "auto" }}>
+              <table
+                style={{
+                  width: "100%",
+                  borderCollapse: "collapse",
+                  fontSize: 14,
+                }}
+              >
                 <thead>
-                  <tr className="border-b border-gray-800 text-gray-400">
-                    <th className="text-left py-2">Author</th>
-                    <th className="text-left py-2">Content</th>
-                    <th className="text-left py-2">Reports</th>
-                    <th className="text-left py-2">Date</th>
-                    <th className="text-left py-2">Action</th>
+                  <tr style={{ borderBottom: "1px solid #222222" }}>
+                    {["Author", "Content", "Reports", "Date", "Action"].map((h) => (
+                      <th
+                        key={h}
+                        style={{
+                          textAlign: "left",
+                          padding: "10px 12px",
+                          color: "#888888",
+                          fontWeight: 500,
+                          fontSize: 12,
+                          textTransform: "uppercase",
+                          letterSpacing: "0.06em",
+                        }}
+                      >
+                        {h}
+                      </th>
+                    ))}
                   </tr>
                 </thead>
                 <tbody>
                   {posts.map((post) => (
-                    <tr key={post.id} className="border-b border-gray-800">
-                      <td className="py-2">
+                    <tr key={post.id} style={{ borderBottom: "1px solid #222222" }}>
+                      <td style={{ padding: "10px 12px" }}>
                         {post.profile.firstName} {post.profile.lastName}
                       </td>
-                      <td className="py-2 text-gray-300 max-w-md truncate">{post.content}</td>
-                      <td className="py-2">{post.reports}</td>
-                      <td className="py-2 text-gray-400">{new Date(post.createdAt).toLocaleDateString()}</td>
-                      <td className="py-2">
+                      <td style={{ padding: "10px 12px", color: "#A0A0A0", maxWidth: 400, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                        {post.content}
+                      </td>
+                      <td style={{ padding: "10px 12px" }}>{post.reports}</td>
+                      <td style={{ padding: "10px 12px", color: "#888888" }}>
+                        {new Date(post.createdAt).toLocaleDateString()}
+                      </td>
+                      <td style={{ padding: "10px 12px" }}>
                         <button
                           onClick={() => deletePost(post.id)}
-                          className="text-red-400 hover:text-red-300"
+                          style={{
+                            padding: "6px 14px",
+                            borderRadius: 8,
+                            border: "1px solid #EF4444",
+                            background: "transparent",
+                            color: "#EF4444",
+                            fontSize: 12,
+                            fontWeight: 600,
+                            cursor: "pointer",
+                            transition: "all 0.15s ease",
+                          }}
+                          onMouseEnter={(e) => {
+                            e.currentTarget.style.background = "#EF4444";
+                            e.currentTarget.style.color = "#0A0A0A";
+                          }}
+                          onMouseLeave={(e) => {
+                            e.currentTarget.style.background = "transparent";
+                            e.currentTarget.style.color = "#EF4444";
+                          }}
                         >
                           Delete
                         </button>
@@ -433,96 +749,216 @@ export default function AdminClient() {
         )}
 
         {view === "simulator" && simulator && (
-          <div className="space-y-6">
-            <h2 className="text-xl font-bold text-white">Simulator</h2>
-            <div className="bg-[#111111] border border-gray-800 rounded p-4">
-              <div className="text-sm text-gray-400">Total Portfolio Value</div>
-              <div className="text-2xl font-bold text-white">
+          <div>
+            <h2
+              style={{
+                fontFamily: "Syne, sans-serif",
+                fontSize: 24,
+                fontWeight: 700,
+                marginBottom: 24,
+              }}
+            >
+              Simulator
+            </h2>
+            <div
+              style={{
+                background: "#111111",
+                border: "1px solid #222222",
+                borderRadius: 12,
+                padding: 24,
+                marginBottom: 24,
+              }}
+            >
+              <div
+                style={{
+                  fontSize: 11,
+                  fontWeight: 600,
+                  textTransform: "uppercase",
+                  letterSpacing: "0.08em",
+                  color: "#888888",
+                  marginBottom: 10,
+                }}
+              >
+                Total Portfolio Value
+              </div>
+              <div
+                style={{
+                  fontFamily: "Syne, sans-serif",
+                  fontSize: 32,
+                  fontWeight: 700,
+                  color: "#F2F0EB",
+                }}
+              >
                 ₹{simulator.totalPortfolioValue.toLocaleString()}
               </div>
             </div>
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
+            <div style={{ overflowX: "auto" }}>
+              <table
+                style={{
+                  width: "100%",
+                  borderCollapse: "collapse",
+                  fontSize: 14,
+                }}
+              >
                 <thead>
-                  <tr className="border-b border-gray-800 text-gray-400">
-                    <th className="text-left py-2">Trader</th>
-                    <th className="text-left py-2">Level</th>
-                    <th className="text-right py-2">Balance</th>
-                    <th className="text-right py-2">P&L</th>
-                    <th className="text-right py-2">Win Rate</th>
+                  <tr style={{ borderBottom: "1px solid #222222" }}>
+                    {["Trader", "Level", "Balance", "P&L", "Win Rate"].map((h) => (
+                      <th
+                        key={h}
+                        style={{
+                          textAlign: h === "Balance" || h === "P&L" || h === "Win Rate" ? "right" : "left",
+                          padding: "10px 12px",
+                          color: "#888888",
+                          fontWeight: 500,
+                          fontSize: 12,
+                          textTransform: "uppercase",
+                          letterSpacing: "0.06em",
+                        }}
+                      >
+                        {h}
+                      </th>
+                    ))}
                   </tr>
                 </thead>
                 <tbody>
                   {simulator.topTraders.map((t: any) => (
-                    <tr key={t.clerkId} className="border-b border-gray-800">
-                      <td className="py-2">{t.name}</td>
-                      <td className="py-2">{t.level}</td>
-                      <td className="py-2 text-right">₹{t.balance.toLocaleString()}</td>
-                      <td className={`py-2 text-right ${t.pnl >= 0 ? "text-green-400" : "text-red-400"}`}>
+                    <tr key={t.clerkId} style={{ borderBottom: "1px solid #222222" }}>
+                      <td style={{ padding: "10px 12px" }}>{t.name}</td>
+                      <td style={{ padding: "10px 12px" }}>{t.level}</td>
+                      <td style={{ padding: "10px 12px", textAlign: "right" }}>₹{t.balance.toLocaleString()}</td>
+                      <td
+                        style={{
+                          padding: "10px 12px",
+                          textAlign: "right",
+                          color: t.pnl >= 0 ? "#22C55E" : "#EF4444",
+                          fontWeight: 600,
+                        }}
+                      >
                         {t.pnl >= 0 ? "+" : ""}₹{t.pnl.toLocaleString()}
                       </td>
-                      <td className="py-2 text-right">{t.winRate}%</td>
+                      <td style={{ padding: "10px 12px", textAlign: "right" }}>{t.winRate}%</td>
                     </tr>
                   ))}
                 </tbody>
               </table>
             </div>
-            <div>
-              <h3 className="font-semibold text-white mb-3">Recent Trades</h3>
-              <div className="overflow-x-auto">
-                <table className="w-full text-sm">
-                  <thead>
-                    <tr className="border-b border-gray-800 text-gray-400">
-                      <th className="text-left py-2">Trader</th>
-                      <th className="text-left py-2">Symbol</th>
-                      <th className="text-left py-2">Side</th>
-                      <th className="text-right py-2">Qty</th>
-                      <th className="text-right py-2">P&L</th>
-                      <th className="text-left py-2">Status</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {simulator.recentTrades.map((t: any) => (
-                      <tr key={t.id} className="border-b border-gray-800">
-                        <td className="py-2">{t.name}</td>
-                        <td className="py-2">{t.symbol}</td>
-                        <td className="py-2 capitalize">{t.side}</td>
-                        <td className="py-2 text-right">{t.quantity}</td>
-                        <td className={`py-2 text-right ${(t.pnl ?? 0) >= 0 ? "text-green-400" : "text-red-400"}`}>
-                          {t.pnl != null ? `${t.pnl >= 0 ? "+" : ""}₹${t.pnl.toLocaleString()}` : "—"}
-                        </td>
-                        <td className="py-2 capitalize">{t.status}</td>
-                      </tr>
+            <h3
+              style={{
+                fontFamily: "Syne, sans-serif",
+                fontSize: 16,
+                fontWeight: 700,
+                marginTop: 32,
+                marginBottom: 16,
+                color: "#F2F0EB",
+              }}
+            >
+              Recent Trades
+            </h3>
+            <div style={{ overflowX: "auto" }}>
+              <table
+                style={{
+                  width: "100%",
+                  borderCollapse: "collapse",
+                  fontSize: 14,
+                }}
+              >
+                <thead>
+                  <tr style={{ borderBottom: "1px solid #222222" }}>
+                    {["Trader", "Symbol", "Side", "Qty", "P&L", "Status"].map((h) => (
+                      <th
+                        key={h}
+                        style={{
+                          textAlign: h === "Qty" || h === "P&L" ? "right" : "left",
+                          padding: "10px 12px",
+                          color: "#888888",
+                          fontWeight: 500,
+                          fontSize: 12,
+                          textTransform: "uppercase",
+                          letterSpacing: "0.06em",
+                        }}
+                      >
+                        {h}
+                      </th>
                     ))}
-                  </tbody>
-                </table>
-              </div>
+                  </tr>
+                </thead>
+                <tbody>
+                  {simulator.recentTrades.map((t: any) => (
+                    <tr key={t.id} style={{ borderBottom: "1px solid #222222" }}>
+                      <td style={{ padding: "10px 12px" }}>{t.name}</td>
+                      <td style={{ padding: "10px 12px" }}>{t.symbol}</td>
+                      <td style={{ padding: "10px 12px", textTransform: "capitalize" }}>{t.side}</td>
+                      <td style={{ padding: "10px 12px", textAlign: "right" }}>{t.quantity}</td>
+                      <td
+                        style={{
+                          padding: "10px 12px",
+                          textAlign: "right",
+                          color: (t.pnl ?? 0) >= 0 ? "#22C55E" : "#EF4444",
+                          fontWeight: 600,
+                        }}
+                      >
+                        {t.pnl != null ? `${t.pnl >= 0 ? "+" : ""}₹${t.pnl.toLocaleString()}` : "—"}
+                      </td>
+                      <td style={{ padding: "10px 12px", textTransform: "capitalize" }}>{t.status}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
           </div>
         )}
 
         {view === "journal" && (
-          <div className="space-y-4">
-            <h2 className="text-xl font-bold text-white">Journal</h2>
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
+          <div>
+            <h2
+              style={{
+                fontFamily: "Syne, sans-serif",
+                fontSize: 24,
+                fontWeight: 700,
+                marginBottom: 24,
+              }}
+            >
+              Journal
+            </h2>
+            <div style={{ overflowX: "auto" }}>
+              <table
+                style={{
+                  width: "100%",
+                  borderCollapse: "collapse",
+                  fontSize: 14,
+                }}
+              >
                 <thead>
-                  <tr className="border-b border-gray-800 text-gray-400">
-                    <th className="text-left py-2">Author</th>
-                    <th className="text-left py-2">Title</th>
-                    <th className="text-left py-2">Mood</th>
-                    <th className="text-left py-2">Date</th>
+                  <tr style={{ borderBottom: "1px solid #222222" }}>
+                    {["Author", "Title", "Mood", "Date"].map((h) => (
+                      <th
+                        key={h}
+                        style={{
+                          textAlign: "left",
+                          padding: "10px 12px",
+                          color: "#888888",
+                          fontWeight: 500,
+                          fontSize: 12,
+                          textTransform: "uppercase",
+                          letterSpacing: "0.06em",
+                        }}
+                      >
+                        {h}
+                      </th>
+                    ))}
                   </tr>
                 </thead>
                 <tbody>
                   {journals.map((entry) => (
-                    <tr key={entry.id} className="border-b border-gray-800">
-                      <td className="py-2">
+                    <tr key={entry.id} style={{ borderBottom: "1px solid #222222" }}>
+                      <td style={{ padding: "10px 12px" }}>
                         {entry.profile.firstName} {entry.profile.lastName}
                       </td>
-                      <td className="py-2">{entry.title}</td>
-                      <td className="py-2 capitalize">{entry.mood}</td>
-                      <td className="py-2 text-gray-400">{new Date(entry.createdAt).toLocaleDateString()}</td>
+                      <td style={{ padding: "10px 12px" }}>{entry.title}</td>
+                      <td style={{ padding: "10px 12px", textTransform: "capitalize" }}>{entry.mood}</td>
+                      <td style={{ padding: "10px 12px", color: "#888888" }}>
+                        {new Date(entry.createdAt).toLocaleDateString()}
+                      </td>
                     </tr>
                   ))}
                 </tbody>

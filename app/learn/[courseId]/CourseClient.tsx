@@ -5,11 +5,12 @@ import { UserButton, useUser } from "@clerk/nextjs";
 import { colors, STORAGE_KEYS } from "@/lib/constants";
 import { navItems, levelCopy } from "@/lib/constants/content/dashboard-content";
 import type { AssessmentStorage } from "@/lib/types";
+import Sidebar from "../../components/Sidebar";
 
 const bg = colors.bg.primary;
 const text = colors.text.primary;
 const accent = colors.accent.primary;
-const sidebarWidth = 280;
+const sidebarWidth = 220;
 
 function getLevelFromScore(score: number) {
   if (score <= 40) return 1;
@@ -166,7 +167,7 @@ export default function CourseClient({ courseId, initialCourse }: CourseClientPr
           fontFamily: "Inter, sans-serif",
         }}
       >
-        <div style={{ color: colors.text.muted }}>Loading course...</div>
+        <div style={{ color: "#888888" }}>Loading course...</div>
       </main>
     );
   }
@@ -183,7 +184,7 @@ export default function CourseClient({ courseId, initialCourse }: CourseClientPr
           fontFamily: "Inter, sans-serif",
         }}
       >
-        <div style={{ color: colors.text.muted }}>Course not found.</div>
+        <div style={{ color: "#888888" }}>Course not found.</div>
       </main>
     );
   }
@@ -197,232 +198,228 @@ export default function CourseClient({ courseId, initialCourse }: CourseClientPr
     : 0;
 
   return (
-    <main style={{ minHeight: "100vh", background: bg, color: text, fontFamily: "Inter, sans-serif" }}>
-      <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Syne:wght@600;700;800&display=swap');
-        * { box-sizing: border-box; }
-        .sidebar-link { color: #9A9A9A; text-decoration: none; padding: 12px 14px; border-radius: 10px; display: block; transition: all .2s ease; }
-        .sidebar-link:hover { color: ${text}; background: #111111; }
-        .sidebar-link.active { color: ${accent}; background: rgba(232, 160, 32, 0.08); }
-        .card { background: #0F0F0F; border: 1px solid #1E1E1E; border-radius: 16px; }
-        .muted { color: #A3A3A3; }
-        .badge { display: inline-flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: 999px; border: 1px solid rgba(232,160,32,0.35); background: rgba(232,160,32,0.08); color: ${accent}; font-weight: 600; font-size: 12px; }
-        .module-accordion { background: #0F0F0F; border: 1px solid #1E1E1E; border-radius: 16px; overflow: hidden; margin-bottom: 16px; transition: border-color .2s ease; }
-        .module-accordion:hover { border-color: #2A2A2A; }
-        .module-accordion.completed { border-color: #4ade80; }
-        .module-header { padding: 20px 24px; cursor: pointer; display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; transition: background .2s ease; }
-        .module-header:hover { background: #111111; }
-        .module-body { padding: 0 24px 20px; border-top: 1px solid #1E1E1E; }
-        .lesson-row { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 14px 0; border-bottom: 1px solid #1E1E1E; text-decoration: none; color: inherit; transition: color .2s ease; }
-        .lesson-row:last-child { border-bottom: none; }
-        .lesson-row:hover { color: ${accent}; }
-        .lesson-row:hover .lesson-arrow { transform: translateX(4px); }
-        .lesson-arrow { transition: transform .2s ease; color: ${accent}; }
-        .type-badge { display: inline-flex; padding: 4px 10px; border-radius: 8px; border: 1px solid #1E1E1E; background: #111111; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; color: #9A9A9A; }
-        .check-icon { color: #4ade80; flexShrink: 0; }
-        .progress-shell { height: 8px; border-radius: 999px; background: #161616; overflow: hidden; }
-        .progress-bar { height: 100%; background: ${accent}; transition: width .35s ease; }
-      `}</style>
-      <div style={{ display: "flex", minHeight: "100vh" }}>
-        <aside
-          style={{
-            width: sidebarWidth,
-            position: "fixed",
-            inset: 0,
-            borderRight: "1px solid #1E1E1E",
-            background: "#0A0A0A",
-            padding: "28px 20px",
-            display: "flex",
-            flexDirection: "column",
-            zIndex: 50,
-          }}
-        >
-          <div>
-            <div
-              style={{
-                fontFamily: "Syne, sans-serif",
-                fontSize: 18,
-                letterSpacing: "0.14em",
-                fontWeight: 800,
-                marginBottom: 32,
-              }}
-            >
-              VORNIX FORGE
-            </div>
-            <nav style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-              {navItems.map((item) => (
-                <a
-                  key={item.label}
-                  href={item.href}
-                  className={item.label === "Learn" ? "sidebar-link active" : "sidebar-link"}
-                  aria-current={item.label === "Learn" ? "page" : undefined}
-                >
-                  {item.label}
-                </a>
-              ))}
-            </nav>
-          </div>
-          <div className="card" style={{ padding: 16, marginTop: "auto" }}>
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
+    <main style={{ minHeight: "100vh", background: bg, color: text }}>
+      <Sidebar activeLabel="Learn" />
+
+      <section style={{ marginLeft: sidebarWidth, width: `calc(100% - ${sidebarWidth}px)`, padding: "48px 40px 80px" }}>
+        <div style={{ maxWidth: 960, margin: "0 auto" }}>
+          <header
+            style={{
+              background: "#111111",
+              border: "1px solid #222222",
+              borderRadius: 12,
+              padding: 28,
+              marginBottom: 28,
+            }}
+          >
+            <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 16, flexWrap: "wrap" }}>
               <div>
-                <div style={{ fontSize: 14, fontWeight: 600, color: text }}>{profileName}</div>
-                <div style={{ fontSize: 12, color: "#9A9A9A", marginTop: 4 }}>
-                  {levelCopy[currentLevel]?.name ?? `Level ${currentLevel}`}
-                </div>
+                <h1
+                  style={{
+                    fontFamily: "Syne, sans-serif",
+                    fontSize: 32,
+                    lineHeight: 1.1,
+                    margin: 0,
+                    fontWeight: 700,
+                  }}
+                >
+                  {course.title}
+                </h1>
+                <p style={{ color: "#A0A0A0", marginTop: 10, lineHeight: 1.6, fontSize: 14 }}>
+                  {course.description}
+                </p>
               </div>
-              <div className="badge">{levelCopy[currentLevel]?.name ?? `Level ${currentLevel}`}</div>
+              <span className="badge">{levelEntry.name}</span>
             </div>
-            <div style={{ marginTop: 16, display: "flex", justifyContent: "flex-end" }}>
-              <UserButton />
+            <div style={{ marginTop: 16, display: "flex", gap: 16, flexWrap: "wrap", alignItems: "center" }}>
+              <span style={{ color: "#888888", fontSize: 13 }}>
+                {course.modules.length} module{course.modules.length !== 1 ? "s" : ""}
+              </span>
+              <span style={{ color: "#888888", fontSize: 13 }}>
+                {totalLessons} lesson{totalLessons !== 1 ? "s" : ""}
+              </span>
+              <span style={{ fontSize: 13, color: "#E8A020", fontWeight: 600 }}>
+                {overallProgress}% complete
+              </span>
             </div>
-          </div>
-        </aside>
-        <section style={{ marginLeft: sidebarWidth, width: `calc(100% - ${sidebarWidth}px)`, padding: 32 }}>
-          <div style={{ maxWidth: 960, margin: "0 auto" }}>
-            <header className="card" style={{ padding: 28, marginBottom: 24 }}>
-              <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 16, flexWrap: "wrap" }}>
-                <div>
-                  <h1 style={{ fontFamily: "Syne, sans-serif", fontSize: 32, lineHeight: 1.1, margin: 0 }}>
-                    {course.title}
-                  </h1>
-                  <p className="muted" style={{ marginTop: 10, lineHeight: 1.6 }}>
-                    {course.description}
-                  </p>
-                </div>
-                <span className="badge">{levelEntry.name}</span>
-              </div>
-              <div style={{ marginTop: 16, display: "flex", gap: 16, flexWrap: "wrap", alignItems: "center" }}>
-                <span className="muted" style={{ fontSize: 13 }}>
-                  {course.modules.length} module{course.modules.length !== 1 ? "s" : ""}
-                </span>
-                <span className="muted" style={{ fontSize: 13 }}>
-                  {totalLessons} lesson{totalLessons !== 1 ? "s" : ""}
-                </span>
-                <span style={{ fontSize: 13, color: accent, fontWeight: 600 }}>
-                  {overallProgress}% complete
-                </span>
-              </div>
-              <div className="progress-shell" style={{ marginTop: 12 }}>
-                <div className="progress-bar" style={{ width: `${overallProgress}%` }} />
-              </div>
-            </header>
+            <div className="progress-shell" style={{ marginTop: 14 }}>
+              <div className="progress-bar" style={{ width: `${overallProgress}%` }} />
+            </div>
+          </header>
 
-            <section style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-              {course.modules.map((module) => {
-                const isExpanded = expandedModules.has(module.id);
-                const isCompleted = courseProgress?.moduleProgress.find((m) => m.id === module.id)?.completed ?? false;
-                const lessonCount = module.lessons.length;
+          <section style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+            {course.modules.map((module) => {
+              const isExpanded = expandedModules.has(module.id);
+              const isCompleted = courseProgress?.moduleProgress.find((m) => m.id === module.id)?.completed ?? false;
+              const lessonCount = module.lessons.length;
 
-                return (
-                  <div key={module.id} className={`module-accordion ${isCompleted ? "completed" : ""}`}>
-                    <div
-                      className="module-header"
-                      onClick={() => toggleModule(module.id)}
-                      role="button"
-                      tabIndex={0}
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter" || e.key === " ") {
-                          e.preventDefault();
-                          toggleModule(module.id);
-                        }
+              return (
+                <div
+                  key={module.id}
+                  style={{
+                    background: "#111111",
+                    border: `1px solid ${isCompleted ? "#22C55E" : "#222222"}`,
+                    borderRadius: 12,
+                    overflow: "hidden",
+                    transition: "all 0.15s ease",
+                  }}
+                >
+                  <div
+                    style={{
+                      padding: "20px 24px",
+                      cursor: "pointer",
+                      display: "flex",
+                      alignItems: "flex-start",
+                      justifyContent: "space-between",
+                      gap: 16,
+                      transition: "background 0.15s ease",
+                    }}
+                    onClick={() => toggleModule(module.id)}
+                    role="button"
+                    tabIndex={0}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" || e.key === " ") {
+                        e.preventDefault();
+                        toggleModule(module.id);
+                      }
+                    }}
+                    onMouseEnter={(e) => (e.currentTarget.style.background = "#1A1A1A")}
+                    onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
+                  >
+                    <div>
+                      <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 6, flexWrap: "wrap" }}>
+                        <div
+                          style={{
+                            fontFamily: "Syne, sans-serif",
+                            fontSize: 18,
+                            fontWeight: 600,
+                          }}
+                        >
+                          {module.title}
+                        </div>
+                        {isCompleted && (
+                          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#22C55E" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
+                            <polyline points="20 6 9 17 4 12" />
+                          </svg>
+                        )}
+                      </div>
+                      <p style={{ color: "#A0A0A0", fontSize: 14, lineHeight: 1.7, margin: 0 }}>
+                        {module.description}
+                      </p>
+                      <div style={{ marginTop: 10, display: "flex", gap: 10, alignItems: "center" }}>
+                        <span style={{ color: "#888888", fontSize: 13 }}>{lessonCount} lesson{lessonCount !== 1 ? "s" : ""}</span>
+                        {isCompleted && (
+                          <span style={{ fontSize: 12, color: "#22C55E", fontWeight: 600 }}>
+                            Completed
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                    <svg
+                      width="20"
+                      height="20"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      style={{
+                        color: "#888888",
+                        transform: isExpanded ? "rotate(180deg)" : "rotate(0deg)",
+                        transition: "transform .2s ease",
+                        flexShrink: 0,
+                        marginTop: 4,
                       }}
                     >
-                      <div>
-                        <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 6 }}>
-                          <div style={{ fontFamily: "Syne, sans-serif", fontSize: 18 }}>
-                            {module.title}
-                          </div>
-                          {isCompleted && (
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#4ade80" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className="check-icon">
-                              <polyline points="20 6 9 17 4 12"></polyline>
-                            </svg>
-                          )}
-                        </div>
-                        <p className="muted" style={{ fontSize: 14, lineHeight: 1.6, margin: 0 }}>
-                          {module.description}
-                        </p>
-                        <div style={{ marginTop: 10, display: "flex", gap: 10, alignItems: "center" }}>
-                          <span className="muted" style={{ fontSize: 13 }}>
-                            {lessonCount} lesson{lessonCount !== 1 ? "s" : ""}
-                          </span>
-                          {isCompleted && (
-                            <span style={{ fontSize: 12, color: "#4ade80", fontWeight: 600 }}>
-                              Completed
-                            </span>
-                          )}
-                        </div>
-                      </div>
-                      <svg
-                        width="20"
-                        height="20"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        style={{
-                          color: colors.text.muted,
-                          transform: isExpanded ? "rotate(180deg)" : "rotate(0deg)",
-                          transition: "transform .2s ease",
-                          flexShrink: 0,
-                          marginTop: 4,
-                        }}
-                      >
-                        <polyline points="6 9 12 15 18 9"></polyline>
-                      </svg>
-                    </div>
-                    {isExpanded && (
-                      <div className="module-body">
-                        {module.lessons.map((lesson) => (
-                          <a
-                            key={lesson.id}
-                            href={`/learn/${course.id}/${module.id}/${lesson.id}`}
-                            className="lesson-row"
-                          >
-                            <div>
-                              <div style={{ display: "flex", alignItems: "center", gap: 8, fontWeight: 600, fontSize: 15 }}>
-                                {lesson.title}
-                                {completedLessonIds.has(lesson.id) && (
-                                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#4ade80" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className="check-icon">
-                                    <polyline points="20 6 9 17 4 12"></polyline>
-                                  </svg>
-                                )}
-                              </div>
-                              <div style={{ display: "flex", gap: 10, marginTop: 8, alignItems: "center" }}>
-                                <span className="type-badge">{lesson.type}</span>
-                                <span className="muted" style={{ fontSize: 13 }}>
-                                  {lesson.duration} min
-                                </span>
-                                <span className="muted" style={{ fontSize: 12 }}>
-                                  {completedLessonIds.has(lesson.id) ? "Completed" : "Not started"}
-                                </span>
-                              </div>
-                            </div>
-                            <svg
-                              className="lesson-arrow"
-                              width="16"
-                              height="16"
-                              viewBox="0 0 24 24"
-                              fill="none"
-                              stroke="currentColor"
-                              strokeWidth="2"
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                            >
-                              <polyline points="9 18 15 12 9 6"></polyline>
-                            </svg>
-                          </a>
-                        ))}
-                      </div>
-                    )}
+                      <polyline points="6 9 12 15 18 9" />
+                    </svg>
                   </div>
-                );
-              })}
-            </section>
-          </div>
-        </section>
-      </div>
+                  {isExpanded && (
+                    <div
+                      style={{
+                        padding: "0 24px 20px",
+                        borderTop: "1px solid #222222",
+                        animation: "slideDown 0.2s ease",
+                      }}
+                    >
+                      {module.lessons.map((lesson) => (
+                        <a
+                          key={lesson.id}
+                          href={`/learn/${course.id}/${module.id}/${lesson.id}`}
+                          style={{
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "space-between",
+                            gap: 16,
+                            padding: "14px 0",
+                            borderBottom: "1px solid #222222",
+                            textDecoration: "none",
+                            color: "inherit",
+                            transition: "color 0.15s ease",
+                          }}
+                          onMouseEnter={(e) => (e.currentTarget.style.color = "#E8A020")}
+                          onMouseLeave={(e) => (e.currentTarget.style.color = "inherit")}
+                        >
+                          <div>
+                            <div style={{ display: "flex", alignItems: "center", gap: 8, fontWeight: 600, fontSize: 15 }}>
+                              {lesson.title}
+                              {completedLessonIds.has(lesson.id) && (
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#22C55E" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
+                                  <polyline points="20 6 9 17 4 12" />
+                                </svg>
+                              )}
+                            </div>
+                            <div style={{ display: "flex", gap: 10, marginTop: 8, alignItems: "center" }}>
+                              <span
+                                style={{
+                                  display: "inline-flex",
+                                  padding: "3px 10px",
+                                  borderRadius: 6,
+                                  border: "1px solid #222222",
+                                  background: "#1A1A1A",
+                                  fontSize: 11,
+                                  fontWeight: 600,
+                                  textTransform: "uppercase",
+                                  letterSpacing: "0.08em",
+                                  color: "#888888",
+                                }}
+                              >
+                                {lesson.type}
+                              </span>
+                              <span style={{ color: "#888888", fontSize: 13 }}>{lesson.duration} min</span>
+                              <span style={{ color: "#555555", fontSize: 12 }}>
+                                {completedLessonIds.has(lesson.id) ? "Completed" : "Not started"}
+                              </span>
+                            </div>
+                          </div>
+                          <svg
+                            width="16"
+                            height="16"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            style={{
+                              color: "#E8A020",
+                              flexShrink: 0,
+                              transition: "transform 0.2s ease",
+                            }}
+                          >
+                            <polyline points="9 18 15 12 9 6" />
+                          </svg>
+                        </a>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </section>
+        </div>
+      </section>
     </main>
   );
 }

@@ -1,249 +1,367 @@
 "use client";
 
-import { useEffect } from "react";
-import { useUser } from "@clerk/nextjs";
-import { useRouter } from "next/navigation";
-import NavAuth from "./components/NavAuth";
-import { STORAGE_KEYS } from "@/lib/constants";
-import { logger } from "@/lib/utils";
+import Link from "next/link";
+
+const bg = "#0A0A0A";
+const surface = "#111111";
+const accent = "#E8A020";
+const text = "#F2F0EB";
+const muted = "#888888";
+const border = "#222222";
+
+const steps = [
+  {
+    title: "Start With the Truth",
+    description:
+      "Take a structured assessment that measures your real knowledge, risk sense, and decision-making — not just your confidence.",
+    tag: "Assessment",
+  },
+  {
+    title: "Follow Your Forge Path",
+    description:
+      "Get a personalized learning track built from your results. Modules adapt to your level so you are never lost or bored.",
+    tag: "Learning",
+  },
+  {
+    title: "Practice in a Simulator",
+    description:
+      "Execute trades in a realistic simulator with journaling built in. Make mistakes here so they cost less later.",
+    tag: "Simulator",
+  },
+  {
+    title: "Build Evidence, Not Hope",
+    description:
+      "Track progress, review journal entries, and move through levels only when your performance proves it.",
+    tag: "Progress",
+  },
+];
+
+const features = [
+  "Structured assessment and leveling system",
+  "Adaptive course tracks by trader level",
+  "Realistic trading simulator with journaling",
+  "Progress tracking and performance reviews",
+  "Community of serious traders",
+  "No hype — just repeatable skill building",
+];
 
 export default function Home() {
-  const { user, isLoaded } = useUser();
-  const router = useRouter();
-
-  useEffect(() => {
-    if (!isLoaded) return;
-
-    if (user) {
-      // User is signed in, check progress from database
-      const checkUserStatus = async () => {
-        try {
-          const res = await fetch("/api/user-status");
-          if (!res.ok) throw new Error("Failed to fetch user status");
-          
-          const { onboardingDone, assessmentDone } = await res.json();
-
-          // Fallback to localStorage if database check fails
-          const localOnboarding = localStorage.getItem(STORAGE_KEYS.onboardingComplete);
-          const localAssessment = localStorage.getItem(STORAGE_KEYS.assessmentComplete);
-
-          if (!onboardingDone && !localOnboarding) {
-            router.push("/onboarding");
-          } else if (!assessmentDone && !localAssessment) {
-            router.push("/assessment");
-          } else {
-            router.push("/dashboard");
-          }
-         } catch (error) {
-           logger.error("Error checking user status:", error);
-           // Fallback to localStorage
-          const onboardingComplete = localStorage.getItem(STORAGE_KEYS.onboardingComplete);
-          const assessmentComplete = localStorage.getItem(STORAGE_KEYS.assessmentComplete);
-
-          if (!onboardingComplete) {
-            router.push("/onboarding");
-          } else if (!assessmentComplete) {
-            router.push("/assessment");
-          } else {
-            router.push("/dashboard");
-          }
-        }
-      };
-
-      checkUserStatus();
-    }
-  }, [user, isLoaded, router]);
-
   return (
-    <main style={{ background: "#0A0A0A", color: "#F2F0EB", fontFamily: "'Inter', sans-serif", minHeight: "100vh" }}>
-
-      {/* Google Fonts */}
-      <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Syne:wght@600;700;800&display=swap');
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-        body { background: #0A0A0A; }
-        .nav { display: flex; align-items: center; justify-content: space-between; padding: 20px 48px; border-bottom: 1px solid #1E1E1E; position: sticky; top: 0; background: #0A0A0A; z-index: 100; }
-        .logo { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 15px; letter-spacing: .12em; color: #F2F0EB; }
-        .nav-right { display: flex; align-items: center; gap: 12px; }
-        .btn-ghost { font-size: 13px; color: #888; text-decoration: none; padding: 8px 16px; transition: color .2s; }
-        .btn-ghost:hover { color: #F2F0EB; }
-        .btn-primary { font-size: 13px; font-weight: 500; background: #F2F0EB; color: #0A0A0A; padding: 9px 20px; border-radius: 6px; text-decoration: none; transition: background .2s; }
-        .btn-primary:hover { background: #E8A020; }
-
-        .hero { max-width: 860px; margin: 0 auto; padding: 120px 48px 100px; }
-        .hero-tag { display: inline-block; font-size: 11px; font-weight: 500; letter-spacing: .1em; text-transform: uppercase; color: #E8A020; margin-bottom: 28px; }
-        .hero-h1 { font-family: 'Syne', sans-serif; font-size: clamp(42px, 6vw, 72px); font-weight: 800; line-height: 1.05; letter-spacing: -.02em; margin-bottom: 24px; }
-        .hero-h1 span { color: #E8A020; }
-        .hero-sub { font-size: 17px; color: #888; line-height: 1.7; max-width: 520px; margin-bottom: 40px; font-weight: 300; }
-        .hero-actions { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
-        .btn-cta { font-size: 14px; font-weight: 600; background: #E8A020; color: #0A0A0A; padding: 14px 28px; border-radius: 6px; text-decoration: none; transition: opacity .2s; }
-        .btn-cta:hover { opacity: .85; }
-        .btn-secondary { font-size: 13px; color: #888; text-decoration: none; display: flex; align-items: center; gap: 6px; transition: color .2s; }
-        .btn-secondary:hover { color: #F2F0EB; }
-        .hero-note { font-size: 12px; color: #444; margin-top: 20px; }
-
-        .section { padding: 80px 48px; border-top: 1px solid #1E1E1E; max-width: 1000px; margin: 0 auto; }
-        .section-label { font-size: 11px; font-weight: 500; letter-spacing: .12em; text-transform: uppercase; color: #444; margin-bottom: 48px; }
-        
-        .problem-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1px; background: #1E1E1E; border: 1px solid #1E1E1E; border-radius: 8px; overflow: hidden; }
-        .problem-card { background: #0F0F0F; padding: 28px; font-size: 14px; color: #666; line-height: 1.7; font-style: italic; }
-        .problem-end { font-family: 'Syne', sans-serif; font-size: 28px; font-weight: 700; color: #F2F0EB; }
-        .problem-end span { color: #E8A020; }
-
-        .steps-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 32px; }
-        .step-item { display: flex; flex-direction: column; gap: 12px; }
-        .step-num { font-family: 'Syne', sans-serif; font-size: 48px; font-weight: 800; color: #1E1E1E; line-height: 1; }
-        .step-title { font-size: 14px; font-weight: 600; color: #F2F0EB; }
-        .step-desc { font-size: 13px; color: #666; line-height: 1.7; }
-
-        .features-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1px; background: #1E1E1E; border: 1px solid #1E1E1E; border-radius: 8px; overflow: hidden; }
-        .feature-card { background: #0F0F0F; padding: 28px 32px; transition: background .2s; cursor: default; }
-        .feature-card:hover { background: #111; }
-        .feature-icon { font-size: 22px; margin-bottom: 16px; }
-        .feature-title { font-size: 14px; font-weight: 600; color: #F2F0EB; margin-bottom: 8px; }
-        .feature-desc { font-size: 13px; color: #666; line-height: 1.7; }
-
-        .who-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; }
-        .who-card { border: 1px solid #1E1E1E; border-radius: 8px; padding: 28px; transition: border-color .2s; }
-        .who-card:hover { border-color: #E8A020; }
-        .who-type { font-family: 'Syne', sans-serif; font-size: 16px; font-weight: 700; color: #F2F0EB; margin-bottom: 12px; }
-        .who-desc { font-size: 13px; color: #666; line-height: 1.7; }
-
-        .cta-section { text-align: center; padding: 100px 48px; border-top: 1px solid #1E1E1E; }
-        .cta-h2 { font-family: 'Syne', sans-serif; font-size: clamp(28px, 4vw, 48px); font-weight: 800; line-height: 1.1; margin-bottom: 16px; letter-spacing: -.02em; }
-        .cta-h2 span { color: #E8A020; }
-        .cta-sub { font-size: 15px; color: #666; margin-bottom: 36px; }
-
-        .footer { padding: 24px 48px; border-top: 1px solid #1E1E1E; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px; }
-        .footer-left { font-size: 12px; color: #333; }
-        .footer-right { font-size: 11px; color: #2A2A2A; font-style: italic; }
-
-        @media (max-width: 640px) {
-          .nav { padding: 16px 20px; }
-          .hero { padding: 72px 20px 64px; }
-          .section { padding: 60px 20px; }
-          .cta-section { padding: 72px 20px; }
-          .footer { padding: 20px; }
-        }
-      `}</style>
-
-      {/* Navbar */}
-      <nav className="nav">
-        <span className="logo">VORNIX FORGE</span>
-        <NavAuth />
+    <main style={{ minHeight: "100vh", background: bg, color: text, fontFamily: "Inter, sans-serif" }}>
+      {/* Navigation */}
+      <nav
+        style={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          padding: "20px 40px",
+          borderBottom: `1px solid ${border}`,
+          background: "rgba(10, 10, 10, 0.9)",
+          backdropFilter: "blur(12px)",
+          position: "sticky",
+          top: 0,
+          zIndex: 50,
+        }}
+      >
+        <div style={{ fontFamily: "Syne, sans-serif", fontSize: 14, fontWeight: 700, letterSpacing: "0.15em" }}>
+          VORNIX FORGE
+        </div>
+        <div style={{ display: "flex", alignItems: "center", gap: 24 }}>
+          <Link
+            href="/sign-in"
+            style={{
+              color: muted,
+              fontSize: 14,
+              fontWeight: 500,
+              textDecoration: "none",
+              transition: "color 0.15s ease",
+            }}
+            onMouseEnter={(e) => (e.currentTarget.style.color = text)}
+            onMouseLeave={(e) => (e.currentTarget.style.color = muted)}
+          >
+            Sign In
+          </Link>
+          <Link
+            href="/sign-up"
+            className="btn-primary"
+            style={{ textDecoration: "none" }}
+          >
+            Get Started
+          </Link>
+        </div>
       </nav>
 
       {/* Hero */}
-      <div className="hero">
-        <span className="hero-tag">Trader Development Platform</span>
-        <h1 className="hero-h1">
-          Trading is a profession.<br />
-          We treat it like <span>one.</span>
-        </h1>
-        <p className="hero-sub">
-          The world's first structured trader development system. Assessed at entry, developed systematically, certified by competence. Not by time spent.
-        </p>
-        <div className="hero-actions">
-          <a href="/sign-up" className="btn-cta">Start My Journey — Free</a>
-          <a href="#how-it-works" className="btn-secondary">See how it works →</a>
-        </div>
-        <p className="hero-note">No credit card. No hidden fees. Free to start.</p>
-      </div>
-
-      {/* Problem */}
-      <div style={{ borderTop: "1px solid #1E1E1E", padding: "80px 48px" }}>
-        <div style={{ maxWidth: "1000px", margin: "0 auto" }}>
-          <p className="section-label">The problem we solve</p>
-          <div className="problem-grid">
-            {[
-              '"YouTube taught me patterns. Nobody taught me how to actually trade."',
-              '"I lost ₹2 lakhs before I understood risk management."',
-              '"I have been trading 2 years and still don\'t know if I\'m good or just lucky."',
-            ].map((q, i) => (
-              <div key={i} className="problem-card">{q}</div>
-            ))}
+      <section style={{ padding: "100px 40px 80px", maxWidth: 1100, margin: "0 auto" }}>
+        <div style={{ maxWidth: 720, margin: "0 auto", textAlign: "center" }}>
+          <div
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 8,
+              padding: "6px 14px",
+              borderRadius: 999,
+              border: `1px solid ${border}`,
+              background: surface,
+              color: muted,
+              fontSize: 12,
+              fontWeight: 600,
+              marginBottom: 24,
+            }}
+          >
+            <span style={{ color: accent }}>●</span> The world&apos;s first structured trader development system
           </div>
-          <p className="problem-end">That ends <span>here.</span></p>
+          <h1
+            style={{
+              fontFamily: "Syne, sans-serif",
+              fontSize: "clamp(36px, 5vw, 64px)",
+              fontWeight: 700,
+              lineHeight: 1.05,
+              margin: "0 0 20px 0",
+              letterSpacing: "-0.02em",
+            }}
+          >
+            Forged by assessment.<br />
+            <span style={{ color: accent }}>Built by discipline.</span>
+          </h1>
+          <p
+            style={{
+              fontSize: 17,
+              lineHeight: 1.7,
+              color: muted,
+              maxWidth: 560,
+              margin: "0 auto 36px",
+            }}
+          >
+            Most trading platforms hand you a chart and hope. Vornix Forge starts by measuring where you actually stand,
+            then builds a path from there — assessed at entry, developed systematically, certified by competence.
+          </p>
+          <div style={{ display: "flex", gap: 14, justifyContent: "center", flexWrap: "wrap" }}>
+            <Link href="/sign-up" className="btn-primary" style={{ textDecoration: "none" }}>
+              Start Free Assessment
+            </Link>
+            <Link
+              href="/dashboard"
+              className="btn-secondary"
+              style={{ textDecoration: "none" }}
+            >
+              View Demo Dashboard
+            </Link>
+          </div>
         </div>
-      </div>
+      </section>
 
-      {/* How it works */}
-      <div id="how-it-works" style={{ borderTop: "1px solid #1E1E1E", padding: "80px 48px" }}>
-        <div style={{ maxWidth: "1000px", margin: "0 auto" }}>
-          <p className="section-label">How it works</p>
-          <div className="steps-grid">
-            {[
-              { n: "01", t: "Get Assessed", d: "Take a knowledge and practical test on entry. The system places you at your real level — not where you think you are." },
-              { n: "02", t: "Learn by Doing", d: "Every module: lesson, simulator task, journal, test. Four steps. All required. No passive video watching." },
-              { n: "03", t: "Prove Competence", d: "Advance only when your knowledge score, practical score, and risk management score all meet the bar. No shortcuts." },
-              { n: "04", t: "Get Certified", d: "Earn a verified Certified Trader credential. Shareable on LinkedIn. Proof that you are genuinely professional." },
-            ].map((s) => (
-              <div key={s.n} className="step-item">
-                <span className="step-num">{s.n}</span>
-                <span className="step-title">{s.t}</span>
-                <p className="step-desc">{s.d}</p>
+      {/* Stats bar */}
+      <section
+        style={{
+          borderTop: `1px solid ${border}`,
+          borderBottom: `1px solid ${border}`,
+          background: surface,
+          padding: "28px 40px",
+        }}
+      >
+        <div
+          style={{
+            maxWidth: 1000,
+            margin: "0 auto",
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))",
+            gap: 24,
+          }}
+        >
+          {[
+            { value: "4", label: "Trader Levels" },
+            { value: "Adaptive", label: "Learning Paths" },
+            { value: "Real", label: "Market Simulator" },
+            { value: "Structured", label: "Progress System" },
+          ].map((stat) => (
+            <div key={stat.label} style={{ textAlign: "center" }}>
+              <div
+                style={{
+                  fontFamily: "Syne, sans-serif",
+                  fontSize: 28,
+                  fontWeight: 700,
+                  color: accent,
+                  lineHeight: 1.2,
+                }}
+              >
+                {stat.value}
               </div>
-            ))}
-          </div>
+              <div style={{ fontSize: 12, color: muted, marginTop: 6, fontWeight: 500 }}>{stat.label}</div>
+            </div>
+          ))}
         </div>
-      </div>
+      </section>
+
+      {/* Steps */}
+      <section style={{ padding: "80px 40px", maxWidth: 1100, margin: "0 auto" }}>
+        <div style={{ textAlign: "center", marginBottom: 56 }}>
+          <h2
+            style={{
+              fontFamily: "Syne, sans-serif",
+              fontSize: "clamp(24px, 3vw, 36px)",
+              fontWeight: 700,
+              margin: "0 0 12px 0",
+            }}
+          >
+            How Forge Works
+          </h2>
+          <p style={{ color: muted, fontSize: 15, maxWidth: 480, margin: "0 auto", lineHeight: 1.7 }}>
+            A four-phase system designed to take you from wherever you are to a consistent, evidence-based trader.
+          </p>
+        </div>
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))",
+            gap: 20,
+          }}
+        >
+          {steps.map((step) => (
+            <div
+              key={step.title}
+              style={{
+                background: surface,
+                border: `1px solid ${border}`,
+                borderRadius: 16,
+                padding: 28,
+                transition: "border-color 0.15s ease",
+              }}
+              onMouseEnter={(e) => (e.currentTarget.style.borderColor = "#2A2A2A")}
+              onMouseLeave={(e) => (e.currentTarget.style.borderColor = border)}
+            >
+              <div
+                style={{
+                  fontSize: 12,
+                  fontWeight: 700,
+                  color: accent,
+                  textTransform: "uppercase",
+                  letterSpacing: "0.1em",
+                  marginBottom: 14,
+                }}
+              >
+                {step.tag}
+              </div>
+              <h3
+                style={{
+                  fontFamily: "Syne, sans-serif",
+                  fontSize: 20,
+                  fontWeight: 700,
+                  margin: "0 0 12px 0",
+                  lineHeight: 1.3,
+                }}
+              >
+                {step.title}
+              </h3>
+              <p style={{ fontSize: 14, color: muted, lineHeight: 1.7, margin: 0 }}>{step.description}</p>
+            </div>
+          ))}
+        </div>
+      </section>
 
       {/* Features */}
-      <div style={{ borderTop: "1px solid #1E1E1E", padding: "80px 48px" }}>
-        <div style={{ maxWidth: "1000px", margin: "0 auto" }}>
-          <p className="section-label">What you get</p>
-          <div className="features-grid">
-            {[
-              { icon: "📊", t: "Paper Trading Simulator", d: "Real NSE, forex, and crypto prices. Trade with virtual money on real markets across all sessions." },
-              { icon: "🧠", t: "AI Journal Feedback", d: "Write after every session. AI reads your entries and gives you specific, personalised feedback." },
-              { icon: "📈", t: "Competency Map", d: "See your strength across 8 trading skill dimensions. Know exactly where you are weak before it costs you money." },
-              { icon: "🎓", t: "Structured Curriculum", d: "6 levels. 6 specialisation tracks. 85+ modules. A real trading education — not a random course." },
-              { icon: "🏆", t: "Verified Certification", d: "Earned through demonstrated skill and proven competence. Not through time spent or money paid." },
-              { icon: "🌍", t: "Free to Start", d: "Every trader in India and worldwide. No credit card. No paywall blocking your development." },
-            ].map((f) => (
-              <div key={f.t} className="feature-card">
-                <div className="feature-icon">{f.icon}</div>
-                <p className="feature-title">{f.t}</p>
-                <p className="feature-desc">{f.d}</p>
-              </div>
-            ))}
+      <section style={{ padding: "80px 40px", maxWidth: 1100, margin: "0 auto" }}>
+        <div
+          style={{
+            background: surface,
+            border: `1px solid ${border}`,
+            borderRadius: 20,
+            padding: "48px 40px",
+          }}
+        >
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 40, alignItems: "center" }}>
+            <div>
+              <h2
+                style={{
+                  fontFamily: "Syne, sans-serif",
+                  fontSize: "clamp(22px, 2.5vw, 32px)",
+                  fontWeight: 700,
+                  margin: "0 0 16px 0",
+                  lineHeight: 1.2,
+                }}
+              >
+                Everything you need to become a disciplined trader.
+              </h2>
+              <p style={{ color: muted, fontSize: 15, lineHeight: 1.7, margin: "0 0 28px" }}>
+                Vornix Forge combines assessment, education, simulation, and tracking into one coherent system.
+                No random tips. No gamified nonsense. Just structured development.
+              </p>
+              <Link href="/sign-up" className="btn-primary" style={{ textDecoration: "none" }}>
+                Create Free Account
+              </Link>
+            </div>
+            <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+              {features.map((feature) => (
+                <div
+                  key={feature}
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 14,
+                    padding: "14px 16px",
+                    background: "#0F0F0F",
+                    border: `1px solid ${border}`,
+                    borderRadius: 12,
+                    fontSize: 14,
+                    color: text,
+                  }}
+                >
+                  <svg
+                    width="18"
+                    height="18"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke={accent}
+                    strokeWidth="3"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    style={{ flexShrink: 0 }}
+                  >
+                    <polyline points="20 6 9 17 4 12" />
+                  </svg>
+                  {feature}
+                </div>
+              ))}
+            </div>
           </div>
         </div>
-      </div>
-
-      {/* Who */}
-      <div style={{ borderTop: "1px solid #1E1E1E", padding: "80px 48px" }}>
-        <div style={{ maxWidth: "1000px", margin: "0 auto" }}>
-          <p className="section-label">Who this is for</p>
-          <div className="who-grid">
-            {[
-              { t: "Complete Beginner", d: "Never traded before. Don't know where to start. Begin at Level 1. We build everything from scratch, step by step." },
-              { t: "Intermediate Trader", d: "Know the basics. Want structure and depth. Take the assessment. Skip what you know. Start exactly where you are." },
-              { t: "Experienced Trader", d: "Years of trading but no structured system. Get assessed, fill the real gaps, earn the credential that proves your competence." },
-            ].map((u) => (
-              <div key={u.t} className="who-card">
-                <p className="who-type">{u.t}</p>
-                <p className="who-desc">{u.d}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
+      </section>
 
       {/* CTA */}
-      <div className="cta-section">
-        <h2 className="cta-h2">Stop learning randomly.<br /><span>Start developing professionally.</span></h2>
-        <p className="cta-sub">Join traders in India and worldwide building real competence on Vornix Forge.</p>
-        <a href="/sign-up" className="btn-cta">Join Vornix Forge — Free</a>
-        <p className="hero-note" style={{ marginTop: "16px" }}>No credit card. No hidden fees. Free forever to start.</p>
-      </div>
+      <section style={{ padding: "80px 40px 120px", maxWidth: 800, margin: "0 auto", textAlign: "center" }}>
+        <h2
+          style={{
+            fontFamily: "Syne, sans-serif",
+            fontSize: "clamp(24px, 3vw, 36px)",
+            fontWeight: 700,
+            margin: "0 0 16px 0",
+          }}
+        >
+          Ready to stop guessing?
+        </h2>
+        <p style={{ color: muted, fontSize: 15, lineHeight: 1.7, margin: "0 0 32px", maxWidth: 480, marginLeft: "auto", marginRight: "auto" }}>
+          Start with a free assessment. See your level. Build from there.
+        </p>
+        <Link href="/sign-up" className="btn-primary" style={{ textDecoration: "none", fontSize: 15, padding: "14px 28px" }}>
+          Start Your Assessment
+        </Link>
+      </section>
 
       {/* Footer */}
-      <footer className="footer">
-        <span className="footer-left">© 2025 Vornix. All rights reserved.</span>
-        <span className="footer-right">From Vaanij — Sanskrit for trader</span>
+      <footer
+        style={{
+          borderTop: `1px solid ${border}`,
+          padding: "32px 40px",
+          textAlign: "center",
+          color: muted,
+          fontSize: 13,
+        }}
+      >
+        <div style={{ fontFamily: "Syne, sans-serif", fontWeight: 700, letterSpacing: "0.1em", marginBottom: 8 }}>
+          VORNIX FORGE
+        </div>
+        <div>Assessed at entry. Developed systematically. Certified by competence.</div>
       </footer>
-
     </main>
   );
 }

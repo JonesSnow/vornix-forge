@@ -14,11 +14,12 @@ import { UserButton, useUser } from "@clerk/nextjs";
 import { colors, STORAGE_KEYS } from "@/lib/constants";
 import { navItems, levelCopy } from "@/lib/constants/content/dashboard-content";
 import type { AssessmentStorage } from "@/lib/types";
+import Sidebar from "../components/Sidebar";
 
 const bg = colors.bg.primary;
 const text = colors.text.primary;
 const accent = colors.accent.primary;
-const sidebarWidth = 280;
+const sidebarWidth = 220;
 
 function getLevelFromScore(score: number) {
   if (score <= 40) return 1;
@@ -118,220 +119,486 @@ export default function ProgressClient({ userId }: ProgressClientProps) {
           fontFamily: "Inter, sans-serif",
         }}
       >
-        <div style={{ color: colors.text.muted }}>Loading progress...</div>
+        <div style={{ color: "#888888" }}>Loading progress...</div>
       </main>
     );
   }
 
   return (
-    <main style={{ minHeight: "100vh", background: bg, color: text, fontFamily: "Inter, sans-serif" }}>
-      <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Syne:wght@600;700;800&display=swap');
-        * { box-sizing: border-box; }
-        .sidebar-link { color: #9A9A9A; text-decoration: none; padding: 12px 14px; border-radius: 10px; display: block; transition: all .2s ease; }
-        .sidebar-link:hover { color: ${text}; background: #111111; }
-        .sidebar-link.active { color: ${accent}; background: rgba(232, 160, 32, 0.08); }
-        .card { background: #0F0F0F; border: 1px solid #1E1E1E; border-radius: 16px; }
-        .muted { color: #A3A3A3; }
-        .badge { display: inline-flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: 999px; border: 1px solid rgba(232,160,32,0.35); background: rgba(232,160,32,0.08); color: ${accent}; font-weight: 600; font-size: 12px; }
-        .progress-shell { height: 10px; border-radius: 999px; background: #161616; overflow: hidden; }
-        .progress-bar { height: 100%; background: ${accent}; transition: width .35s ease; }
-        .stat-value { font-family: 'Syne', sans-serif; font-size: 28px; font-weight: 700; color: ${text}; }
-        .profit { color: #4ade80; }
-        .loss { color: #ef4444; }
-      `}</style>
-      <div style={{ display: "flex", minHeight: "100vh" }}>
-        <aside
-          style={{
-            width: sidebarWidth,
-            position: "fixed",
-            inset: 0,
-            borderRight: "1px solid #1E1E1E",
-            background: "#0A0A0A",
-            padding: "28px 20px",
-            display: "flex",
-            flexDirection: "column",
-            zIndex: 50,
-          }}
-        >
-          <div>
-            <div
+    <main style={{ minHeight: "100vh", background: bg, color: text }}>
+      <Sidebar activeLabel="Progress" />
+
+      <section style={{ marginLeft: sidebarWidth, width: `calc(100% - ${sidebarWidth}px)`, padding: "48px 40px 80px" }}>
+        <div style={{ maxWidth: 1200, margin: "0 auto" }}>
+          <header style={{ marginBottom: 32 }}>
+            <h1
               style={{
                 fontFamily: "Syne, sans-serif",
-                fontSize: 18,
-                letterSpacing: "0.14em",
-                fontWeight: 800,
-                marginBottom: 32,
+                fontSize: 36,
+                lineHeight: 1.05,
+                margin: 0,
+                fontWeight: 700,
               }}
             >
-              VORNIX FORGE
-            </div>
-            <nav style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-              {navItems.map((item) => (
-                <a
-                  key={item.label}
-                  href={item.href}
-                  className={item.label === "Progress" ? "sidebar-link active" : "sidebar-link"}
-                  aria-current={item.label === "Progress" ? "page" : undefined}
+              Progress
+            </h1>
+            <p style={{ color: "#A0A0A0", marginTop: 8, lineHeight: 1.6, fontSize: 14 }}>
+              Track your learning journey, simulator performance, and trading mindset.
+            </p>
+          </header>
+
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(4, minmax(0, 1fr))",
+              gap: 16,
+              marginBottom: 32,
+            }}
+          >
+            {[
+              { label: "Current Level", value: `Level ${currentLevel}` },
+              { label: "Modules Completed", value: summary?.completedModules.length ?? 0 },
+              { label: "Journal Entries", value: summary?.journalCount ?? 0 },
+              { label: "Win Rate", value: `${summary?.winRate ?? 0}%`, color: (summary?.winRate ?? 0) > 50 ? "#22C55E" : (summary?.winRate ?? 0) < 50 ? "#EF4444" : "#F2F0EB" },
+            ].map((item) => (
+              <div
+                key={item.label}
+                style={{
+                  background: "#111111",
+                  border: "1px solid #222222",
+                  borderRadius: 12,
+                  padding: 24,
+                }}
+              >
+                <div
+                  style={{
+                    fontSize: 11,
+                    fontWeight: 600,
+                    textTransform: "uppercase",
+                    letterSpacing: "0.08em",
+                    color: "#A0A0A0",
+                    marginBottom: 12,
+                  }}
                 >
                   {item.label}
-                </a>
-              ))}
-            </nav>
-          </div>
-          <div className="card" style={{ padding: 16, marginTop: "auto" }}>
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
-              <div>
-                <div style={{ fontSize: 14, fontWeight: 600, color: text }}>{profileName}</div>
-                <div style={{ fontSize: 12, color: "#9A9A9A", marginTop: 4 }}>
-                  {levelEntry.name}
+                </div>
+                <div
+                  style={{
+                    fontFamily: "Syne, sans-serif",
+                    fontSize: 28,
+                    fontWeight: 700,
+                    color: item.color || "#F2F0EB",
+                  }}
+                >
+                  {item.value}
                 </div>
               </div>
-              <div className="badge">{levelEntry.name}</div>
+            ))}
+          </div>
+
+          <div style={{ display: "grid", gridTemplateColumns: "1.2fr .8fr", gap: 24, marginBottom: 32 }}>
+            {/* Radar */}
+            <div
+              style={{
+                background: "#111111",
+                border: "1px solid #222222",
+                borderRadius: 12,
+                padding: 28,
+                minHeight: 420,
+              }}
+            >
+              <div
+                style={{
+                  fontSize: 11,
+                  fontWeight: 600,
+                  textTransform: "uppercase",
+                  letterSpacing: "0.08em",
+                  color: "#A0A0A0",
+                  marginBottom: 14,
+                }}
+              >
+                Competency Map
+              </div>
+              <h2
+                style={{
+                  fontFamily: "Syne, sans-serif",
+                  fontSize: 20,
+                  margin: "0 0 20px 0",
+                  fontWeight: 700,
+                }}
+              >
+                Eight-skill profile
+              </h2>
+              <div style={{ width: "100%", height: 340 }}>
+                <ResponsiveContainer>
+                  <RadarChart data={summary?.radarData ?? []}>
+                    <PolarGrid stroke="#2A2A2A" />
+                    <PolarAngleAxis
+                      dataKey="skill"
+                      tick={{ fill: "#F2F0EB", fontSize: 11, fontFamily: "Inter, sans-serif" }}
+                    />
+                    <PolarRadiusAxis
+                      angle={30}
+                      domain={[0, 100]}
+                      tick={false}
+                      axisLine={false}
+                    />
+                    <Radar
+                      dataKey="value"
+                      stroke="#E8A020"
+                      fill="#E8A020"
+                      fillOpacity={0.15}
+                      strokeWidth={2}
+                    />
+                    <Tooltip
+                      contentStyle={{
+                        background: "#111111",
+                        border: "1px solid #2A2A2A",
+                        borderRadius: 8,
+                        color: "#F2F0EB",
+                        fontSize: 13,
+                      }}
+                      labelStyle={{ color: "#F2F0EB" }}
+                    />
+                  </RadarChart>
+                </ResponsiveContainer>
+              </div>
             </div>
-            <div style={{ marginTop: 16, display: "flex", justifyContent: "flex-end" }}>
-              <UserButton />
+
+            {/* Level Progress + Milestones + Certifications */}
+            <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
+              {/* Level Progress */}
+              <div
+                style={{
+                  background: "#111111",
+                  border: "1px solid #222222",
+                  borderRadius: 12,
+                  padding: 28,
+                }}
+              >
+                <div
+                  style={{
+                    fontSize: 11,
+                    fontWeight: 600,
+                    textTransform: "uppercase",
+                    letterSpacing: "0.08em",
+                    color: "#A0A0A0",
+                    marginBottom: 18,
+                  }}
+                >
+                  Level Progress
+                </div>
+                <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                  <div>
+                    <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 10 }}>
+                      <span style={{ fontSize: 14, fontWeight: 600 }}>{levelEntry.name}</span>
+                      <span style={{ fontSize: 12, color: "#888888" }}>Level {currentLevel}</span>
+                    </div>
+                    <div className="progress-shell">
+                      <div className="progress-bar" style={{ width: `${Math.min(levelProgress, 100)}%` }} />
+                    </div>
+                  </div>
+                  <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                    <span style={{ fontSize: 12, color: "#888888" }}>Next:</span>
+                    <span className="badge">{(levelCopy[nextLevel] ?? levelCopy[1]).name}</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Next Milestone */}
+              <div
+                style={{
+                  background: "#111111",
+                  border: "1px solid #222222",
+                  borderRadius: 12,
+                  padding: 28,
+                }}
+              >
+                <div
+                  style={{
+                    fontSize: 11,
+                    fontWeight: 600,
+                    textTransform: "uppercase",
+                    letterSpacing: "0.08em",
+                    color: "#A0A0A0",
+                    marginBottom: 16,
+                  }}
+                >
+                  Next Milestone
+                </div>
+                <div style={{ fontSize: 14, lineHeight: 1.8 }}>
+                  {(levelCopy[nextLevel] ?? levelCopy[1]).learn.map((item, i) => (
+                    <div key={i} style={{ display: "flex", gap: 12, marginBottom: 10, alignItems: "flex-start" }}>
+                      <span
+                        style={{
+                          width: 20,
+                          height: 20,
+                          borderRadius: "50%",
+                          background: "rgba(232, 160, 32, 0.1)",
+                          border: "1px solid rgba(232, 160, 32, 0.3)",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          fontSize: 10,
+                          fontWeight: 700,
+                          color: "#E8A020",
+                          flexShrink: 0,
+                          marginTop: 2,
+                        }}
+                      >
+                        {i + 1}
+                      </span>
+                      <span style={{ color: "#F2F0EB" }}>{item}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Certifications */}
+              <div
+                style={{
+                  background: "#111111",
+                  border: "1px solid #222222",
+                  borderRadius: 12,
+                  padding: 28,
+                }}
+              >
+                <div
+                  style={{
+                    fontSize: 11,
+                    fontWeight: 600,
+                    textTransform: "uppercase",
+                    letterSpacing: "0.08em",
+                    color: "#A0A0A0",
+                    marginBottom: 16,
+                  }}
+                >
+                  Certifications
+                </div>
+                <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                  {BADGES.filter((b) => b.level <= currentLevel).map((badge) => (
+                    <div
+                      key={badge.level}
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 12,
+                        padding: "12px 14px",
+                        borderRadius: 10,
+                        background: "#1A1A1A",
+                        border: "1px solid #222222",
+                      }}
+                    >
+                      <span style={{ fontSize: 20 }}>{badge.icon}</span>
+                      <span style={{ fontSize: 14, fontWeight: 600, color: "#F2F0EB" }}>{badge.name}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
             </div>
           </div>
-        </aside>
 
-        <section style={{ marginLeft: sidebarWidth, width: `calc(100% - ${sidebarWidth}px)`, padding: 32 }}>
-          <div style={{ maxWidth: 1240, margin: "0 auto" }}>
-            <header style={{ marginBottom: 24 }}>
-              <h1 style={{ fontFamily: "Syne, sans-serif", fontSize: 36, lineHeight: 1.05, margin: 0 }}>Progress</h1>
-              <p className="muted" style={{ marginTop: 8, lineHeight: 1.6 }}>
-                Track your learning journey, simulator performance, and trading mindset.
-              </p>
-            </header>
-
-             <section style={{ display: "grid", gridTemplateColumns: "repeat(4, minmax(0, 1fr))", gap: 16, marginBottom: 24 }}>
-              {[
-                { label: "Current Level", value: `Level ${currentLevel}` },
-                { label: "Modules Completed", value: summary?.completedModules.length ?? 0 },
-                { label: "Journal Entries", value: summary?.journalCount ?? 0 },
-                { label: "Win Rate", value: `${summary?.winRate ?? 0}%`, color: (summary?.winRate ?? 0) > 50 ? "#4ade80" : (summary?.winRate ?? 0) < 50 ? "#ef4444" : text },
-              ].map((item) => (
-                <div key={item.label} className="card" style={{ padding: 20 }}>
-                  <div className="muted" style={{ fontSize: 13, marginBottom: 12 }}>{item.label}</div>
-                  <div className="stat-value" style={{ color: item.color }}>{item.value}</div>
-                </div>
-              ))}
-            </section>
-
-            <section style={{ display: "grid", gridTemplateColumns: "1.2fr .8fr", gap: 24, marginBottom: 24 }}>
-              <div className="card" style={{ padding: 28, minHeight: 420 }}>
-                <div className="muted" style={{ fontSize: 13, marginBottom: 14 }}>Competency Map</div>
-                <h2 style={{ fontFamily: "Syne, sans-serif", fontSize: 24, margin: "0 0 16px 0" }}>Eight-skill profile</h2>
-                <div style={{ width: "100%", height: 320 }}>
-                  <ResponsiveContainer>
-                    <RadarChart data={summary?.radarData ?? []} width={400} height={300}>
-                      <PolarGrid stroke="#222" />
-                      <PolarAngleAxis dataKey="skill" tick={{ fill: "#F2F0EB", fontSize: 11 }} />
-                      <PolarRadiusAxis angle={30} domain={[0, 100]} tick={false} axisLine={false} />
-                      <Radar dataKey="value" stroke={accent} fill={accent} fillOpacity={0.18} />
-                      <Tooltip contentStyle={{ background: "#111", border: "1px solid #2A2A2A", color: text }} labelStyle={{ color: text }} />
-                    </RadarChart>
-                  </ResponsiveContainer>
-                </div>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 24, marginBottom: 32 }}>
+            {/* Modules Completed */}
+            <div
+              style={{
+                background: "#111111",
+                border: "1px solid #222222",
+                borderRadius: 12,
+                padding: 28,
+              }}
+            >
+              <div
+                style={{
+                  fontSize: 11,
+                  fontWeight: 600,
+                  textTransform: "uppercase",
+                  letterSpacing: "0.08em",
+                  color: "#A0A0A0",
+                  marginBottom: 16,
+                }}
+              >
+                Modules Completed
               </div>
-
-              <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
-                <div className="card" style={{ padding: 28 }}>
-                  <div className="muted" style={{ fontSize: 13, marginBottom: 14 }}>Level Progress</div>
-                  <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-                    <div>
-                      <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 8 }}>
-                        <span style={{ fontSize: 14, fontWeight: 600 }}>{levelEntry.name}</span>
-                        <span className="muted" style={{ fontSize: 12 }}>Level {currentLevel}</span>
-                      </div>
-                      <div className="progress-shell">
-                        <div className="progress-bar" style={{ width: `${Math.min(levelProgress, 100)}%` }} />
-                      </div>
+              {!summary || summary.completedModules.length === 0 ? (
+                <div style={{ color: "#888888", fontSize: 14 }}>No modules completed yet.</div>
+              ) : (
+                <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                  {summary.completedModules.map((mod) => (
+                    <div
+                      key={mod.id}
+                      style={{
+                        padding: "12px 14px",
+                        borderRadius: 10,
+                        background: "#1A1A1A",
+                        border: "1px solid #222222",
+                        fontSize: 14,
+                        color: "#F2F0EB",
+                      }}
+                    >
+                      {mod.title}
                     </div>
-                    <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                      <span className="muted" style={{ fontSize: 13 }}>Next:</span>
-                      <span className="badge">{(levelCopy[nextLevel] ?? levelCopy[1]).name}</span>
-                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Simulator Stats */}
+            <div
+              style={{
+                background: "#111111",
+                border: "1px solid #222222",
+                borderRadius: 12,
+                padding: 28,
+              }}
+            >
+              <div
+                style={{
+                  fontSize: 11,
+                  fontWeight: 600,
+                  textTransform: "uppercase",
+                  letterSpacing: "0.08em",
+                  color: "#A0A0A0",
+                  marginBottom: 16,
+                }}
+              >
+                Simulator Stats
+              </div>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
+                <div>
+                  <div
+                    style={{
+                      fontSize: 11,
+                      color: "#888888",
+                      marginBottom: 6,
+                      textTransform: "uppercase",
+                      letterSpacing: "0.06em",
+                    }}
+                  >
+                    Total P&L
+                  </div>
+                  <div
+                    style={{
+                      fontFamily: "Syne, sans-serif",
+                      fontSize: 20,
+                      fontWeight: 700,
+                      color: (summary?.totalPnl ?? 0) >= 0 ? "#22C55E" : "#EF4444",
+                    }}
+                  >
+                    {(summary?.totalPnl ?? 0) >= 0 ? "+" : ""}₹{(summary?.totalPnl ?? 0).toFixed(2)}
                   </div>
                 </div>
-
-                <div className="card" style={{ padding: 28 }}>
-                  <div className="muted" style={{ fontSize: 13, marginBottom: 14 }}>Next Milestone</div>
-                  <div style={{ fontSize: 14, lineHeight: 1.7 }}>
-                    {(levelCopy[nextLevel] ?? levelCopy[1]).learn.map((item, i) => (
-                      <div key={i} style={{ display: "flex", gap: 10, marginBottom: 8, alignItems: "flex-start" }}>
-                        <span style={{ color: accent, flexShrink: 0 }}>→</span>
-                        <span>{item}</span>
-                      </div>
-                    ))}
+                <div>
+                  <div
+                    style={{
+                      fontSize: 11,
+                      color: "#888888",
+                      marginBottom: 6,
+                      textTransform: "uppercase",
+                      letterSpacing: "0.06em",
+                    }}
+                  >
+                    Win Rate
+                  </div>
+                  <div
+                    style={{
+                      fontFamily: "Syne, sans-serif",
+                      fontSize: 20,
+                      fontWeight: 700,
+                      color: "#F2F0EB",
+                    }}
+                  >
+                    {summary?.winRate ?? 0}%
                   </div>
                 </div>
-
-                <div className="card" style={{ padding: 28 }}>
-                  <div className="muted" style={{ fontSize: 13, marginBottom: 14 }}>Certifications</div>
-                  <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-                    {BADGES.filter((b) => b.level <= currentLevel).map((badge) => (
-                      <div key={badge.level} style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 12px", borderRadius: 10, background: "#111111", border: "1px solid #1E1E1E" }}>
-                        <span style={{ fontSize: 20 }}>{badge.icon}</span>
-                        <span style={{ fontSize: 14, fontWeight: 600 }}>{badge.name}</span>
-                      </div>
-                    ))}
+                <div>
+                  <div
+                    style={{
+                      fontSize: 11,
+                      color: "#888888",
+                      marginBottom: 6,
+                      textTransform: "uppercase",
+                      letterSpacing: "0.06em",
+                    }}
+                  >
+                    Total Trades
+                  </div>
+                  <div
+                    style={{
+                      fontFamily: "Syne, sans-serif",
+                      fontSize: 20,
+                      fontWeight: 700,
+                      color: "#F2F0EB",
+                    }}
+                  >
+                    {summary?.tradeHistory.length ?? 0}
+                  </div>
+                </div>
+                <div>
+                  <div
+                    style={{
+                      fontSize: 11,
+                      color: "#888888",
+                      marginBottom: 6,
+                      textTransform: "uppercase",
+                      letterSpacing: "0.06em",
+                    }}
+                  >
+                    Open Positions
+                  </div>
+                  <div
+                    style={{
+                      fontFamily: "Syne, sans-serif",
+                      fontSize: 20,
+                      fontWeight: 700,
+                      color: "#F2F0EB",
+                    }}
+                  >
+                    {summary?.openPositions.length ?? 0}
                   </div>
                 </div>
               </div>
-            </section>
-
-            <section style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 24, marginBottom: 24 }}>
-              <div className="card" style={{ padding: 28 }}>
-                <div className="muted" style={{ fontSize: 13, marginBottom: 14 }}>Modules Completed</div>
-                {!summary || summary.completedModules.length === 0 ? (
-                  <div style={{ color: colors.text.muted, fontSize: 14 }}>No modules completed yet.</div>
-                ) : (
-                  <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                    {summary.completedModules.map((mod) => (
-                      <div key={mod.id} style={{ padding: "10px 12px", borderRadius: 10, background: "#111111", border: "1px solid #1E1E1E", fontSize: 14 }}>
-                        {mod.title}
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-
-              <div className="card" style={{ padding: 28 }}>
-                <div className="muted" style={{ fontSize: 13, marginBottom: 14 }}>Simulator Stats</div>
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
-                  <div>
-                    <div className="muted" style={{ fontSize: 12, marginBottom: 6 }}>Total P&L</div>
-                    <div className="stat-value" style={{ fontSize: 20, color: (summary?.totalPnl ?? 0) >= 0 ? "#4ade80" : "#ef4444" }}>
-                      {(summary?.totalPnl ?? 0) >= 0 ? "+" : ""}₹{(summary?.totalPnl ?? 0).toFixed(2)}
-                    </div>
-                  </div>
-                  <div>
-                    <div className="muted" style={{ fontSize: 12, marginBottom: 6 }}>Win Rate</div>
-                    <div className="stat-value" style={{ fontSize: 20 }}>{summary?.winRate ?? 0}%</div>
-                  </div>
-                  <div>
-                    <div className="muted" style={{ fontSize: 12, marginBottom: 6 }}>Total Trades</div>
-                    <div className="stat-value" style={{ fontSize: 20 }}>{summary?.tradeHistory.length ?? 0}</div>
-                  </div>
-                  <div>
-                    <div className="muted" style={{ fontSize: 12, marginBottom: 6 }}>Open Positions</div>
-                    <div className="stat-value" style={{ fontSize: 20 }}>{summary?.openPositions.length ?? 0}</div>
-                  </div>
-                </div>
-              </div>
-            </section>
-
-            <section className="card" style={{ padding: 28, marginBottom: 24 }}>
-              <div className="muted" style={{ fontSize: 13, marginBottom: 14 }}>Journal Streak</div>
-              <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
-                <div className="stat-value" style={{ fontSize: 48 }}>{summary?.journalCount ?? 0}</div>
-                <div className="muted" style={{ fontSize: 14 }}>entries written</div>
-              </div>
-            </section>
+            </div>
           </div>
-        </section>
-      </div>
+
+          {/* Journal Streak */}
+          <div
+            style={{
+              background: "#111111",
+              border: "1px solid #222222",
+              borderRadius: 12,
+              padding: 28,
+            }}
+          >
+            <div
+              style={{
+                fontSize: 11,
+                fontWeight: 600,
+                textTransform: "uppercase",
+                letterSpacing: "0.08em",
+                color: "#A0A0A0",
+                marginBottom: 14,
+              }}
+            >
+              Journal Streak
+            </div>
+            <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
+              <div
+                style={{
+                  fontFamily: "Syne, sans-serif",
+                  fontSize: 48,
+                  fontWeight: 700,
+                  color: "#E8A020",
+                  lineHeight: 1,
+                }}
+              >
+                {summary?.journalCount ?? 0}
+              </div>
+              <div style={{ color: "#A0A0A0", fontSize: 14 }}>entries written</div>
+            </div>
+          </div>
+        </div>
+      </section>
     </main>
   );
 }

@@ -23,6 +23,15 @@ const text = colors.text.primary;
 
 const steps = onboardingSteps;
 
+const STEP_ICONS: Record<number, string> = {
+  1: "🎯",
+  2: "📊",
+  3: "🌐",
+  4: "⏱",
+  5: "🛡",
+  6: "✅",
+};
+
 export default function OnboardingClient() {
   const router = useRouter();
   const { user } = useUser();
@@ -121,18 +130,46 @@ export default function OnboardingClient() {
   const StepCard: React.FC<{ title: string; children: React.ReactNode }> = ({ title, children }) => (
     <div
       style={{
-        background: "#0F0F0F",
-        padding: 28,
-        borderRadius: 10,
+        background: "#111111",
+        border: "1px solid #222222",
+        borderRadius: 16,
+        padding: 40,
         maxWidth: 720,
         width: "100%",
-        boxShadow: "0 6px 20px rgba(0,0,0,0.6)",
         opacity: animating ? 0 : 1,
         transform: animating ? "translateY(12px)" : "translateY(0)",
         transition: "opacity .25s ease, transform .25s ease",
       }}
     >
-      <h2 style={{ fontFamily: "Syne, sans-serif", fontSize: 20, marginBottom: 12, color: text }}>{title}</h2>
+      <div style={{ display: "flex", alignItems: "center", gap: 14, marginBottom: 20 }}>
+        <div
+          style={{
+            width: 44,
+            height: 44,
+            borderRadius: "50%",
+            background: "rgba(232, 160, 32, 0.1)",
+            border: "1px solid rgba(232, 160, 32, 0.3)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            fontSize: 20,
+            flexShrink: 0,
+          }}
+        >
+          {STEP_ICONS[step] || "📋"}
+        </div>
+        <h2
+          style={{
+            fontFamily: "Syne, sans-serif",
+            fontSize: 22,
+            margin: 0,
+            color: text,
+            fontWeight: 700,
+          }}
+        >
+          {title}
+        </h2>
+      </div>
       {children}
     </div>
   );
@@ -140,171 +177,479 @@ export default function OnboardingClient() {
   const stepLabels = ["Goal", "Experience", "Markets", "Time", "Risk", "Review"];
 
   return (
-    <main style={{ minHeight: "100vh", background: bg, color: text, fontFamily: "'Inter', sans-serif", padding: "48px 16px" }}>
-      <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Syne:wght@600;700;800&display=swap');
-        .progress { height: 10px; background: #151515; border-radius: 999px; overflow: hidden; }
-        .progress-bar { height: 100%; background: ${accent}; width: ${percent()}%; transition: width .35s ease; }
-        .options { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; margin-top: 16px; }
-        .option-btn { background: #0A0A0A; border: 1px solid #1E1E1E; color: ${text}; padding: 12px 14px; border-radius: 8px; cursor: pointer; text-align: left; transition: all .2s ease; }
-        .option-btn:hover { border-color: #2A2A2A; }
-        .option-btn.selected { background: ${accent}; color: #0A0A0A; border-color: ${accent}; }
-        .controls { display:flex; gap:12px; margin-top:18px; justify-content:flex-end; }
-        .btn { padding: 10px 14px; border-radius:8px; cursor:pointer; font-weight:600; border: none; }
-        .btn.ghost { background: transparent; color: #888; border: 1px solid #222; }
-        .btn.primary { background: ${accent}; color: #0A0A0A; }
-        .btn:disabled { opacity: 0.5; cursor: not-allowed; }
-        .spinner { width: 16px; height: 16px; border: 2px solid #0A0A0A; border-top-color: transparent; border-radius: 50%; animation: spin .8s linear infinite; display: inline-block; vertical-align: middle; }
-        @keyframes spin { to { transform: rotate(360deg); } }
-        .error-msg { color: #ef4444; font-size: 13px; margin-top: 10px; }
-        .summary-row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #1E1E1E; }
-        .summary-row:last-child { border-bottom: none; }
-        .summary-label { color: #888; font-size: 14px; }
-        .summary-value { color: ${text}; font-weight: 600; font-size: 14px; }
-      `}</style>
+    <main
+      style={{
+        minHeight: "100vh",
+        background: bg,
+        color: text,
+        fontFamily: "Inter, sans-serif",
+        padding: "48px 24px",
+      }}
+    >
+      <div
+        style={{
+          maxWidth: 920,
+          margin: "0 auto",
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+        }}
+      >
+        {/* Logo */}
+        <div
+          style={{
+            fontFamily: "Syne, sans-serif",
+            fontSize: 13,
+            letterSpacing: "0.15em",
+            fontWeight: 700,
+            color: text,
+            marginBottom: 48,
+            textAlign: "center",
+          }}
+        >
+          VORNIX FORGE
+        </div>
 
-      <div style={{ maxWidth: 920, margin: "0 auto" }}>
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, marginBottom: 18 }}>
-          <h1 style={{ fontFamily: "Syne, sans-serif", fontSize: 24, margin: 0 }}>Onboarding</h1>
-          <div style={{ width: 240 }}>
-            <div className="progress">
-              <div className="progress-bar" style={{ width: `${percent()}%` }} />
-            </div>
-            <div style={{ fontSize: 12, color: "#888", marginTop: 6, textAlign: "right" }}>
-              {stepLabels[step - 1]} · {percent()}%
-            </div>
+        <div style={{ width: 280, marginBottom: 40 }}>
+          <div className="progress-shell" style={{ height: 4 }}>
+            <div className="progress-bar" style={{ width: `${percent()}%` }} />
+          </div>
+          <div
+            style={{
+              fontSize: 12,
+              color: "#888888",
+              marginTop: 8,
+              textAlign: "right",
+              fontWeight: 500,
+            }}
+          >
+            {stepLabels[step - 1]} · {percent()}%
           </div>
         </div>
 
-        <div style={{ display: "flex", justifyContent: "center" }}>
+        <div style={{ display: "flex", justifyContent: "center", width: "100%" }}>
           {step <= 5 ? (
             <StepCard title={steps[step - 1]}>
               {step === 1 && (
                 <div>
-                  <div className="options">
-                    {goalOptions.map((o) => (
-                      <button
-                        key={o}
-                        className={["option-btn", answers.goal === o ? "selected" : ""].join(" ")}
-                        onClick={() => updateSingle("goal", o)}
-                      >
-                        {o}
-                      </button>
-                    ))}
+                  <p style={{ fontSize: 14, color: "#A0A0A0", marginBottom: 20, lineHeight: 1.7 }}>
+                    What brings you to trading?
+                  </p>
+                  <div
+                    style={{
+                      display: "grid",
+                      gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))",
+                      gap: 12,
+                    }}
+                  >
+                    {goalOptions.map((o) => {
+                      const isSelected = answers.goal === o;
+                      return (
+                        <button
+                          key={o}
+                          style={{
+                            padding: "18px 20px",
+                            borderRadius: 12,
+                            border: `1px solid ${isSelected ? "#E8A020" : "#222222"}`,
+                            background: isSelected ? "rgba(232, 160, 32, 0.08)" : "#0F0F0F",
+                            color: isSelected ? "#F2F0EB" : "#A0A0A0",
+                            fontSize: 14,
+                            cursor: "pointer",
+                            transition: "all 0.15s ease",
+                            textAlign: "left",
+                            fontWeight: isSelected ? 600 : 400,
+                            display: "flex",
+                            alignItems: "center",
+                            gap: 12,
+                          }}
+                          onClick={() => updateSingle("goal", o)}
+                          onMouseEnter={(e) => {
+                            if (!isSelected) {
+                              e.currentTarget.style.borderColor = "#2A2A2A";
+                              e.currentTarget.style.color = "#F2F0EB";
+                            }
+                          }}
+                          onMouseLeave={(e) => {
+                            if (!isSelected) {
+                              e.currentTarget.style.borderColor = "#222222";
+                              e.currentTarget.style.color = "#A0A0A0";
+                            }
+                          }}
+                        >
+                          {isSelected && (
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#E8A020" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
+                              <polyline points="20 6 9 17 4 12" />
+                            </svg>
+                          )}
+                          {o}
+                        </button>
+                      );
+                    })}
                   </div>
                 </div>
               )}
 
               {step === 2 && (
                 <div>
-                  <div className="options">
-                    {experienceOptions.map((o) => (
-                      <button
-                        key={o}
-                        className={["option-btn", answers.experience === o ? "selected" : ""].join(" ")}
-                        onClick={() => updateSingle("experience", o)}
-                      >
-                        {o}
-                      </button>
-                    ))}
+                  <p style={{ fontSize: 14, color: "#A0A0A0", marginBottom: 20, lineHeight: 1.7 }}>
+                    How much trading experience do you have?
+                  </p>
+                  <div
+                    style={{
+                      display: "grid",
+                      gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))",
+                      gap: 12,
+                    }}
+                  >
+                    {experienceOptions.map((o) => {
+                      const isSelected = answers.experience === o;
+                      return (
+                        <button
+                          key={o}
+                          style={{
+                            padding: "18px 20px",
+                            borderRadius: 12,
+                            border: `1px solid ${isSelected ? "#E8A020" : "#222222"}`,
+                            background: isSelected ? "rgba(232, 160, 32, 0.08)" : "#0F0F0F",
+                            color: isSelected ? "#F2F0EB" : "#A0A0A0",
+                            fontSize: 14,
+                            cursor: "pointer",
+                            transition: "all 0.15s ease",
+                            textAlign: "left",
+                            fontWeight: isSelected ? 600 : 400,
+                            display: "flex",
+                            alignItems: "center",
+                            gap: 12,
+                          }}
+                          onClick={() => updateSingle("experience", o)}
+                          onMouseEnter={(e) => {
+                            if (!isSelected) {
+                              e.currentTarget.style.borderColor = "#2A2A2A";
+                              e.currentTarget.style.color = "#F2F0EB";
+                            }
+                          }}
+                          onMouseLeave={(e) => {
+                            if (!isSelected) {
+                              e.currentTarget.style.borderColor = "#222222";
+                              e.currentTarget.style.color = "#A0A0A0";
+                            }
+                          }}
+                        >
+                          {isSelected && (
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#E8A020" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
+                              <polyline points="20 6 9 17 4 12" />
+                            </svg>
+                          )}
+                          {o}
+                        </button>
+                      );
+                    })}
                   </div>
                 </div>
               )}
 
               {step === 3 && (
                 <div>
-                  <div style={{ fontSize: 13, color: "#AAA" }}>Select all that apply</div>
-                  <div className="options">
-                    {marketOptions.map((o) => (
-                      <button
-                        key={o}
-                        className={["option-btn", answers.markets.includes(o) ? "selected" : ""].join(" ")}
-                        onClick={() => toggleMarket(o)}
-                      >
-                        {o}
-                      </button>
-                    ))}
+                  <p style={{ fontSize: 14, color: "#A0A0A0", marginBottom: 8, lineHeight: 1.7 }}>
+                    Which markets interest you? Select all that apply.
+                  </p>
+                  {marketError && (
+                    <div style={{ color: "#EF4444", fontSize: 13, marginBottom: 12 }}>Please select at least one market</div>
+                  )}
+                  <div
+                    style={{
+                      display: "grid",
+                      gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))",
+                      gap: 12,
+                    }}
+                  >
+                    {marketOptions.map((o) => {
+                      const isSelected = answers.markets.includes(o);
+                      return (
+                        <button
+                          key={o}
+                          style={{
+                            padding: "18px 20px",
+                            borderRadius: 12,
+                            border: `1px solid ${isSelected ? "#E8A020" : "#222222"}`,
+                            background: isSelected ? "rgba(232, 160, 32, 0.08)" : "#0F0F0F",
+                            color: isSelected ? "#F2F0EB" : "#A0A0A0",
+                            fontSize: 14,
+                            cursor: "pointer",
+                            transition: "all 0.15s ease",
+                            textAlign: "left",
+                            fontWeight: isSelected ? 600 : 400,
+                            display: "flex",
+                            alignItems: "center",
+                            gap: 12,
+                          }}
+                          onClick={() => toggleMarket(o)}
+                          onMouseEnter={(e) => {
+                            if (!isSelected) {
+                              e.currentTarget.style.borderColor = "#2A2A2A";
+                              e.currentTarget.style.color = "#F2F0EB";
+                            }
+                          }}
+                          onMouseLeave={(e) => {
+                            if (!isSelected) {
+                              e.currentTarget.style.borderColor = "#222222";
+                              e.currentTarget.style.color = "#A0A0A0";
+                            }
+                          }}
+                        >
+                          {isSelected && (
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#E8A020" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
+                              <polyline points="20 6 9 17 4 12" />
+                            </svg>
+                          )}
+                          {o}
+                        </button>
+                      );
+                    })}
                   </div>
-                  {marketError && <div className="error-msg">Please select at least one market</div>}
                 </div>
               )}
 
               {step === 4 && (
                 <div>
-                  <div className="options">
-                    {timeOptions.map((o) => (
-                      <button
-                        key={o}
-                        className={["option-btn", answers.time === o ? "selected" : ""].join(" ")}
-                        onClick={() => updateSingle("time", o)}
-                      >
-                        {o}
-                      </button>
-                    ))}
+                  <p style={{ fontSize: 14, color: "#A0A0A0", marginBottom: 20, lineHeight: 1.7 }}>
+                    How much time can you dedicate to trading each day?
+                  </p>
+                  <div
+                    style={{
+                      display: "grid",
+                      gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))",
+                      gap: 12,
+                    }}
+                  >
+                    {timeOptions.map((o) => {
+                      const isSelected = answers.time === o;
+                      return (
+                        <button
+                          key={o}
+                          style={{
+                            padding: "18px 20px",
+                            borderRadius: 12,
+                            border: `1px solid ${isSelected ? "#E8A020" : "#222222"}`,
+                            background: isSelected ? "rgba(232, 160, 32, 0.08)" : "#0F0F0F",
+                            color: isSelected ? "#F2F0EB" : "#A0A0A0",
+                            fontSize: 14,
+                            cursor: "pointer",
+                            transition: "all 0.15s ease",
+                            textAlign: "left",
+                            fontWeight: isSelected ? 600 : 400,
+                            display: "flex",
+                            alignItems: "center",
+                            gap: 12,
+                          }}
+                          onClick={() => updateSingle("time", o)}
+                          onMouseEnter={(e) => {
+                            if (!isSelected) {
+                              e.currentTarget.style.borderColor = "#2A2A2A";
+                              e.currentTarget.style.color = "#F2F0EB";
+                            }
+                          }}
+                          onMouseLeave={(e) => {
+                            if (!isSelected) {
+                              e.currentTarget.style.borderColor = "#222222";
+                              e.currentTarget.style.color = "#A0A0A0";
+                            }
+                          }}
+                        >
+                          {isSelected && (
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#E8A020" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
+                              <polyline points="20 6 9 17 4 12" />
+                            </svg>
+                          )}
+                          {o}
+                        </button>
+                      );
+                    })}
                   </div>
                 </div>
               )}
 
               {step === 5 && (
                 <div>
-                  <div className="options">
-                    {riskOptions.map((o) => (
-                      <button
-                        key={o}
-                        className={["option-btn", answers.risk === o ? "selected" : ""].join(" ")}
-                        onClick={() => updateSingle("risk", o)}
-                      >
-                        {o}
-                      </button>
-                    ))}
+                  <p style={{ fontSize: 14, color: "#A0A0A0", marginBottom: 20, lineHeight: 1.7 }}>
+                    What is your risk tolerance?
+                  </p>
+                  <div
+                    style={{
+                      display: "grid",
+                      gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))",
+                      gap: 12,
+                    }}
+                  >
+                    {riskOptions.map((o) => {
+                      const isSelected = answers.risk === o;
+                      return (
+                        <button
+                          key={o}
+                          style={{
+                            padding: "18px 20px",
+                            borderRadius: 12,
+                            border: `1px solid ${isSelected ? "#E8A020" : "#222222"}`,
+                            background: isSelected ? "rgba(232, 160, 32, 0.08)" : "#0F0F0F",
+                            color: isSelected ? "#F2F0EB" : "#A0A0A0",
+                            fontSize: 14,
+                            cursor: "pointer",
+                            transition: "all 0.15s ease",
+                            textAlign: "left",
+                            fontWeight: isSelected ? 600 : 400,
+                            display: "flex",
+                            alignItems: "center",
+                            gap: 12,
+                          }}
+                          onClick={() => updateSingle("risk", o)}
+                          onMouseEnter={(e) => {
+                            if (!isSelected) {
+                              e.currentTarget.style.borderColor = "#2A2A2A";
+                              e.currentTarget.style.color = "#F2F0EB";
+                            }
+                          }}
+                          onMouseLeave={(e) => {
+                            if (!isSelected) {
+                              e.currentTarget.style.borderColor = "#222222";
+                              e.currentTarget.style.color = "#A0A0A0";
+                            }
+                          }}
+                        >
+                          {isSelected && (
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#E8A020" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
+                              <polyline points="20 6 9 17 4 12" />
+                            </svg>
+                          )}
+                          {o}
+                        </button>
+                      );
+                    })}
                   </div>
                 </div>
               )}
 
-              <div className="controls">
-                <button className="btn ghost" onClick={back} disabled={step === 1} style={{ opacity: step === 1 ? 0.5 : 1 }}>
+              <div style={{ display: "flex", gap: 12, marginTop: 28, justifyContent: "space-between" }}>
+                <button
+                  style={{
+                    padding: "10px 20px",
+                    borderRadius: 8,
+                    border: "1px solid #222222",
+                    background: "transparent",
+                    color: "#888888",
+                    fontSize: 14,
+                    fontWeight: 600,
+                    cursor: "pointer",
+                    transition: "all 0.15s ease",
+                  }}
+                  onClick={back}
+                  disabled={step === 1}
+                >
                   Back
                 </button>
-                <button className="btn primary" onClick={next}>
+                <button className="btn-primary" onClick={next}>
                   {step < 5 ? "Next" : "Review"}
                 </button>
               </div>
             </StepCard>
           ) : (
             <StepCard title="Review Your Answers">
-              <div style={{ marginBottom: 20 }}>
-                <div className="summary-row">
-                  <span className="summary-label">Trading goal</span>
-                  <span className="summary-value">{answers.goal || "—"}</span>
+              <div style={{ marginBottom: 24 }}>
+                <div
+                  style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    padding: "12px 0",
+                    borderBottom: "1px solid #222222",
+                  }}
+                >
+                  <span style={{ color: "#888888", fontSize: 14 }}>Trading goal</span>
+                  <span style={{ color: "#F2F0EB", fontWeight: 600, fontSize: 14 }}>{answers.goal || "—"}</span>
                 </div>
-                <div className="summary-row">
-                  <span className="summary-label">Experience</span>
-                  <span className="summary-value">{answers.experience || "—"}</span>
+                <div
+                  style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    padding: "12px 0",
+                    borderBottom: "1px solid #222222",
+                  }}
+                >
+                  <span style={{ color: "#888888", fontSize: 14 }}>Experience</span>
+                  <span style={{ color: "#F2F0EB", fontWeight: 600, fontSize: 14 }}>{answers.experience || "—"}</span>
                 </div>
-                <div className="summary-row">
-                  <span className="summary-label">Markets</span>
-                  <span className="summary-value" style={{ textAlign: "right", maxWidth: "60%" }}>
+                <div
+                  style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    padding: "12px 0",
+                    borderBottom: "1px solid #222222",
+                  }}
+                >
+                  <span style={{ color: "#888888", fontSize: 14 }}>Markets</span>
+                  <span style={{ color: "#F2F0EB", fontWeight: 600, fontSize: 14, textAlign: "right", maxWidth: "60%" }}>
                     {answers.markets.length ? answers.markets.join(", ") : "—"}
                   </span>
                 </div>
-                <div className="summary-row">
-                  <span className="summary-label">Daily time</span>
-                  <span className="summary-value">{answers.time || "—"}</span>
+                <div
+                  style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    padding: "12px 0",
+                    borderBottom: "1px solid #222222",
+                  }}
+                >
+                  <span style={{ color: "#888888", fontSize: 14 }}>Daily time</span>
+                  <span style={{ color: "#F2F0EB", fontWeight: 600, fontSize: 14 }}>{answers.time || "—"}</span>
                 </div>
-                <div className="summary-row">
-                  <span className="summary-label">Risk tolerance</span>
-                  <span className="summary-value">{answers.risk || "—"}</span>
+                <div
+                  style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    padding: "12px 0",
+                  }}
+                >
+                  <span style={{ color: "#888888", fontSize: 14 }}>Risk tolerance</span>
+                  <span style={{ color: "#F2F0EB", fontWeight: 600, fontSize: 14 }}>{answers.risk || "—"}</span>
                 </div>
               </div>
 
-              <div className="controls">
-                <button className="btn ghost" onClick={() => goTo(5)}>
+              <div style={{ display: "flex", gap: 12, justifyContent: "space-between" }}>
+                <button
+                  style={{
+                    padding: "10px 20px",
+                    borderRadius: 8,
+                    border: "1px solid #222222",
+                    background: "transparent",
+                    color: "#888888",
+                    fontSize: 14,
+                    fontWeight: 600,
+                    cursor: "pointer",
+                    transition: "all 0.15s ease",
+                  }}
+                  onClick={() => goTo(5)}
+                >
                   Back
                 </button>
-                <button className="btn primary" onClick={submitOnboarding} disabled={saving}>
+                <button
+                  className="btn-primary"
+                  onClick={submitOnboarding}
+                  disabled={saving}
+                  style={{ opacity: saving ? 0.6 : 1 }}
+                >
                   {saving ? (
                     <>
-                      <span className="spinner" /> Saving...
+                      <span
+                        style={{
+                          width: 16,
+                          height: 16,
+                          border: "2px solid #0A0A0A",
+                          borderTopColor: "transparent",
+                          borderRadius: "50%",
+                          animation: "spin .8s linear infinite",
+                          display: "inline-block",
+                          verticalAlign: "middle",
+                        }}
+                      />
+                      Saving...
                     </>
                   ) : (
                     "Start My Assessment"
@@ -313,6 +658,22 @@ export default function OnboardingClient() {
               </div>
             </StepCard>
           )}
+        </div>
+
+        {/* Progress dots */}
+        <div style={{ display: "flex", gap: 8, marginTop: 40 }}>
+          {[1, 2, 3, 4, 5, 6].map((dotStep) => (
+            <div
+              key={dotStep}
+              style={{
+                width: 8,
+                height: 8,
+                borderRadius: "50%",
+                background: dotStep === step ? "#E8A020" : dotStep < step ? "#E8A020" : "#222222",
+                transition: "all 0.15s ease",
+              }}
+            />
+          ))}
         </div>
       </div>
     </main>

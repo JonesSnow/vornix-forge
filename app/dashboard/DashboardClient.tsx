@@ -1,35 +1,17 @@
 "use client";
 
 import React, { useEffect, useMemo, useState } from "react";
-import { UserButton, useUser } from "@clerk/nextjs";
-import {
-  PolarAngleAxis,
-  PolarGrid,
-  PolarRadiusAxis,
-  Radar,
-  RadarChart,
-  ResponsiveContainer,
-  Tooltip,
-} from "recharts";
-import {
-  colors,
-  STORAGE_KEYS,
-} from "@/lib/constants";
-import {
-  navItems,
-  skillLabels,
-  levelCopy,
-  nextModules,
-} from "@/lib/constants/content/dashboard-content";
-import type { OnboardingAnswers, AssessmentResult, AssessmentStorage, DashboardState } from "@/lib/types";
+import { useUser } from "@clerk/nextjs";
+import Link from "next/link";
+import { colors, STORAGE_KEYS } from "@/lib/constants";
+import { navItems, levelCopy, nextModules } from "@/lib/constants/content/dashboard-content";
+import type { AssessmentStorage } from "@/lib/types";
+import Sidebar from "../components/Sidebar";
 
 const bg = colors.bg.primary;
 const text = colors.text.primary;
-const accent = colors.accent.primary;
-const sidebarWidth = 280;
-const ONBOARDING_KEY = STORAGE_KEYS.onboardingAnswers;
-const ASSESSMENT_KEY = STORAGE_KEYS.assessment;
-const DASHBOARD_KEY = STORAGE_KEYS.dashboard;
+const border = "#222222";
+const sidebarWidth = 220;
 
 function getLevelFromScore(score: number) {
   if (score <= 40) return 1;
@@ -38,38 +20,42 @@ function getLevelFromScore(score: number) {
   return 4;
 }
 
-type DashboardSummary = {
-  profile: { id: string; clerkId: string; onboardingDone: boolean };
-  assessment: { score: number; level: number } | null;
-  modulesCompleted: number;
-  openPositions: Array<{ id: string; symbol: string; side: string; status: string }>;
-  tradeHistory: Array<{ id: string; symbol: string; side: string; status: string; pnl: number | null }>;
-  totalPnl: number;
-  winRate: number;
-  journalCount: number;
-  radarData: Array<{ skill: string; value: number }>;
-  currentLevel: number;
-  balance: number;
+type Deadline = {
+  id: string;
+  title: string;
+  dueDate: string;
+  courseTitle?: string;
+  type?: string;
+};
+
+type FinanceData = {
+  totalBalance?: number;
+  monthlyIncome?: number;
+  monthlyExpenses?: number;
+  savingsRate?: number;
+};
+
+type Goal = {
+  id: string;
+  title: string;
+  description: string;
+  progress: number;
 };
 
 export default function DashboardClient() {
   const { user } = useUser();
   const [mounted, setMounted] = useState(false);
-  const [onboarding, setOnboarding] = useState<OnboardingAnswers | null>(null);
   const [assessment, setAssessment] = useState<AssessmentStorage | null>(null);
-  const [dashboardState, setDashboardState] = useState<DashboardState | null>(null);
-  const [summary, setSummary] = useState<DashboardSummary | null>(null);
+  const [dashboardData, setDashboardData] = useState<{
+    upcomingDeadlines?: Deadline[];
+    finances?: FinanceData;
+    goals?: Goal[];
+  } | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState<"overview" | "finances" | "goals">("overview");
 
   useEffect(() => {
-    const onboardingRaw = localStorage.getItem(ONBOARDING_KEY);
-    if (onboardingRaw) {
-      try {
-        setOnboarding(JSON.parse(onboardingRaw) as OnboardingAnswers);
-      } catch {
-        setOnboarding(null);
-      }
-    }
-    const assessmentRaw = localStorage.getItem(ASSESSMENT_KEY);
+    const assessmentRaw = localStorage.getItem(STORAGE_KEYS.assessment);
     if (assessmentRaw) {
       try {
         setAssessment(JSON.parse(assessmentRaw) as AssessmentStorage);
@@ -77,220 +63,339 @@ export default function DashboardClient() {
         setAssessment(null);
       }
     }
-    const dashboardRaw = localStorage.getItem(DASHBOARD_KEY);
-    if (dashboardRaw) {
-      try {
-        setDashboardState(JSON.parse(dashboardRaw) as DashboardState);
-      } catch {
-        const initial = { modulesCompleted: 0 };
-        setDashboardState(initial);
-        localStorage.setItem(DASHBOARD_KEY, JSON.stringify(initial));
-      }
-    } else {
-      const initial = { modulesCompleted: 0 };
-      setDashboardState(initial);
-      localStorage.setItem(DASHBOARD_KEY, JSON.stringify(initial));
-    }
     setMounted(true);
   }, []);
 
   useEffect(() => {
-    if (dashboardState) {
-      localStorage.setItem(DASHBOARD_KEY, JSON.stringify(dashboardState));
-    }
-  }, [dashboardState]);
-
-  useEffect(() => {
-    async function fetchSummary() {
+    async function fetchDashboard() {
       try {
-        const res = await fetch("/api/dashboard/summary");
+        const res = await fetch("/api/dashboard");
         if (res.ok) {
           const data = await res.json();
-          setSummary(data);
+          setDashboardData(data);
         }
       } catch (e) {
-        console.error("Failed to fetch dashboard summary:", e);
+        console.error("Failed to fetch dashboard:", e);
+      } finally {
+        setLoading(false);
       }
     }
-    fetchSummary();
+    fetchDashboard();
   }, []);
+
+  const assessmentScore = assessment?.result?.score ?? assessment?.score ?? 0;
+  const currentLevel = assessment?.result?.level ?? assessment?.level ?? getLevelFromScore(assessmentScore);
+  const levelEntry = levelCopy[currentLevel] ?? levelCopy[1];
+  const nextModule = nextModules[currentLevel];
 
   const profileName = useMemo(() => {
     const email = user?.primaryEmailAddress?.emailAddress?.split("@")[0];
     return user?.fullName || user?.firstName || user?.username || email || "Signed-in user";
   }, [user]);
-  const assessmentScore = summary?.assessment?.score ?? assessment?.result?.score ?? assessment?.score ?? 0;
-  const currentLevel = summary?.currentLevel ?? assessment?.result?.level ?? assessment?.level ?? getLevelFromScore(assessmentScore);
-  const levelEntry = levelCopy[currentLevel] ?? levelCopy[1];
-  const specialisationGoal = onboarding?.goal ?? "No onboarding profile saved yet.";
-  const modulesCompleted = summary?.modulesCompleted ?? dashboardState?.modulesCompleted ?? 0;
-  const daysActive = 1;
 
-  const radarData = useMemo(() => {
-    if (summary?.radarData && summary.radarData.length > 0) {
-      return summary.radarData.map((item) => ({ subject: item.skill, value: item.value }));
-    }
-    return skillLabels.map((subject) => ({ subject, value: assessmentScore }));
-  }, [summary?.radarData, assessmentScore]);
+  const deadlines = useMemo(() => {
+    if (!dashboardData?.upcomingDeadlines) return [];
+    return dashboardData.upcomingDeadlines.slice(0, 5);
+  }, [dashboardData]);
 
-  const nextModule = nextModules[currentLevel] ?? nextModules[1];
-  const levelCompletion = modulesCompleted > 0 ? Math.min((modulesCompleted / 4) * 100, 100) : 0;
+  const finances = useMemo(() => {
+    if (!dashboardData?.finances) return null;
+    return dashboardData.finances;
+  }, [dashboardData]);
 
-  if (!mounted) {
+  const goals = useMemo(() => {
+    if (!dashboardData?.goals) return [];
+    return dashboardData.goals.slice(0, 4);
+  }, [dashboardData]);
+
+  if (!mounted || loading) {
     return (
-      <main style={{ minHeight: "100vh", background: bg, color: text, display: "grid", placeItems: "center", fontFamily: "Inter, sans-serif" }}>
-        <div style={{ color: "#888" }}>Loading dashboard...</div>
+      <main
+        style={{
+          minHeight: "100vh",
+          background: bg,
+          color: text,
+          display: "grid",
+          placeItems: "center",
+          fontFamily: "Inter, sans-serif",
+        }}
+      >
+        <div style={{ color: "#888888" }}>Loading dashboard...</div>
       </main>
     );
   }
 
   return (
-    <main style={{ minHeight: "100vh", background: bg, color: text, fontFamily: "Inter, sans-serif" }}>
-      <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Syne:wght@600;700;800&display=swap');
-        * { box-sizing: border-box; }
-        .sidebar-link { color: #9A9A9A; text-decoration: none; padding: 12px 14px; border-radius: 10px; display: block; transition: all .2s ease; }
-        .sidebar-link:hover { color: ${text}; background: #111111; }
-        .sidebar-link.active { color: ${accent}; background: rgba(232, 160, 32, 0.08); }
-        .card { background: #0F0F0F; border: 1px solid #1E1E1E; border-radius: 16px; }
-        .muted { color: #A3A3A3; }
-        .badge { display: inline-flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: 999px; border: 1px solid rgba(232,160,32,0.35); background: rgba(232,160,32,0.08); color: ${accent}; font-weight: 600; font-size: 12px; }
-        .progress-shell { height: 10px; border-radius: 999px; background: #161616; overflow: hidden; }
-        .progress-bar { height: 100%; background: ${accent}; transition: width .35s ease; }
-        .stat-value { font-family: 'Syne', sans-serif; font-size: 28px; font-weight: 700; color: ${text}; }
-      `}</style>
-      <div style={{ display: "flex", minHeight: "100vh" }}>
-        <aside style={{ width: sidebarWidth, position: "fixed", inset: 0, borderRight: "1px solid #1E1E1E", background: "#0A0A0A", padding: "28px 20px", display: "flex", flexDirection: "column", zIndex: 50 }}>
-          <div>
-            <div style={{ fontFamily: "Syne, sans-serif", fontSize: 18, letterSpacing: "0.14em", fontWeight: 800, marginBottom: 32 }}>VORNIX FORGE</div>
-            <nav style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-              {navItems.map((item) => (
-                <a key={item.label} href={item.href} className={item.label === "Dashboard" ? "sidebar-link active" : "sidebar-link"} aria-current={item.label === "Dashboard" ? "page" : undefined}>
-                  {item.label}
-                </a>
-              ))}
-            </nav>
+    <main style={{ minHeight: "100vh", background: bg, color: text }}>
+      <Sidebar activeLabel="Dashboard" />
+
+      <section style={{ marginLeft: sidebarWidth, width: `calc(100% - ${sidebarWidth}px)`, padding: "48px 40px 80px" }}>
+        <div style={{ maxWidth: 1100, margin: "0 auto" }}>
+          {/* Header */}
+          <div style={{ marginBottom: 32 }}>
+            <h1
+              style={{
+                fontFamily: "Syne, sans-serif",
+                fontSize: 32,
+                fontWeight: 700,
+                margin: "0 0 8px 0",
+                lineHeight: 1.1,
+              }}
+            >
+              Welcome back, {profileName.split(" ")[0]}
+            </h1>
+            <p style={{ color: "#A0A0A0", fontSize: 14, lineHeight: 1.6, margin: 0 }}>
+              {levelEntry.description}
+            </p>
           </div>
-          <div className="card" style={{ padding: 16 }}>
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
-              <div>
-                <div style={{ fontSize: 14, fontWeight: 600, color: text }}>{profileName}</div>
-                <div style={{ fontSize: 12, color: "#9A9A9A", marginTop: 4 }}>{specialisationGoal}</div>
+
+          {/* Level & Next Module */}
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
+              gap: 20,
+              marginBottom: 32,
+            }}
+          >
+            <div
+              style={{
+                background: "#111111",
+                border: "1px solid #222222",
+                borderRadius: 16,
+                padding: 28,
+              }}
+            >
+              <div style={{ fontSize: 12, fontWeight: 600, color: "#888888", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 10 }}>
+                Current Level
               </div>
-              <div className="badge">{levelEntry.name}</div>
+              <div style={{ fontFamily: "Syne, sans-serif", fontSize: 28, fontWeight: 700, color: "#E8A020", marginBottom: 8 }}>
+                {levelEntry.name}
+              </div>
+              <div style={{ fontSize: 13, color: "#A0A0A0", lineHeight: 1.6 }}>
+                Assessment score: {assessmentScore}%
+              </div>
+              <div className="progress-shell" style={{ marginTop: 14 }}>
+                <div className="progress-bar" style={{ width: `${levelEntry.progress}%` }} />
+              </div>
             </div>
-            <div style={{ marginTop: 16, display: "flex", justifyContent: "flex-end" }}>
-              <UserButton />
-            </div>
+
+            {nextModule && (
+              <div
+                style={{
+                  background: "#111111",
+                  border: "1px solid #222222",
+                  borderRadius: 16,
+                  padding: 28,
+                }}
+              >
+                <div style={{ fontSize: 12, fontWeight: 600, color: "#888888", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 10 }}>
+                  Next Module
+                </div>
+                <div style={{ fontFamily: "Syne, sans-serif", fontSize: 20, fontWeight: 700, marginBottom: 8, lineHeight: 1.3 }}>
+                  {nextModule.title}
+                </div>
+                <div style={{ fontSize: 13, color: "#A0A0A0", lineHeight: 1.6, marginBottom: 16 }}>
+                  {nextModule.description}
+                </div>
+                <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
+                  <span style={{ fontSize: 12, color: "#888888" }}>{nextModule.time}</span>
+                  <Link href="/learn" className="btn-primary" style={{ textDecoration: "none", fontSize: 13, padding: "8px 16px" }}>
+                    Continue Learning
+                  </Link>
+                </div>
+              </div>
+            )}
           </div>
-        </aside>
-        <section style={{ marginLeft: sidebarWidth, width: `calc(100% - ${sidebarWidth}px)`, padding: 32 }}>
-          <div style={{ maxWidth: 1240, margin: "0 auto" }}>
-            <header className="card" style={{ padding: 28, marginBottom: 24, display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 24 }}>
-              <div>
-                <h1 style={{ fontFamily: "Syne, sans-serif", fontSize: 36, lineHeight: 1.05, margin: 0 }}>Welcome back, {profileName}</h1>
-                <div style={{ marginTop: 14, display: "flex", gap: 12, flexWrap: "wrap", alignItems: "center" }}>
-                  <span className="badge">{levelEntry.name}</span>
-                  <span className="muted">{specialisationGoal}</span>
+
+          {/* Tab navigation */}
+          <div style={{ display: "flex", gap: 4, marginBottom: 24, borderBottom: `1px solid ${border}` }}>
+            {(["overview", "finances", "goals"] as const).map((tab) => (
+              <button
+                key={tab}
+                onClick={() => setActiveTab(tab)}
+                style={{
+                  padding: "10px 16px",
+                  background: "transparent",
+                  border: "none",
+                  borderBottom: activeTab === tab ? "2px solid #E8A020" : "2px solid transparent",
+                  color: activeTab === tab ? "#E8A020" : "#A0A0A0",
+                  fontSize: 14,
+                  fontWeight: 600,
+                  cursor: "pointer",
+                  transition: "all 0.15s ease",
+                  marginBottom: -1,
+                }}
+              >
+                {tab === "overview" ? "Overview" : tab === "finances" ? "Finances" : "Goals"}
+              </button>
+            ))}
+          </div>
+
+          {/* Tab content */}
+          {activeTab === "overview" && (
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 20 }}>
+              <div
+                style={{
+                  background: "#111111",
+                  border: "1px solid #222222",
+                  borderRadius: 16,
+                  padding: 28,
+                }}
+              >
+                <div style={{ fontSize: 12, fontWeight: 600, color: "#888888", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 16 }}>
+                  Upcoming Deadlines
                 </div>
-              </div>
-              <div className="badge">Assessment Score {assessmentScore}%</div>
-            </header>
-            <section style={{ marginBottom: 24 }}>
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(4, minmax(0, 1fr))", gap: 16 }}>
-                {[
-                  { label: "Current Level", value: `Level ${currentLevel}` },
-                  { label: "Modules Completed", value: modulesCompleted },
-                  { label: "Assessment Score", value: `${assessmentScore}%` },
-                  { label: "Days Active", value: daysActive },
-                ].map((item) => (
-                  <div key={item.label} className="card" style={{ padding: 20 }}>
-                    <div className="muted" style={{ fontSize: 13, marginBottom: 12 }}>{item.label}</div>
-                    <div className="stat-value">{item.value}</div>
+                {deadlines.length === 0 ? (
+                  <div style={{ color: "#555555", fontSize: 14 }}>No upcoming deadlines.</div>
+                ) : (
+                  <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                    {deadlines.map((d) => (
+                      <div
+                        key={d.id}
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "space-between",
+                          padding: "12px 0",
+                          borderBottom: "1px solid #222222",
+                        }}
+                      >
+                        <div>
+                          <div style={{ fontSize: 14, fontWeight: 600, color: "#F2F0EB" }}>{d.title}</div>
+                          <div style={{ fontSize: 12, color: "#888888", marginTop: 3 }}>{d.courseTitle || d.type}</div>
+                        </div>
+                        <div style={{ fontSize: 12, color: "#E8A020", fontWeight: 600 }}>
+                          {new Date(d.dueDate).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
+                        </div>
+                      </div>
+                    ))}
                   </div>
-                ))}
+                )}
               </div>
-            </section>
-            <section className="card" style={{ padding: 28, marginBottom: 24 }}>
-              <div style={{ display: "flex", justifyContent: "space-between", gap: 24, alignItems: "flex-start", flexWrap: "wrap" }}>
-                <div style={{ maxWidth: 560 }}>
-                  <div className="muted" style={{ fontSize: 13, marginBottom: 10 }}>Continue Learning</div>
-                  <h2 style={{ fontFamily: "Syne, sans-serif", fontSize: 26, margin: "0 0 10px 0" }}>{nextModule.title}</h2>
-                  <p className="muted" style={{ margin: 0, lineHeight: 1.7 }}>{nextModule.description}</p>
-                  <div style={{ marginTop: 14, fontSize: 13, color: accent, fontWeight: 600 }}>Estimated time: {nextModule.time}</div>
+
+              <div
+                style={{
+                  background: "#111111",
+                  border: "1px solid #222222",
+                  borderRadius: 16,
+                  padding: 28,
+                }}
+              >
+                <div style={{ fontSize: 12, fontWeight: 600, color: "#888888", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 16 }}>
+                  Quick Actions
                 </div>
-                <a href="/learn" className="badge" style={{ textDecoration: "none" }}>Continue</a>
-              </div>
-              <div style={{ marginTop: 20 }}>
-                <div className="progress-shell">
-                  <div className="progress-bar" style={{ width: `${levelCompletion}%` }} />
-                </div>
-                <div className="muted" style={{ marginTop: 8, fontSize: 12 }}>{Math.round(levelCompletion)}% of current level completed</div>
-              </div>
-            </section>
-            <section style={{ display: "grid", gridTemplateColumns: "1.2fr .8fr", gap: 24, marginBottom: 24 }}>
-              <div className="card" style={{ padding: 28, minHeight: 420 }}>
-                <div className="muted" style={{ fontSize: 13, marginBottom: 14 }}>Competency Map</div>
-                <h2 style={{ fontFamily: "Syne, sans-serif", fontSize: 24, margin: "0 0 16px 0" }}>Eight-skill profile</h2>
-                <div style={{ width: "100%", height: 320 }}>
-                  <ResponsiveContainer>
-                    <RadarChart data={radarData}>
-                      <PolarGrid stroke="#222" />
-                      <PolarAngleAxis dataKey="subject" tick={{ fill: "#F2F0EB", fontSize: 11 }} />
-                      <PolarRadiusAxis angle={30} domain={[0, 100]} tick={false} axisLine={false} />
-                      <Radar dataKey="value" stroke={accent} fill={accent} fillOpacity={0.18} />
-                      <Tooltip contentStyle={{ background: "#111", border: "1px solid #2A2A2A", color: text }} labelStyle={{ color: text }} />
-                    </RadarChart>
-                  </ResponsiveContainer>
-                </div>
-              </div>
-              <div className="card" style={{ padding: 28 }}>
-                <div className="muted" style={{ fontSize: 13, marginBottom: 14 }}>Profile Summary</div>
-                <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-                  <div>
-                    <div style={{ fontSize: 12, color: "#999", marginBottom: 6 }}>Current Level</div>
-                    <div style={{ fontFamily: "Syne, sans-serif", fontSize: 22 }}>{levelEntry.name}</div>
-                  </div>
-                  <div>
-                    <div style={{ fontSize: 12, color: "#999", marginBottom: 6 }}>Learning Goal</div>
-                    <div style={{ lineHeight: 1.6 }}>{specialisationGoal}</div>
-                  </div>
-                  <div>
-                    <div style={{ fontSize: 12, color: "#999", marginBottom: 6 }}>Assessment Result</div>
-                    <div style={{ lineHeight: 1.6 }}>{assessmentScore}% score places you at Level {currentLevel}.</div>
-                  </div>
+                <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                  {navItems.map((item) => (
+                    <Link
+                      key={item.label}
+                      href={item.href}
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "space-between",
+                        padding: "12px 16px",
+                        background: "#0F0F0F",
+                        border: "1px solid #222222",
+                        borderRadius: 10,
+                        color: text,
+                        textDecoration: "none",
+                        fontSize: 14,
+                        fontWeight: 500,
+                        transition: "all 0.15s ease",
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.borderColor = "#2A2A2A";
+                        e.currentTarget.style.color = "#E8A020";
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.borderColor = "#222222";
+                        e.currentTarget.style.color = text;
+                      }}
+                    >
+                      {item.label}
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ color: "#888888" }}>
+                        <polyline points="9 18 15 12 9 6" />
+                      </svg>
+                    </Link>
+                  ))}
                 </div>
               </div>
-            </section>
-            <section className="card" style={{ padding: 28, marginBottom: 24 }}>
-              <div className="muted" style={{ fontSize: 13, marginBottom: 14 }}>Recent Activity</div>
-              {summary && (summary.openPositions.length > 0 || summary.tradeHistory.length > 0 || summary.journalCount > 0) ? (
-                <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-                  {summary.openPositions.length > 0 && (
-                    <div style={{ padding: "12px 16px", borderRadius: 12, background: "#111111", border: "1px solid #1E1E1E", fontSize: 14 }}>
-                      📈 {summary.openPositions.length} open position{summary.openPositions.length !== 1 ? "s" : ""} in simulator
+            </div>
+          )}
+
+          {activeTab === "finances" && (
+            <div
+              style={{
+                background: "#111111",
+                border: "1px solid #222222",
+                borderRadius: 16,
+                padding: 28,
+              }}
+            >
+              <div style={{ fontSize: 12, fontWeight: 600, color: "#888888", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 16 }}>
+                Financial Overview
+              </div>
+              {finances ? (
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: 16 }}>
+                  {[
+                    { label: "Total Balance", value: `₹${(finances.totalBalance || 0).toLocaleString()}`, color: "#E8A020" },
+                    { label: "Monthly Income", value: `₹${(finances.monthlyIncome || 0).toLocaleString()}`, color: "#22C55E" },
+                    { label: "Monthly Expenses", value: `₹${(finances.monthlyExpenses || 0).toLocaleString()}`, color: "#EF4444" },
+                    { label: "Savings Rate", value: `${finances.savingsRate || 0}%`, color: "#E8A020" },
+                  ].map((item) => (
+                    <div key={item.label} style={{ padding: "16px 0", borderBottom: "1px solid #222222" }}>
+                      <div style={{ fontSize: 12, color: "#888888", marginBottom: 6 }}>{item.label}</div>
+                      <div style={{ fontFamily: "Syne, sans-serif", fontSize: 20, fontWeight: 700, color: item.color as string }}>{item.value}</div>
                     </div>
-                  )}
-                  {summary.tradeHistory.length > 0 && (
-                    <div style={{ padding: "12px 16px", borderRadius: 12, background: "#111111", border: "1px solid #1E1E1E", fontSize: 14 }}>
-                      📊 {summary.tradeHistory.length} closed trade{summary.tradeHistory.length !== 1 ? "s" : ""} — P&L: ₹{summary.totalPnl.toFixed(2)}
-                    </div>
-                  )}
-                  {summary.journalCount > 0 && (
-                    <div style={{ padding: "12px 16px", borderRadius: 12, background: "#111111", border: "1px solid #1E1E1E", fontSize: 14 }}>
-                      📝 {summary.journalCount} journal entries
-                    </div>
-                  )}
+                  ))}
                 </div>
               ) : (
-                <div style={{ border: "1px dashed #333", borderRadius: 14, padding: 28, color: "#8D8D8D", textAlign: "center" }}>
-                  No activity yet. Complete your first module to get started.
+                <div style={{ color: "#555555", fontSize: 14 }}>No financial data available yet.</div>
+              )}
+            </div>
+          )}
+
+          {activeTab === "goals" && (
+            <div
+              style={{
+                background: "#111111",
+                border: "1px solid #222222",
+                borderRadius: 16,
+                padding: 28,
+              }}
+            >
+              <div style={{ fontSize: 12, fontWeight: 600, color: "#888888", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 16 }}>
+                Active Goals
+              </div>
+              {goals.length === 0 ? (
+                <div style={{ color: "#555555", fontSize: 14 }}>No goals set yet.</div>
+              ) : (
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: 16 }}>
+                  {goals.map((goal) => (
+                    <div
+                      key={goal.id}
+                      style={{
+                        background: "#0F0F0F",
+                        border: "1px solid #222222",
+                        borderRadius: 12,
+                        padding: 20,
+                      }}
+                    >
+                      <div style={{ fontSize: 14, fontWeight: 600, color: "#F2F0EB", marginBottom: 8 }}>{goal.title}</div>
+                      <div style={{ fontSize: 12, color: "#888888", marginBottom: 12, lineHeight: 1.6 }}>{goal.description}</div>
+                      <div className="progress-shell" style={{ height: 6 }}>
+                        <div className="progress-bar" style={{ width: `${Math.min(goal.progress || 0, 100)}%` }} />
+                      </div>
+                      <div style={{ fontSize: 12, color: "#888888", marginTop: 8 }}>{goal.progress || 0}% complete</div>
+                    </div>
+                  ))}
                 </div>
               )}
-            </section>
-          </div>
-        </section>
-      </div>
+            </div>
+          )}
+        </div>
+      </section>
     </main>
   );
 }
