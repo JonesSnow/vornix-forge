@@ -1,6 +1,8 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 const bg = "#0A0A0A";
 const surface = "#111111";
@@ -46,6 +48,48 @@ const features = [
 ];
 
 export default function Home() {
+  const router = useRouter();
+  const [checking, setChecking] = useState(true);
+
+  useEffect(() => {
+    async function checkStatus() {
+      try {
+        const res = await fetch("/api/user-status");
+        if (res.ok) {
+          const data = await res.json();
+          if (!data.onboardingDone) {
+            router.replace("/onboarding");
+          } else if (!data.assessmentDone) {
+            router.replace("/assessment");
+          } else {
+            router.replace("/dashboard");
+          }
+        }
+      } catch {
+        // ignore and show landing page
+      } finally {
+        setChecking(false);
+      }
+    }
+    checkStatus();
+  }, [router]);
+
+  if (checking) {
+    return (
+      <main
+        style={{
+          minHeight: "100vh",
+          background: bg,
+          color: text,
+          display: "grid",
+          placeItems: "center",
+          fontFamily: "Inter, sans-serif",
+        }}
+      >
+        <div style={{ color: muted }}>Loading...</div>
+      </main>
+    );
+  }
   return (
     <main style={{ minHeight: "100vh", background: bg, color: text, fontFamily: "Inter, sans-serif" }}>
       {/* Navigation */}

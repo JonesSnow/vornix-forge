@@ -26,7 +26,7 @@ export default function SignUpPage() {
         VORNIX FORGE
       </Link>
 
-      <SignUp appearance={vornixClerkAppearance} />
+      <SignUp appearance={vornixClerkAppearance} fallbackRedirectUrl="/onboarding" />
     </div>
   );
 }

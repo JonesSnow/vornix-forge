@@ -26,7 +26,7 @@ export default function SignInPage() {
         VORNIX FORGE
       </Link>
 
-      <SignIn appearance={vornixClerkAppearance} />
+      <SignIn appearance={vornixClerkAppearance} fallbackRedirectUrl="/dashboard" />
     </div>
   );
 }
