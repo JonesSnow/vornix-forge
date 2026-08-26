@@ -4,13 +4,6 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
-const bg = "#0A0A0A";
-const surface = "#111111";
-const accent = "#E8A020";
-const text = "#F2F0EB";
-const muted = "#888888";
-const border = "#222222";
-
 const steps = [
   {
     title: "Start With the Truth",
@@ -76,294 +69,139 @@ export default function Home() {
 
   if (checking) {
     return (
-      <main
-        style={{
-          minHeight: "100vh",
-          background: bg,
-          color: text,
-          display: "grid",
-          placeItems: "center",
-          fontFamily: "Inter, sans-serif",
-        }}
-      >
-        <div style={{ color: muted }}>Loading...</div>
+      <main className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-text-secondary">Loading...</div>
       </main>
     );
   }
+
   return (
-    <main style={{ minHeight: "100vh", background: bg, color: text, fontFamily: "Inter, sans-serif" }}>
+    <main className="min-h-screen bg-background font-sans text-primary antialiased">
       {/* Navigation */}
-      <nav
-        style={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          padding: "20px 40px",
-          borderBottom: `1px solid ${border}`,
-          background: "rgba(10, 10, 10, 0.9)",
-          backdropFilter: "blur(12px)",
-          position: "sticky",
-          top: 0,
-          zIndex: 50,
-        }}
-      >
-        <div style={{ fontFamily: "Syne, sans-serif", fontSize: 14, fontWeight: 700, letterSpacing: "0.15em" }}>
+      <nav className="flex items-center justify-between px-6 sm:px-10 lg:px-16 h-16 border-b border-border">
+        <div className="font-display text-sm font-bold tracking-[0.15em] text-primary">
           VORNIX FORGE
         </div>
-        <div style={{ display: "flex", alignItems: "center", gap: 24 }}>
+        <div className="flex items-center gap-6 sm:gap-8">
           <Link
             href="/sign-in"
-            style={{
-              color: muted,
-              fontSize: 14,
-              fontWeight: 500,
-              textDecoration: "none",
-              transition: "color 0.15s ease",
-            }}
-            onMouseEnter={(e) => (e.currentTarget.style.color = text)}
-            onMouseLeave={(e) => (e.currentTarget.style.color = muted)}
+            className="text-body-sm font-medium text-text-secondary hover:text-primary transition-colors"
           >
             Sign In
           </Link>
-          <Link
-            href="/sign-up"
-            className="btn-primary"
-            style={{ textDecoration: "none" }}
-          >
+          <Link href="/sign-up" className="btn btn-primary">
             Get Started
           </Link>
         </div>
       </nav>
 
       {/* Hero */}
-      <section style={{ padding: "100px 40px 80px", maxWidth: 1100, margin: "0 auto" }}>
-        <div style={{ maxWidth: 720, margin: "0 auto", textAlign: "center" }}>
-          <div
-            style={{
-              display: "inline-flex",
-              alignItems: "center",
-              gap: 8,
-              padding: "6px 14px",
-              borderRadius: 999,
-              border: `1px solid ${border}`,
-              background: surface,
-              color: muted,
-              fontSize: 12,
-              fontWeight: 600,
-              marginBottom: 24,
-            }}
-          >
-            <span style={{ color: accent }}>●</span> The world&apos;s first structured trader development system
+      <section className="px-6 sm:px-10 lg:px-16 pt-20 sm:pt-28 pb-16 sm:pb-24">
+        <div className="max-w-3xl mx-auto text-center">
+          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-border-visible bg-surface-elevated text-caption text-text-secondary mb-8">
+            <span className="w-1.5 h-1.5 rounded-full bg-accent" />
+            The world&apos;s first structured trader development system
           </div>
-          <h1
-            style={{
-              fontFamily: "Syne, sans-serif",
-              fontSize: "clamp(36px, 5vw, 64px)",
-              fontWeight: 700,
-              lineHeight: 1.05,
-              margin: "0 0 20px 0",
-              letterSpacing: "-0.02em",
-            }}
-          >
-            Forged by assessment.<br />
-            <span style={{ color: accent }}>Built by discipline.</span>
+          <h1 className="text-display text-primary mb-6">
+            Forged by assessment.
+            <br />
+            <span className="text-accent">Built by discipline.</span>
           </h1>
-          <p
-            style={{
-              fontSize: 17,
-              lineHeight: 1.7,
-              color: muted,
-              maxWidth: 560,
-              margin: "0 auto 36px",
-            }}
-          >
+          <p className="text-body text-text-secondary max-w-xl mx-auto mb-10 leading-relaxed">
             Most trading platforms hand you a chart and hope. Vornix Forge starts by measuring where you actually stand,
             then builds a path from there — assessed at entry, developed systematically, certified by competence.
           </p>
-          <div style={{ display: "flex", gap: 14, justifyContent: "center", flexWrap: "wrap" }}>
-            <Link href="/sign-up" className="btn-primary" style={{ textDecoration: "none" }}>
+          <div className="flex items-center justify-center gap-4 flex-wrap">
+            <Link href="/sign-up" className="btn btn-primary btn-lg">
               Start Free Assessment
             </Link>
-            <Link
-              href="/dashboard"
-              className="btn-secondary"
-              style={{ textDecoration: "none" }}
-            >
+            <Link href="/dashboard" className="btn btn-secondary btn-lg">
               View Demo Dashboard
             </Link>
           </div>
         </div>
       </section>
 
-      {/* Stats bar */}
-      <section
-        style={{
-          borderTop: `1px solid ${border}`,
-          borderBottom: `1px solid ${border}`,
-          background: surface,
-          padding: "28px 40px",
-        }}
-      >
-        <div
-          style={{
-            maxWidth: 1000,
-            margin: "0 auto",
-            display: "grid",
-            gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))",
-            gap: 24,
-          }}
-        >
+      <hr className="border-border mx-6 sm:mx-10 lg:mx-16" />
+
+      {/* Stats */}
+      <section className="px-6 sm:px-10 lg:px-16 py-12 sm:py-16">
+        <div className="max-w-5xl mx-auto grid grid-cols-2 sm:grid-cols-4 gap-8 sm:gap-12">
           {[
             { value: "4", label: "Trader Levels" },
             { value: "Adaptive", label: "Learning Paths" },
             { value: "Real", label: "Market Simulator" },
             { value: "Structured", label: "Progress System" },
           ].map((stat) => (
-            <div key={stat.label} style={{ textAlign: "center" }}>
-              <div
-                style={{
-                  fontFamily: "Syne, sans-serif",
-                  fontSize: 28,
-                  fontWeight: 700,
-                  color: accent,
-                  lineHeight: 1.2,
-                }}
-              >
-                {stat.value}
-              </div>
-              <div style={{ fontSize: 12, color: muted, marginTop: 6, fontWeight: 500 }}>{stat.label}</div>
+            <div key={stat.label} className="text-center">
+              <div className="font-display text-3xl sm:text-4xl font-bold text-accent leading-tight">{stat.value}</div>
+              <div className="text-caption text-text-secondary mt-2">{stat.label}</div>
             </div>
           ))}
         </div>
       </section>
+
+      <hr className="border-border mx-6 sm:mx-10 lg:mx-16" />
 
       {/* Steps */}
-      <section style={{ padding: "80px 40px", maxWidth: 1100, margin: "0 auto" }}>
-        <div style={{ textAlign: "center", marginBottom: 56 }}>
-          <h2
-            style={{
-              fontFamily: "Syne, sans-serif",
-              fontSize: "clamp(24px, 3vw, 36px)",
-              fontWeight: 700,
-              margin: "0 0 12px 0",
-            }}
-          >
-            How Forge Works
-          </h2>
-          <p style={{ color: muted, fontSize: 15, maxWidth: 480, margin: "0 auto", lineHeight: 1.7 }}>
-            A four-phase system designed to take you from wherever you are to a consistent, evidence-based trader.
-          </p>
-        </div>
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))",
-            gap: 20,
-          }}
-        >
-          {steps.map((step) => (
-            <div
-              key={step.title}
-              style={{
-                background: surface,
-                border: `1px solid ${border}`,
-                borderRadius: 16,
-                padding: 28,
-                transition: "border-color 0.15s ease",
-              }}
-              onMouseEnter={(e) => (e.currentTarget.style.borderColor = "#2A2A2A")}
-              onMouseLeave={(e) => (e.currentTarget.style.borderColor = border)}
-            >
-              <div
-                style={{
-                  fontSize: 12,
-                  fontWeight: 700,
-                  color: accent,
-                  textTransform: "uppercase",
-                  letterSpacing: "0.1em",
-                  marginBottom: 14,
-                }}
-              >
-                {step.tag}
+      <section className="px-6 sm:px-10 lg:px-16 py-16 sm:py-24">
+        <div className="max-w-5xl mx-auto">
+          <div className="text-center mb-16">
+            <h2 className="text-h2 text-primary mb-4">How Forge Works</h2>
+            <p className="text-body text-text-secondary max-w-lg mx-auto">
+              A four-phase system designed to take you from wherever you are to a consistent, evidence-based trader.
+            </p>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-px bg-border">
+            {steps.map((step, idx) => (
+              <div key={step.title} className="bg-surface p-8 sm:p-10">
+                <div className="text-caption text-accent font-semibold mb-4">
+                  {String(idx + 1).padStart(2, "0")} / {step.tag}
+                </div>
+                <h3 className="text-h3 text-primary mb-3">{step.title}</h3>
+                <p className="text-body-sm text-text-secondary leading-relaxed">{step.description}</p>
               </div>
-              <h3
-                style={{
-                  fontFamily: "Syne, sans-serif",
-                  fontSize: 20,
-                  fontWeight: 700,
-                  margin: "0 0 12px 0",
-                  lineHeight: 1.3,
-                }}
-              >
-                {step.title}
-              </h3>
-              <p style={{ fontSize: 14, color: muted, lineHeight: 1.7, margin: 0 }}>{step.description}</p>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
       </section>
 
+      <hr className="border-border mx-6 sm:mx-10 lg:mx-16" />
+
       {/* Features */}
-      <section style={{ padding: "80px 40px", maxWidth: 1100, margin: "0 auto" }}>
-        <div
-          style={{
-            background: surface,
-            border: `1px solid ${border}`,
-            borderRadius: 20,
-            padding: "48px 40px",
-          }}
-        >
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 40, alignItems: "center" }}>
+      <section className="px-6 sm:px-10 lg:px-16 py-16 sm:py-24">
+        <div className="max-w-5xl mx-auto">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-20 items-start">
             <div>
-              <h2
-                style={{
-                  fontFamily: "Syne, sans-serif",
-                  fontSize: "clamp(22px, 2.5vw, 32px)",
-                  fontWeight: 700,
-                  margin: "0 0 16px 0",
-                  lineHeight: 1.2,
-                }}
-              >
-                Everything you need to become a disciplined trader.
-              </h2>
-              <p style={{ color: muted, fontSize: 15, lineHeight: 1.7, margin: "0 0 28px" }}>
+              <h2 className="text-h2 text-primary mb-4">Everything you need to become a disciplined trader.</h2>
+              <p className="text-body text-text-secondary mb-8 leading-relaxed">
                 Vornix Forge combines assessment, education, simulation, and tracking into one coherent system.
                 No random tips. No gamified nonsense. Just structured development.
               </p>
-              <Link href="/sign-up" className="btn-primary" style={{ textDecoration: "none" }}>
+              <Link href="/sign-up" className="btn btn-primary">
                 Create Free Account
               </Link>
             </div>
-            <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+            <div className="space-y-3">
               {features.map((feature) => (
                 <div
                   key={feature}
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 14,
-                    padding: "14px 16px",
-                    background: "#0F0F0F",
-                    border: `1px solid ${border}`,
-                    borderRadius: 12,
-                    fontSize: 14,
-                    color: text,
-                  }}
+                  className="flex items-start gap-4 px-5 py-4 bg-surface border border-border rounded-lg"
                 >
                   <svg
                     width="18"
                     height="18"
                     viewBox="0 0 24 24"
                     fill="none"
-                    stroke={accent}
-                    strokeWidth="3"
+                    stroke="currentColor"
+                    strokeWidth="2.5"
                     strokeLinecap="round"
                     strokeLinejoin="round"
-                    style={{ flexShrink: 0 }}
+                    className="text-accent flex-shrink-0 mt-0.5"
                   >
                     <polyline points="20 6 9 17 4 12" />
                   </svg>
-                  {feature}
+                  <span className="text-body-sm text-primary leading-relaxed">{feature}</span>
                 </div>
               ))}
             </div>
@@ -371,40 +209,54 @@ export default function Home() {
         </div>
       </section>
 
+      <hr className="border-border mx-6 sm:mx-10 lg:mx-16" />
+
+      {/* Progression */}
+      <section className="px-6 sm:px-10 lg:px-16 py-16 sm:py-24">
+        <div className="max-w-3xl mx-auto text-center">
+          <h2 className="text-h2 text-primary mb-4">Level-Based Development</h2>
+          <p className="text-body text-text-secondary max-w-xl mx-auto mb-12 leading-relaxed">
+            You do not unlock content by watching videos. You advance by demonstrating competence.
+            Each level builds on the last, ensuring you have a real foundation before taking on greater complexity.
+          </p>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-px bg-border">
+            {[
+              { level: 1, name: "Foundation", focus: "Market structure, chart basics, risk rules" },
+              { level: 2, name: "Beginner", focus: "Support and resistance, guided practice, journaling" },
+              { level: 3, name: "Intermediate", focus: "Setup selection, risk-reward, review discipline" },
+              { level: 4, name: "Advanced", focus: "Strategy refinement, execution, optimization" },
+            ].map((item) => (
+              <div key={item.level} className="bg-surface p-6 sm:p-8">
+                <div className="font-display text-2xl font-bold text-accent mb-2">L{item.level}</div>
+                <div className="text-h4 text-primary mb-2">{item.name}</div>
+                <p className="text-body-sm text-text-secondary leading-relaxed">{item.focus}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <hr className="border-border mx-6 sm:mx-10 lg:mx-16" />
+
       {/* CTA */}
-      <section style={{ padding: "80px 40px 120px", maxWidth: 800, margin: "0 auto", textAlign: "center" }}>
-        <h2
-          style={{
-            fontFamily: "Syne, sans-serif",
-            fontSize: "clamp(24px, 3vw, 36px)",
-            fontWeight: 700,
-            margin: "0 0 16px 0",
-          }}
-        >
-          Ready to stop guessing?
-        </h2>
-        <p style={{ color: muted, fontSize: 15, lineHeight: 1.7, margin: "0 0 32px", maxWidth: 480, marginLeft: "auto", marginRight: "auto" }}>
-          Start with a free assessment. See your level. Build from there.
-        </p>
-        <Link href="/sign-up" className="btn-primary" style={{ textDecoration: "none", fontSize: 15, padding: "14px 28px" }}>
-          Start Your Assessment
-        </Link>
+      <section className="px-6 sm:px-10 lg:px-16 py-16 sm:py-24">
+        <div className="max-w-2xl mx-auto text-center">
+          <h2 className="text-h2 text-primary mb-4">Ready to stop guessing?</h2>
+          <p className="text-body text-text-secondary mb-10 leading-relaxed">
+            Start with a free assessment. See your level. Build from there.
+          </p>
+          <Link href="/sign-up" className="btn btn-primary btn-lg">
+            Start Your Assessment
+          </Link>
+        </div>
       </section>
 
       {/* Footer */}
-      <footer
-        style={{
-          borderTop: `1px solid ${border}`,
-          padding: "32px 40px",
-          textAlign: "center",
-          color: muted,
-          fontSize: 13,
-        }}
-      >
-        <div style={{ fontFamily: "Syne, sans-serif", fontWeight: 700, letterSpacing: "0.1em", marginBottom: 8 }}>
-          VORNIX FORGE
+      <footer className="border-t border-border px-6 sm:px-10 lg:px-16 py-10">
+        <div className="max-w-5xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div className="font-display text-sm font-bold tracking-[0.15em] text-primary">VORNIX FORGE</div>
+          <div className="text-body-sm text-text-secondary">Assessed at entry. Developed systematically. Certified by competence.</div>
         </div>
-        <div>Assessed at entry. Developed systematically. Certified by competence.</div>
       </footer>
     </main>
   );

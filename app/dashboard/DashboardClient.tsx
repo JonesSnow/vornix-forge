@@ -3,15 +3,24 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useUser } from "@clerk/nextjs";
 import Link from "next/link";
-import { colors, STORAGE_KEYS } from "@/lib/constants";
+import { STORAGE_KEYS } from "@/lib/constants";
 import { navItems, levelCopy, nextModules } from "@/lib/constants/content/dashboard-content";
 import type { AssessmentStorage } from "@/lib/types";
-import Sidebar from "../components/Sidebar";
 
-const bg = colors.bg.primary;
-const text = colors.text.primary;
-const border = "#222222";
-const sidebarWidth = 220;
+import {
+  AppShell,
+  PageHeader,
+  Stat,
+  SectionHeader,
+  Button,
+  Badge,
+  Table,
+  TableHead,
+  TableBody,
+  TableRow,
+  TableCell,
+  EmptyState,
+} from "../components";
 
 function getLevelFromScore(score: number) {
   if (score <= 40) return 1;
@@ -20,44 +29,31 @@ function getLevelFromScore(score: number) {
   return 4;
 }
 
-type Deadline = {
-  id: string;
-  title: string;
-  dueDate: string;
-  courseTitle?: string;
-  type?: string;
-};
-
-type FinanceData = {
-  totalBalance?: number;
-  monthlyIncome?: number;
-  monthlyExpenses?: number;
-  savingsRate?: number;
-};
-
-type Goal = {
-  id: string;
-  title: string;
-  description: string;
-  progress: number;
+type DashboardSummary = {
+  profile: { id: string; clerkId: string; onboardingDone: boolean };
+  assessment: { score: number; level: number } | null;
+  modulesCompleted: number;
+  openPositions: Array<{ id: string; symbol: string; side: string; status: string; pnl: number | null; entryPrice: number; openedAt: string }>;
+  tradeHistory: Array<{ id: string; symbol: string; side: string; status: string; pnl: number | null; entryPrice: number; exitPrice: number | null; openedAt: string; closedAt: string | null }>;
+  totalPnl: number;
+  winRate: number;
+  journalCount: number;
+  currentLevel: number;
+  balance: number;
 };
 
 export default function DashboardClient() {
   const { user } = useUser();
   const [mounted, setMounted] = useState(false);
   const [assessment, setAssessment] = useState<AssessmentStorage | null>(null);
-  const [dashboardData, setDashboardData] = useState<{
-    upcomingDeadlines?: Deadline[];
-    finances?: FinanceData;
-    goals?: Goal[];
-  } | null>(null);
+  const [summary, setSummary] = useState<DashboardSummary | null>(null);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<"overview" | "finances" | "goals">("overview");
 
   useEffect(() => {
     const assessmentRaw = localStorage.getItem(STORAGE_KEYS.assessment);
     if (assessmentRaw) {
       try {
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         setAssessment(JSON.parse(assessmentRaw) as AssessmentStorage);
       } catch {
         setAssessment(null);
@@ -69,10 +65,10 @@ export default function DashboardClient() {
   useEffect(() => {
     async function fetchDashboard() {
       try {
-        const res = await fetch("/api/dashboard");
+        const res = await fetch("/api/dashboard/summary");
         if (res.ok) {
           const data = await res.json();
-          setDashboardData(data);
+          setSummary(data);
         }
       } catch (e) {
         console.error("Failed to fetch dashboard:", e);
@@ -84,318 +80,243 @@ export default function DashboardClient() {
   }, []);
 
   const assessmentScore = assessment?.result?.score ?? assessment?.score ?? 0;
-  const currentLevel = assessment?.result?.level ?? assessment?.level ?? getLevelFromScore(assessmentScore);
+  const currentLevel = summary?.currentLevel ?? assessment?.result?.level ?? assessment?.level ?? getLevelFromScore(assessmentScore);
   const levelEntry = levelCopy[currentLevel] ?? levelCopy[1];
   const nextModule = nextModules[currentLevel];
 
   const profileName = useMemo(() => {
     const email = user?.primaryEmailAddress?.emailAddress?.split("@")[0];
-    return user?.fullName || user?.firstName || user?.username || email || "Signed-in user";
+    return user?.fullName || user?.firstName || user?.username || email || "User";
   }, [user]);
 
-  const deadlines = useMemo(() => {
-    if (!dashboardData?.upcomingDeadlines) return [];
-    return dashboardData.upcomingDeadlines.slice(0, 5);
-  }, [dashboardData]);
-
-  const finances = useMemo(() => {
-    if (!dashboardData?.finances) return null;
-    return dashboardData.finances;
-  }, [dashboardData]);
-
-  const goals = useMemo(() => {
-    if (!dashboardData?.goals) return [];
-    return dashboardData.goals.slice(0, 4);
-  }, [dashboardData]);
+  const firstName = profileName.split(" ")[0];
 
   if (!mounted || loading) {
     return (
-      <main
-        style={{
-          minHeight: "100vh",
-          background: bg,
-          color: text,
-          display: "grid",
-          placeItems: "center",
-          fontFamily: "Inter, sans-serif",
-        }}
-      >
-        <div style={{ color: "#888888" }}>Loading dashboard...</div>
-      </main>
+      <AppShell activeLabel="Dashboard">
+        <div className="flex items-center justify-center min-h-[50vh]">
+          <div className="text-text-secondary">Loading dashboard...</div>
+        </div>
+      </AppShell>
     );
   }
 
+  const openPositions = summary?.openPositions ?? [];
+  const tradeHistory = summary?.tradeHistory ?? [];
+  const balance = summary?.balance ?? 500000;
+  const totalPnl = summary?.totalPnl ?? 0;
+  const winRate = summary?.winRate ?? 0;
+  const modulesCompleted = summary?.modulesCompleted ?? 0;
+  const journalCount = summary?.journalCount ?? 0;
+
   return (
-    <main style={{ minHeight: "100vh", background: bg, color: text }}>
-      <Sidebar activeLabel="Dashboard" />
-
-      <section style={{ marginLeft: sidebarWidth, width: `calc(100% - ${sidebarWidth}px)`, padding: "48px 40px 80px" }}>
-        <div style={{ maxWidth: 1100, margin: "0 auto" }}>
-          {/* Header */}
-          <div style={{ marginBottom: 32 }}>
-            <h1
-              style={{
-                fontFamily: "Syne, sans-serif",
-                fontSize: 32,
-                fontWeight: 700,
-                margin: "0 0 8px 0",
-                lineHeight: 1.1,
-              }}
-            >
-              Welcome back, {profileName.split(" ")[0]}
-            </h1>
-            <p style={{ color: "#A0A0A0", fontSize: 14, lineHeight: 1.6, margin: 0 }}>
-              {levelEntry.description}
-            </p>
+    <AppShell activeLabel="Dashboard">
+      <PageHeader
+        title="Dashboard"
+        subtitle={`Welcome back, ${firstName}. ${levelEntry.description}`}
+        actions={
+          <div className="flex items-center gap-3">
+            <Badge variant="accent">{levelEntry.name}</Badge>
           </div>
+        }
+      />
 
-          {/* Level & Next Module */}
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
-              gap: 20,
-              marginBottom: 32,
-            }}
-          >
-            <div
-              style={{
-                background: "#111111",
-                border: "1px solid #222222",
-                borderRadius: 16,
-                padding: 28,
-              }}
-            >
-              <div style={{ fontSize: 12, fontWeight: 600, color: "#888888", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 10 }}>
-                Current Level
-              </div>
-              <div style={{ fontFamily: "Syne, sans-serif", fontSize: 28, fontWeight: 700, color: "#E8A020", marginBottom: 8 }}>
-                {levelEntry.name}
-              </div>
-              <div style={{ fontSize: 13, color: "#A0A0A0", lineHeight: 1.6 }}>
-                Assessment score: {assessmentScore}%
-              </div>
-              <div className="progress-shell" style={{ marginTop: 14 }}>
-                <div className="progress-bar" style={{ width: `${levelEntry.progress}%` }} />
-              </div>
-            </div>
+      <div className="divider" />
 
-            {nextModule && (
-              <div
-                style={{
-                  background: "#111111",
-                  border: "1px solid #222222",
-                  borderRadius: 16,
-                  padding: 28,
-                }}
-              >
-                <div style={{ fontSize: 12, fontWeight: 600, color: "#888888", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 10 }}>
-                  Next Module
-                </div>
-                <div style={{ fontFamily: "Syne, sans-serif", fontSize: 20, fontWeight: 700, marginBottom: 8, lineHeight: 1.3 }}>
-                  {nextModule.title}
-                </div>
-                <div style={{ fontSize: 13, color: "#A0A0A0", lineHeight: 1.6, marginBottom: 16 }}>
-                  {nextModule.description}
-                </div>
-                <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
-                  <span style={{ fontSize: 12, color: "#888888" }}>{nextModule.time}</span>
-                  <Link href="/learn" className="btn-primary" style={{ textDecoration: "none", fontSize: 13, padding: "8px 16px" }}>
-                    Continue Learning
-                  </Link>
-                </div>
-              </div>
-            )}
-          </div>
+      {/* Stats Row */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-6 mb-8">
+        <Stat label="Level" value={currentLevel} />
+        <Stat label="Modules Completed" value={modulesCompleted} />
+        <Stat
+          label="Balance"
+          value={`₹${balance.toLocaleString("en-IN")}`}
+        />
+        <Stat
+          label="Total P&L"
+          value={`${totalPnl >= 0 ? "+" : ""}₹${totalPnl.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
+          change={{
+            value: `${winRate}% win rate`,
+            direction: winRate >= 50 ? "up" : "down",
+          }}
+        />
+        <Stat
+          label="Win Rate"
+          value={`${winRate}%`}
+          change={{
+            value: `${tradeHistory.length} closed trades`,
+            direction: "neutral",
+          }}
+        />
+      </div>
 
-          {/* Tab navigation */}
-          <div style={{ display: "flex", gap: 4, marginBottom: 24, borderBottom: `1px solid ${border}` }}>
-            {(["overview", "finances", "goals"] as const).map((tab) => (
-              <button
-                key={tab}
-                onClick={() => setActiveTab(tab)}
-                style={{
-                  padding: "10px 16px",
-                  background: "transparent",
-                  border: "none",
-                  borderBottom: activeTab === tab ? "2px solid #E8A020" : "2px solid transparent",
-                  color: activeTab === tab ? "#E8A020" : "#A0A0A0",
-                  fontSize: 14,
-                  fontWeight: 600,
-                  cursor: "pointer",
-                  transition: "all 0.15s ease",
-                  marginBottom: -1,
-                }}
-              >
-                {tab === "overview" ? "Overview" : tab === "finances" ? "Finances" : "Goals"}
-              </button>
-            ))}
-          </div>
+      <div className="divider" />
 
-          {/* Tab content */}
-          {activeTab === "overview" && (
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 20 }}>
-              <div
-                style={{
-                  background: "#111111",
-                  border: "1px solid #222222",
-                  borderRadius: 16,
-                  padding: 28,
-                }}
-              >
-                <div style={{ fontSize: 12, fontWeight: 600, color: "#888888", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 16 }}>
-                  Upcoming Deadlines
-                </div>
-                {deadlines.length === 0 ? (
-                  <div style={{ color: "#555555", fontSize: 14 }}>No upcoming deadlines.</div>
-                ) : (
-                  <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-                    {deadlines.map((d) => (
-                      <div
-                        key={d.id}
-                        style={{
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "space-between",
-                          padding: "12px 0",
-                          borderBottom: "1px solid #222222",
-                        }}
-                      >
-                        <div>
-                          <div style={{ fontSize: 14, fontWeight: 600, color: "#F2F0EB" }}>{d.title}</div>
-                          <div style={{ fontSize: 12, color: "#888888", marginTop: 3 }}>{d.courseTitle || d.type}</div>
-                        </div>
-                        <div style={{ fontSize: 12, color: "#E8A020", fontWeight: 600 }}>
-                          {new Date(d.dueDate).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-
-              <div
-                style={{
-                  background: "#111111",
-                  border: "1px solid #222222",
-                  borderRadius: 16,
-                  padding: 28,
-                }}
-              >
-                <div style={{ fontSize: 12, fontWeight: 600, color: "#888888", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 16 }}>
-                  Quick Actions
-                </div>
-                <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-                  {navItems.map((item) => (
-                    <Link
-                      key={item.label}
-                      href={item.href}
-                      style={{
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "space-between",
-                        padding: "12px 16px",
-                        background: "#0F0F0F",
-                        border: "1px solid #222222",
-                        borderRadius: 10,
-                        color: text,
-                        textDecoration: "none",
-                        fontSize: 14,
-                        fontWeight: 500,
-                        transition: "all 0.15s ease",
-                      }}
-                      onMouseEnter={(e) => {
-                        e.currentTarget.style.borderColor = "#2A2A2A";
-                        e.currentTarget.style.color = "#E8A020";
-                      }}
-                      onMouseLeave={(e) => {
-                        e.currentTarget.style.borderColor = "#222222";
-                        e.currentTarget.style.color = text;
-                      }}
-                    >
-                      {item.label}
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ color: "#888888" }}>
-                        <polyline points="9 18 15 12 9 6" />
-                      </svg>
-                    </Link>
-                  ))}
-                </div>
-              </div>
-            </div>
-          )}
-
-          {activeTab === "finances" && (
-            <div
-              style={{
-                background: "#111111",
-                border: "1px solid #222222",
-                borderRadius: 16,
-                padding: 28,
-              }}
-            >
-              <div style={{ fontSize: 12, fontWeight: 600, color: "#888888", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 16 }}>
-                Financial Overview
-              </div>
-              {finances ? (
-                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: 16 }}>
-                  {[
-                    { label: "Total Balance", value: `₹${(finances.totalBalance || 0).toLocaleString()}`, color: "#E8A020" },
-                    { label: "Monthly Income", value: `₹${(finances.monthlyIncome || 0).toLocaleString()}`, color: "#22C55E" },
-                    { label: "Monthly Expenses", value: `₹${(finances.monthlyExpenses || 0).toLocaleString()}`, color: "#EF4444" },
-                    { label: "Savings Rate", value: `${finances.savingsRate || 0}%`, color: "#E8A020" },
-                  ].map((item) => (
-                    <div key={item.label} style={{ padding: "16px 0", borderBottom: "1px solid #222222" }}>
-                      <div style={{ fontSize: 12, color: "#888888", marginBottom: 6 }}>{item.label}</div>
-                      <div style={{ fontFamily: "Syne, sans-serif", fontSize: 20, fontWeight: 700, color: item.color as string }}>{item.value}</div>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div style={{ color: "#555555", fontSize: 14 }}>No financial data available yet.</div>
-              )}
-            </div>
-          )}
-
-          {activeTab === "goals" && (
-            <div
-              style={{
-                background: "#111111",
-                border: "1px solid #222222",
-                borderRadius: 16,
-                padding: 28,
-              }}
-            >
-              <div style={{ fontSize: 12, fontWeight: 600, color: "#888888", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 16 }}>
-                Active Goals
-              </div>
-              {goals.length === 0 ? (
-                <div style={{ color: "#555555", fontSize: 14 }}>No goals set yet.</div>
-              ) : (
-                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: 16 }}>
-                  {goals.map((goal) => (
-                    <div
-                      key={goal.id}
-                      style={{
-                        background: "#0F0F0F",
-                        border: "1px solid #222222",
-                        borderRadius: 12,
-                        padding: 20,
-                      }}
-                    >
-                      <div style={{ fontSize: 14, fontWeight: 600, color: "#F2F0EB", marginBottom: 8 }}>{goal.title}</div>
-                      <div style={{ fontSize: 12, color: "#888888", marginBottom: 12, lineHeight: 1.6 }}>{goal.description}</div>
-                      <div className="progress-shell" style={{ height: 6 }}>
-                        <div className="progress-bar" style={{ width: `${Math.min(goal.progress || 0, 100)}%` }} />
-                      </div>
-                      <div style={{ fontSize: 12, color: "#888888", marginTop: 8 }}>{goal.progress || 0}% complete</div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
+      {/* Two-column: Open Positions + Side Panel */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
+        {/* Open Positions — 2 cols */}
+        <div className="lg:col-span-2">
+          <SectionHeader
+            title="Open Positions"
+            description={`${openPositions.length} active position${openPositions.length !== 1 ? "s" : ""}`}
+          />
+          {openPositions.length === 0 ? (
+            <EmptyState
+              title="No open positions"
+              description="Your active trades will appear here. Start trading in the simulator."
+              action={{ label: "Open Simulator", href: "/simulator" }}
+            />
+          ) : (
+            <Table>
+              <TableHead>
+                <tr>
+                  <th>Symbol</th>
+                  <th>Side</th>
+                  <th align="right">Entry</th>
+                  <th align="right">P&L</th>
+                  <th align="right">Opened</th>
+                </tr>
+              </TableHead>
+              <TableBody>
+                {openPositions.map((trade) => {
+                  const pnl = trade.pnl ?? 0;
+                  const isProfitable = pnl >= 0;
+                  return (
+                    <TableRow key={trade.id}>
+                      <TableCell>
+                        <span className="font-medium">{trade.symbol}</span>
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant={trade.side === "buy" ? "positive" : "negative"}>
+                          {trade.side.toUpperCase()}
+                        </Badge>
+                      </TableCell>
+                      <TableCell align="right" className="font-mono-tabular">₹{trade.entryPrice.toFixed(2)}</TableCell>
+                      <TableCell align="right" className={`font-mono-tabular font-medium ${isProfitable ? "text-positive" : "text-negative"}`}>
+                        {isProfitable ? "+" : ""}₹{pnl.toFixed(2)}
+                      </TableCell>
+                      <TableCell align="right" className="text-text-secondary text-body-sm">
+                        {new Date(trade.openedAt).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
+              </TableBody>
+            </Table>
           )}
         </div>
-      </section>
-    </main>
+
+        {/* Side Panel — 1 col */}
+        <div className="space-y-6">
+          {/* Next Module */}
+          {nextModule && (
+            <div className="border-b border-border pb-6">
+              <div className="text-caption text-text-secondary mb-3">Next Module</div>
+              <div className="text-h3 text-primary mb-2">{nextModule.title}</div>
+              <p className="text-body-sm text-text-secondary mb-4 leading-relaxed">{nextModule.description}</p>
+              <div className="flex items-center gap-3">
+                <span className="text-caption text-text-muted">{nextModule.time}</span>
+                <Link href="/learn">
+                  <Button variant="primary" size="sm">Continue Learning</Button>
+                </Link>
+              </div>
+            </div>
+          )}
+
+          {/* Journal stat */}
+          <div className="border-b border-border pb-6">
+            <div className="text-caption text-text-secondary mb-3">Journal</div>
+            <div className="flex items-baseline gap-3">
+              <span className="font-display text-3xl font-bold text-primary">{journalCount}</span>
+              <span className="text-body-sm text-text-secondary">entries logged</span>
+            </div>
+            <div className="mt-3">
+              <Link href="/journal">
+                <Button variant="secondary" size="sm" className="w-full">View Journal</Button>
+              </Link>
+            </div>
+          </div>
+
+          {/* Quick Actions */}
+          <div>
+            <div className="text-caption text-text-secondary mb-3">Quick Actions</div>
+            <div className="flex flex-col gap-2">
+              {navItems.map((item) => (
+                <Link
+                  key={item.label}
+                  href={item.href}
+                  className="
+                    flex items-center justify-between
+                    px-3 py-2.5 rounded-lg
+                    border border-border-subtle
+                    text-body-sm font-medium text-text-secondary
+                    hover:border-border-visible hover:text-primary
+                    transition-colors
+                  "
+                >
+                  {item.label}
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-text-muted">
+                    <polyline points="9 18 15 12 9 6" />
+                  </svg>
+                </Link>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="divider" />
+
+      {/* Trade History */}
+      <div>
+        <SectionHeader
+          title="Trade History"
+          description={`${tradeHistory.length} recent closed trade${tradeHistory.length !== 1 ? "s" : ""}`}
+        />
+        {tradeHistory.length === 0 ? (
+          <EmptyState
+            title="No closed trades yet"
+            description="Your trade history will appear here after you close positions in the simulator."
+            action={{ label: "Open Simulator", href: "/simulator" }}
+          />
+        ) : (
+            <Table>
+              <TableHead>
+                <tr>
+                  <th>Symbol</th>
+                  <th>Side</th>
+                  <th align="right">Entry</th>
+                  <th align="right">Exit</th>
+                  <th align="right">P&L</th>
+                </tr>
+              </TableHead>
+              <TableBody>
+                {tradeHistory.map((trade) => {
+                  const pnl = trade.pnl ?? 0;
+                  const isProfitable = pnl >= 0;
+                  return (
+                    <TableRow key={trade.id}>
+                      <TableCell>
+                        <span className="font-medium">{trade.symbol}</span>
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant={trade.side === "buy" ? "positive" : "negative"}>
+                          {trade.side.toUpperCase()}
+                        </Badge>
+                      </TableCell>
+                      <TableCell align="right" className="font-mono-tabular">₹{trade.entryPrice.toFixed(2)}</TableCell>
+                      <TableCell align="right" className="font-mono-tabular text-text-secondary">
+                        {trade.exitPrice ? `₹${trade.exitPrice.toFixed(2)}` : "—"}
+                      </TableCell>
+                      <TableCell align="right" className={`font-mono-tabular font-medium ${isProfitable ? "text-positive" : "text-negative"}`}>
+                        {isProfitable ? "+" : ""}₹{pnl.toFixed(2)}
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
+              </TableBody>
+            </Table>
+        )}
+      </div>
+    </AppShell>
   );
 }

@@ -9,5 +9,5 @@ export default async function SimulatorPage() {
     redirect("/sign-in");
   }
 
-  return <SimulatorClient userId={userId} />;
+  return <SimulatorClient />;
 }

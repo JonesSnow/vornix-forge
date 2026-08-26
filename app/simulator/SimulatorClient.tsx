@@ -2,16 +2,27 @@
 
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { createChart, ColorType, IChartApi, ISeriesApi, CandlestickData, Time, CandlestickSeries, LineSeries } from "lightweight-charts";
-import { UserButton, useUser } from "@clerk/nextjs";
-import { colors, STORAGE_KEYS } from "@/lib/constants";
-import { navItems, levelCopy } from "@/lib/constants/content/dashboard-content";
+import { useUser } from "@clerk/nextjs";
+import { STORAGE_KEYS } from "@/lib/constants";
 import type { AssessmentStorage } from "@/lib/types";
 import Sidebar from "../components/Sidebar";
 
-const bg = colors.bg.primary;
-const text = colors.text.primary;
-const accent = colors.accent.primary;
-const sidebarWidth = 220;
+import {
+  AppShell,
+  PageHeader,
+  Stat,
+  SectionHeader,
+  Button,
+  Badge,
+  Table,
+  TableHead,
+  TableBody,
+  TableRow,
+  TableCell,
+  Input,
+  EmptyState,
+} from "../components";
+import ChartContainer from "../components/ChartContainer";
 
 function getLevelFromScore(score: number) {
   if (score <= 40) return 1;
@@ -43,10 +54,6 @@ type Portfolio = {
   tradeHistory?: Trade[];
 };
 
-type SimulatorClientProps = {
-  userId: string;
-};
-
 const SYMBOLS = [
   { label: "RELIANCE.NS", value: "RELIANCE.NS" },
   { label: "TCS.NS", value: "TCS.NS" },
@@ -76,7 +83,7 @@ function generateFallbackLineData(basePrice: number) {
   return data;
 }
 
-export default function SimulatorClient({ userId }: SimulatorClientProps) {
+export default function SimulatorClient() {
   const { user } = useUser();
   const [mounted, setMounted] = useState(false);
   const [portfolio, setPortfolio] = useState<Portfolio | null>(null);
@@ -86,8 +93,6 @@ export default function SimulatorClient({ userId }: SimulatorClientProps) {
   const [tradeError, setTradeError] = useState<string | null>(null);
   const [tradeSuccess, setTradeSuccess] = useState<string | null>(null);
   const [chartError, setChartError] = useState<string | null>(null);
-  const [confirmCloseId, setConfirmCloseId] = useState<string | null>(null);
-  const [closePnl, setClosePnl] = useState<number>(0);
   const [resetting, setResetting] = useState(false);
 
   const [symbol, setSymbol] = useState(SYMBOLS[0].value);
@@ -107,6 +112,7 @@ export default function SimulatorClient({ userId }: SimulatorClientProps) {
     const assessmentRaw = localStorage.getItem(STORAGE_KEYS.assessment);
     if (assessmentRaw) {
       try {
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         setAssessment(JSON.parse(assessmentRaw) as AssessmentStorage);
       } catch {
         setAssessment(null);
@@ -158,48 +164,48 @@ export default function SimulatorClient({ userId }: SimulatorClientProps) {
     if (!mounted) return;
     if (!chartContainerRef.current) return;
 
-    let chart: any = null;
-    let series: any = null;
-    let lineSeries: any = null;
+    let chart: IChartApi | null = null;
+    let series: ISeriesApi<"Candlestick"> | null = null;
+    let lineSeries: ISeriesApi<"Line"> | null = null;
 
     try {
       chart = createChart(chartContainerRef.current, {
         layout: {
-          background: { type: ColorType.Solid, color: "#111111" },
-          textColor: "#F2F0EB",
+          background: { type: ColorType.Solid, color: "#FFFFFF" },
+          textColor: "#0F172A",
         },
         grid: {
-          vertLines: { color: "#222222" },
-          horzLines: { color: "#222222" },
+          vertLines: { color: "#F1F5F9" },
+          horzLines: { color: "#F1F5F9" },
         },
         crosshair: {
           mode: 1,
         },
         rightPriceScale: {
-          borderColor: "#222222",
+          borderColor: "#E2E8F0",
         },
         timeScale: {
-          borderColor: "#222222",
+          borderColor: "#E2E8F0",
           timeVisible: true,
           secondsVisible: false,
         },
       });
 
       series = chart.addSeries(CandlestickSeries, {
-        upColor: "#22C55E",
-        downColor: "#EF4444",
-        borderUpColor: "#22C55E",
-        borderDownColor: "#EF4444",
-        wickUpColor: "#22C55E",
-        wickDownColor: "#EF4444",
+        upColor: "#0D9488",
+        downColor: "#DC2626",
+        borderUpColor: "#0D9488",
+        borderDownColor: "#DC2626",
+        wickUpColor: "#0D9488",
+        wickDownColor: "#DC2626",
       });
 
       lineSeries = chart.addSeries(LineSeries, {
-        color: accent,
+        color: "#D4A017",
         lineWidth: 2,
         crosshairMarkerVisible: true,
         crosshairMarkerRadius: 4,
-        crosshairMarkerBorderColor: accent,
+        crosshairMarkerBorderColor: "#D4A017",
         lastValueVisible: true,
         priceLineVisible: true,
       });
@@ -212,7 +218,7 @@ export default function SimulatorClient({ userId }: SimulatorClientProps) {
         if (chartContainerRef.current && chart) {
           chart.applyOptions({
             width: chartContainerRef.current.clientWidth,
-            height: chartContainerRef.current.clientHeight || 400,
+            height: chartContainerRef.current.clientHeight || 420,
           });
         }
       };
@@ -228,6 +234,7 @@ export default function SimulatorClient({ userId }: SimulatorClientProps) {
       };
     } catch (e) {
       console.error("Chart initialization error:", e);
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setChartError("Failed to initialize chart");
     }
   }, [mounted]);
@@ -290,8 +297,8 @@ export default function SimulatorClient({ userId }: SimulatorClientProps) {
           throw new Error("Missing time series data");
         }
 
-        const entries = Object.entries(timeSeries).slice(0, 90);
-        const candlestickData: CandlestickData<Time>[] = entries.map(([date, values]: [string, any]) => {
+        const entries = Object.entries(timeSeries).slice(0, 90) as [string, Record<string, string>][];
+        const candlestickData: CandlestickData<Time>[] = entries.map(([date, values]) => {
           const open = parseFloat(values["1. open"] ?? values["1a. open (USD)"] ?? "0");
           const high = parseFloat(values["2. high"] ?? values["2a. high (USD)"] ?? "0");
           const low = parseFloat(values["3. low"] ?? values["3a. low (USD)"] ?? "0");
@@ -331,12 +338,6 @@ export default function SimulatorClient({ userId }: SimulatorClientProps) {
   }, [symbol]);
 
   const assessmentScore = assessment?.result?.score ?? assessment?.score ?? 0;
-  const currentLevel = assessment?.result?.level ?? assessment?.level ?? getLevelFromScore(assessmentScore);
-
-  const profileName = useMemo(() => {
-    const email = user?.primaryEmailAddress?.emailAddress?.split("@")[0];
-    return user?.fullName || user?.firstName || user?.username || email || "Signed-in user";
-  }, [user]);
 
   const openTrades = useMemo(
     () => portfolio?.openPositions ?? [],
@@ -348,6 +349,7 @@ export default function SimulatorClient({ userId }: SimulatorClientProps) {
     [portfolio?.tradeHistory]
   );
 
+  const balance = portfolio?.balance ?? 500000;
   const totalPnl = useMemo(
     () => (portfolio?.openPositions ?? []).reduce((acc, t) => acc + (t.pnl ?? 0), 0) + (portfolio?.tradeHistory ?? []).reduce((acc, t) => acc + (t.pnl ?? 0), 0),
     [portfolio?.openPositions, portfolio?.tradeHistory]
@@ -359,6 +361,11 @@ export default function SimulatorClient({ userId }: SimulatorClientProps) {
     const wins = closed.filter((t) => (t.pnl ?? 0) > 0).length;
     return Math.round((wins / closed.length) * 100);
   }, [portfolio?.tradeHistory]);
+
+  const totalTrades = useMemo(
+    () => (portfolio?.openPositions?.length ?? 0) + (portfolio?.tradeHistory?.length ?? 0),
+    [portfolio?.openPositions, portfolio?.tradeHistory]
+  );
 
   async function handlePlaceOrder(e: React.FormEvent) {
     e.preventDefault();
@@ -398,7 +405,7 @@ export default function SimulatorClient({ userId }: SimulatorClientProps) {
         setTakeProfit("");
         await refreshPortfolio();
       }
-    } catch (e) {
+    } catch {
       setTradeError("Network error");
     } finally {
       setPlacingTrade(false);
@@ -432,7 +439,7 @@ export default function SimulatorClient({ userId }: SimulatorClientProps) {
         setTradeSuccess("Position closed");
         await refreshPortfolio();
       }
-    } catch (e) {
+    } catch {
       setTradeError("Network error");
     }
   }
@@ -453,7 +460,7 @@ export default function SimulatorClient({ userId }: SimulatorClientProps) {
         setTradeSuccess("Portfolio reset");
         await refreshPortfolio();
       }
-    } catch (e) {
+    } catch {
       setTradeError("Network error");
     } finally {
       setResetting(false);
@@ -462,602 +469,300 @@ export default function SimulatorClient({ userId }: SimulatorClientProps) {
 
   if (!mounted || loading) {
     return (
-      <main
-        style={{
-          minHeight: "100vh",
-          background: bg,
-          color: text,
-          display: "grid",
-          placeItems: "center",
-          fontFamily: "Inter, sans-serif",
-        }}
-      >
-        <div style={{ color: "#888888" }}>Loading simulator...</div>
-      </main>
+      <AppShell activeLabel="Simulator">
+        <div className="flex items-center justify-center min-h-[50vh]">
+          <div className="text-text-secondary">Loading simulator...</div>
+        </div>
+      </AppShell>
     );
   }
 
-  const balance = portfolio?.balance ?? 500000;
-
   return (
-    <main style={{ minHeight: "100vh", background: bg, color: text }}>
-      <Sidebar activeLabel="Simulator" />
+    <AppShell activeLabel="Simulator">
+      <PageHeader
+        title="Paper Trading Simulator"
+        subtitle={`Practice trading with ₹${balance.toLocaleString("en-IN")} virtual balance. No real money at risk.`}
+      />
 
-      <section style={{ marginLeft: sidebarWidth, width: `calc(100% - ${sidebarWidth}px)`, padding: "48px 40px 80px" }}>
-        <div style={{ maxWidth: 1400, margin: "0 auto" }}>
-          <header style={{ marginBottom: 32 }}>
-            <h1
-              style={{
-                fontFamily: "Syne, sans-serif",
-                fontSize: 32,
-                lineHeight: 1.1,
-                margin: 0,
-                fontWeight: 700,
-              }}
-            >
-              Paper Trading Simulator
-            </h1>
-            <p style={{ color: "#A0A0A0", marginTop: 8, lineHeight: 1.6, fontSize: 14 }}>
-              Practice trading with ₹{balance.toLocaleString("en-IN")} virtual balance. No real money at risk.
-            </p>
-          </header>
+      {/* Stats */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-6 mb-8">
+        <Stat label="Balance" value={`₹${balance.toLocaleString("en-IN")}`} />
+        <Stat
+          label="Total P&L"
+          value={`${totalPnl >= 0 ? "+" : ""}₹${totalPnl.toFixed(2)}`}
+          change={{
+            value: `${winRate}% win rate`,
+            direction: winRate >= 50 ? "up" : "down",
+          }}
+        />
+        <Stat label="Open Positions" value={openTrades.length} />
+        <Stat label="Total Trades" value={totalTrades} />
+        <Stat label="Win Rate" value={`${winRate}%`} />
+      </div>
 
-          {/* Chart */}
-          <div
-            style={{
-              background: "#111111",
-              border: "1px solid #222222",
-              borderRadius: 12,
-              overflow: "hidden",
-              marginBottom: 24,
-              height: 420,
-              position: "relative",
-            }}
-          >
+      <div className="divider" />
+
+      {/* Chart + Order Panel */}
+      <div className="grid grid-cols-1 xl:grid-cols-[1fr_340px] gap-8 mb-8">
+        {/* Chart */}
+        <div>
+          <ChartContainer title="Market Chart" subtitle={symbol}>
             {chartError && (
-              <div
-                style={{
-                  position: "absolute",
-                  inset: 0,
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  color: "#888888",
-                  fontSize: 14,
-                  zIndex: 10,
-                  background: "#111111",
-                  borderRadius: 12,
-                }}
-              >
-                {chartError}
+              <div className="text-text-secondary text-body-sm mt-2">{chartError}</div>
+            )}
+            <div ref={chartContainerRef} className="w-full" style={{ height: 420 }} />
+          </ChartContainer>
+          <p className="text-caption text-text-muted mt-2">Prices are indicative. For practice only.</p>
+        </div>
+
+        {/* Order Panel */}
+        <div className="border border-border rounded-xl p-5">
+          <div className="text-caption text-text-secondary mb-4">Order Ticket</div>
+
+          {tradeError && (
+            <div className="mb-4 p-3 rounded-lg bg-negative-soft border border-negative text-negative text-sm">
+              {tradeError}
+            </div>
+          )}
+          {tradeSuccess && (
+            <div className="mb-4 p-3 rounded-lg bg-positive-soft border border-positive text-positive text-sm">
+              {tradeSuccess}
+            </div>
+          )}
+
+          <form onSubmit={handlePlaceOrder} className="flex flex-col gap-4">
+            <div>
+              <label className="label">Symbol</label>
+              <select value={symbol} onChange={(e) => setSymbol(e.target.value)} className="input">
+                {SYMBOLS.map((s) => (
+                  <option key={s.value} value={s.value}>{s.label}</option>
+                ))}
+              </select>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="label">Side</label>
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setSide("buy")}
+                    className={`
+                      flex-1 h-9 rounded-md font-semibold text-sm cursor-pointer transition-all border
+                      ${side === "buy"
+                        ? "bg-positive text-white border-positive"
+                        : "bg-surface text-text-secondary border-border-visible hover:border-positive hover:text-positive"
+                      }
+                    `}
+                  >
+                    Buy
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setSide("sell")}
+                    className={`
+                      flex-1 h-9 rounded-md font-semibold text-sm cursor-pointer transition-all border
+                      ${side === "sell"
+                        ? "bg-negative text-white border-negative"
+                        : "bg-surface text-text-secondary border-border-visible hover:border-negative hover:text-negative"
+                      }
+                    `}
+                  >
+                    Sell
+                  </button>
+                </div>
+              </div>
+              <div>
+                <label className="label">Order Type</label>
+                <select value={orderType} onChange={(e) => setOrderType(e.target.value as "market" | "limit")} className="input">
+                  <option value="market">Market</option>
+                  <option value="limit">Limit</option>
+                </select>
+              </div>
+            </div>
+
+            <div>
+              <label className="label">Quantity</label>
+              <Input
+                type="number"
+                min="1"
+                step="1"
+                value={quantity}
+                onChange={(e) => setQuantity(e.target.value)}
+                required
+              />
+            </div>
+
+            {orderType === "limit" && (
+              <div>
+                <label className="label">Limit Price</label>
+                <Input
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  value={limitPrice}
+                  onChange={(e) => setLimitPrice(e.target.value)}
+                  required
+                />
               </div>
             )}
-            <div ref={chartContainerRef} style={{ width: "100%", height: "100%" }} />
-          </div>
-          <p style={{ fontSize: 12, color: "#555555", marginTop: -16, marginBottom: 24 }}>
-            Prices are indicative. For practice only.
-          </p>
 
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: "400px 1fr",
-              gap: 24,
-            }}
-          >
-            {/* Left: Order + Open Positions */}
-            <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
-              {/* Place Order */}
-              <div
-                style={{
-                  background: "#111111",
-                  border: "1px solid #222222",
-                  borderRadius: 12,
-                  padding: 24,
-                }}
-              >
-                <div
-                  style={{
-                    fontSize: 11,
-                    fontWeight: 600,
-                    textTransform: "uppercase",
-                    letterSpacing: "0.08em",
-                    color: "#A0A0A0",
-                    marginBottom: 20,
-                  }}
-                >
-                  Place Order
-                </div>
-                {tradeError && (
-                  <div style={{ color: "#EF4444", fontSize: 13, marginBottom: 12, padding: "10px 14px", background: "rgba(239, 68, 68, 0.08)", borderRadius: 8, border: "1px solid rgba(239, 68, 68, 0.2)" }}>
-                    {tradeError}
-                  </div>
-                )}
-                {tradeSuccess && (
-                  <div style={{ color: "#22C55E", fontSize: 13, marginBottom: 12, padding: "10px 14px", background: "rgba(34, 197, 94, 0.08)", borderRadius: 8, border: "1px solid rgba(34, 197, 94, 0.2)" }}>
-                    {tradeSuccess}
-                  </div>
-                )}
-                <form onSubmit={handlePlaceOrder} style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-                  <div>
-                    <label className="label">Symbol</label>
-                    <select value={symbol} onChange={(e) => setSymbol(e.target.value)} className="input">
-                      {SYMBOLS.map((s) => (
-                        <option key={s.value} value={s.value}>{s.label}</option>
-                      ))}
-                    </select>
-                  </div>
-                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
-                    <div>
-                      <label className="label">Side</label>
-                      <div style={{ display: "flex", gap: 8 }}>
-                        <button
-                          type="button"
-                          style={{
-                            flex: 1,
-                            padding: "10px 16px",
-                            borderRadius: 8,
-                            fontWeight: 600,
-                            fontSize: 13,
-                            cursor: "pointer",
-                            transition: "all 0.15s ease",
-                            background: side === "buy" ? "#22C55E" : "transparent",
-                            color: side === "buy" ? "#0A0A0A" : "#A0A0A0",
-                            border: side === "buy" ? "1px solid #22C55E" : "1px solid #222222",
-                          }}
-                          onClick={() => setSide("buy")}
-                        >
-                          Buy
-                        </button>
-                        <button
-                          type="button"
-                          style={{
-                            flex: 1,
-                            padding: "10px 16px",
-                            borderRadius: 8,
-                            fontWeight: 600,
-                            fontSize: 13,
-                            cursor: "pointer",
-                            transition: "all 0.15s ease",
-                            background: side === "sell" ? "#EF4444" : "transparent",
-                            color: side === "sell" ? "#0A0A0A" : "#A0A0A0",
-                            border: side === "sell" ? "1px solid #EF4444" : "1px solid #222222",
-                          }}
-                          onClick={() => setSide("sell")}
-                        >
-                          Sell
-                        </button>
-                      </div>
-                    </div>
-                    <div>
-                      <label className="label">Order Type</label>
-                      <select value={orderType} onChange={(e) => setOrderType(e.target.value as "market" | "limit")} className="input">
-                        <option value="market">Market</option>
-                        <option value="limit">Limit</option>
-                      </select>
-                    </div>
-                  </div>
-                  <div>
-                    <label className="label">Quantity</label>
-                    <input
-                      type="number"
-                      min="1"
-                      step="1"
-                      value={quantity}
-                      onChange={(e) => setQuantity(e.target.value)}
-                      className="input"
-                      required
-                    />
-                  </div>
-                  {orderType === "limit" && (
-                    <div>
-                      <label className="label">Limit Price</label>
-                      <input
-                        type="number"
-                        min="0"
-                        step="0.01"
-                        value={limitPrice}
-                        onChange={(e) => setLimitPrice(e.target.value)}
-                        className="input"
-                        required
-                      />
-                    </div>
-                  )}
-                  <div>
-                    <label className="label">Stop Loss (optional)</label>
-                    <input
-                      type="number"
-                      min="0"
-                      step="0.01"
-                      value={stopLoss}
-                      onChange={(e) => setStopLoss(e.target.value)}
-                      className="input"
-                    />
-                  </div>
-                  <div>
-                    <label className="label">Take Profit (optional)</label>
-                    <input
-                      type="number"
-                      min="0"
-                      step="0.01"
-                      value={takeProfit}
-                      onChange={(e) => setTakeProfit(e.target.value)}
-                      className="input"
-                    />
-                  </div>
-                  <button
-                    type="submit"
-                    style={{
-                      width: "100%",
-                      padding: "12px 20px",
-                      borderRadius: 8,
-                      border: "none",
-                      fontWeight: 600,
-                      fontSize: 14,
-                      cursor: "pointer",
-                      transition: "all 0.15s ease",
-                      background: side === "buy" ? "#22C55E" : "#EF4444",
-                      color: "#0A0A0A",
-                      opacity: placingTrade ? 0.6 : 1,
-                    }}
-                    disabled={placingTrade}
-                  >
-                    {placingTrade ? "Placing..." : side === "buy" ? "Buy" : "Sell"} {symbol}
-                  </button>
-                </form>
-              </div>
-
-              {/* Open Positions */}
-              <div
-                style={{
-                  background: "#111111",
-                  border: "1px solid #222222",
-                  borderRadius: 12,
-                  padding: 24,
-                }}
-              >
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
-                  <div
-                    style={{
-                      fontSize: 11,
-                      fontWeight: 600,
-                      textTransform: "uppercase",
-                      letterSpacing: "0.08em",
-                      color: "#A0A0A0",
-                    }}
-                  >
-                    Open Positions
-                  </div>
-                  <button
-                    style={{
-                      padding: "6px 14px",
-                      borderRadius: 8,
-                      border: "1px solid #222222",
-                      background: "transparent",
-                      color: "#EF4444",
-                      fontSize: 12,
-                      fontWeight: 600,
-                      cursor: "pointer",
-                      transition: "all 0.15s ease",
-                    }}
-                    onClick={handleResetPortfolio}
-                    disabled={resetting}
-                    onMouseEnter={(e) => (e.currentTarget.style.borderColor = "#EF4444")}
-                    onMouseLeave={(e) => (e.currentTarget.style.borderColor = "#222222")}
-                  >
-                    {resetting ? "Resetting..." : "Reset Portfolio"}
-                  </button>
-                </div>
-                {openTrades.length === 0 ? (
-                  <div style={{ color: "#888888", fontSize: 13 }}>No open positions.</div>
-                ) : (
-                  <div style={{ overflowX: "auto" }}>
-                    <table
-                      style={{
-                        width: "100%",
-                        borderCollapse: "collapse",
-                        fontSize: 13,
-                        fontFamily: "'Inter', monospace",
-                      }}
-                    >
-                      <thead>
-                        <tr>
-                          <th style={{ textAlign: "left", padding: "10px 12px", color: "#888888", fontWeight: 500, borderBottom: "1px solid #222222", fontSize: 11, textTransform: "uppercase", letterSpacing: "0.06em" }}>Symbol</th>
-                          <th style={{ textAlign: "left", padding: "10px 12px", color: "#888888", fontWeight: 500, borderBottom: "1px solid #222222", fontSize: 11, textTransform: "uppercase", letterSpacing: "0.06em" }}>Side</th>
-                          <th style={{ textAlign: "left", padding: "10px 12px", color: "#888888", fontWeight: 500, borderBottom: "1px solid #222222", fontSize: 11, textTransform: "uppercase", letterSpacing: "0.06em" }}>Qty</th>
-                          <th style={{ textAlign: "left", padding: "10px 12px", color: "#888888", fontWeight: 500, borderBottom: "1px solid #222222", fontSize: 11, textTransform: "uppercase", letterSpacing: "0.06em" }}>Entry</th>
-                          <th style={{ textAlign: "left", padding: "10px 12px", color: "#888888", fontWeight: 500, borderBottom: "1px solid #222222", fontSize: 11, textTransform: "uppercase", letterSpacing: "0.06em" }}>Current</th>
-                          <th style={{ textAlign: "left", padding: "10px 12px", color: "#888888", fontWeight: 500, borderBottom: "1px solid #222222", fontSize: 11, textTransform: "uppercase", letterSpacing: "0.06em" }}>P&L</th>
-                          <th style={{ textAlign: "left", padding: "10px 12px", color: "#888888", fontWeight: 500, borderBottom: "1px solid #222222", fontSize: 11, textTransform: "uppercase", letterSpacing: "0.06em" }}>Opened</th>
-                          <th style={{ textAlign: "left", padding: "10px 12px", color: "#888888", fontWeight: 500, borderBottom: "1px solid #222222", fontSize: 11, textTransform: "uppercase", letterSpacing: "0.06em" }}>Action</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {openTrades.map((trade, idx) => {
-                          const currentPrice = FALLBACK_PRICES[trade.symbol] ?? trade.entryPrice;
-                          const pnl = trade.side === "buy"
-                            ? (currentPrice - trade.entryPrice) * trade.quantity
-                            : (trade.entryPrice - currentPrice) * trade.quantity;
-                          const isProfitable = pnl >= 0;
-                          return (
-                            <tr
-                              key={trade.id}
-                              style={{
-                                background: idx % 2 === 0 ? "#111111" : "#0F0F0F",
-                              }}
-                            >
-                              <td style={{ padding: "10px 12px", fontWeight: 600 }}>{trade.symbol}</td>
-                              <td style={{ padding: "10px 12px", color: trade.side === "buy" ? "#22C55E" : "#EF4444", textTransform: "uppercase", fontWeight: 600 }}>{trade.side}</td>
-                              <td style={{ padding: "10px 12px", fontVariantNumeric: "tabular-nums" }}>{trade.quantity}</td>
-                              <td style={{ padding: "10px 12px", fontVariantNumeric: "tabular-nums" }}>₹{trade.entryPrice.toFixed(2)}</td>
-                              <td style={{ padding: "10px 12px", color: "#888888", fontVariantNumeric: "tabular-nums" }}>₹{currentPrice.toFixed(2)}</td>
-                              <td style={{ padding: "10px 12px", fontWeight: 600, color: isProfitable ? "#22C55E" : "#EF4444", fontVariantNumeric: "tabular-nums" }}>
-                                {isProfitable ? "+" : ""}₹{pnl.toFixed(2)}
-                              </td>
-                              <td style={{ padding: "10px 12px", color: "#888888", fontSize: 12 }}>
-                                {new Date(trade.openedAt).toLocaleDateString("en-US", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })}
-                              </td>
-                              <td style={{ padding: "10px 12px" }}>
-                                <button
-                                  style={{
-                                    padding: "6px 14px",
-                                    borderRadius: 8,
-                                    border: "1px solid #EF4444",
-                                    background: "transparent",
-                                    color: "#EF4444",
-                                    fontSize: 12,
-                                    fontWeight: 600,
-                                    cursor: "pointer",
-                                    transition: "all 0.15s ease",
-                                  }}
-                                  onClick={() => handleClosePosition(trade.id)}
-                                  onMouseEnter={(e) => {
-                                    e.currentTarget.style.background = "#EF4444";
-                                    e.currentTarget.style.color = "#0A0A0A";
-                                  }}
-                                  onMouseLeave={(e) => {
-                                    e.currentTarget.style.background = "transparent";
-                                    e.currentTarget.style.color = "#EF4444";
-                                  }}
-                                >
-                                  Close
-                                </button>
-                              </td>
-                            </tr>
-                          );
-                        })}
-                      </tbody>
-                    </table>
-                  </div>
-                )}
-              </div>
+            <div>
+              <label className="label">Stop Loss (optional)</label>
+              <Input
+                type="number"
+                min="0"
+                step="0.01"
+                value={stopLoss}
+                onChange={(e) => setStopLoss(e.target.value)}
+              />
             </div>
 
-            {/* Right: Balance + Stats + History */}
-            <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
-              {/* Balance */}
-              <div
-                style={{
-                  background: "#111111",
-                  border: "1px solid #222222",
-                  borderRadius: 12,
-                  padding: 24,
-                }}
-              >
-                <div
-                  style={{
-                    fontSize: 11,
-                    fontWeight: 600,
-                    textTransform: "uppercase",
-                    letterSpacing: "0.08em",
-                    color: "#A0A0A0",
-                    marginBottom: 12,
-                  }}
-                >
-                  Balance
-                </div>
-                <div
-                  style={{
-                    fontFamily: "Syne, sans-serif",
-                    fontSize: 32,
-                    fontWeight: 700,
-                    color: "#F2F0EB",
-                  }}
-                >
-                  ₹{balance.toLocaleString("en-IN")}
-                </div>
-              </div>
-
-              {/* Stats */}
-              <div
-                style={{
-                  background: "#111111",
-                  border: "1px solid #222222",
-                  borderRadius: 12,
-                  padding: 24,
-                }}
-              >
-                <div
-                  style={{
-                    fontSize: 11,
-                    fontWeight: 600,
-                    textTransform: "uppercase",
-                    letterSpacing: "0.08em",
-                    color: "#A0A0A0",
-                    marginBottom: 16,
-                  }}
-                >
-                  Stats
-                </div>
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
-                  <div>
-                    <div
-                      style={{
-                        fontSize: 11,
-                        color: "#888888",
-                        marginBottom: 6,
-                        textTransform: "uppercase",
-                        letterSpacing: "0.06em",
-                      }}
-                    >
-                      Total P&L
-                    </div>
-                    <div
-                      style={{
-                        fontFamily: "Syne, sans-serif",
-                        fontSize: 20,
-                        fontWeight: 700,
-                        color: totalPnl >= 0 ? "#22C55E" : "#EF4444",
-                      }}
-                    >
-                      {totalPnl >= 0 ? "+" : ""}₹{totalPnl.toFixed(2)}
-                    </div>
-                  </div>
-                  <div>
-                    <div
-                      style={{
-                        fontSize: 11,
-                        color: "#888888",
-                        marginBottom: 6,
-                        textTransform: "uppercase",
-                        letterSpacing: "0.06em",
-                      }}
-                    >
-                      Win Rate
-                    </div>
-                    <div
-                      style={{
-                        fontFamily: "Syne, sans-serif",
-                        fontSize: 20,
-                        fontWeight: 700,
-                        color: "#F2F0EB",
-                      }}
-                    >
-                      {winRate}%
-                    </div>
-                  </div>
-                  <div>
-                    <div
-                      style={{
-                        fontSize: 11,
-                        color: "#888888",
-                        marginBottom: 6,
-                        textTransform: "uppercase",
-                        letterSpacing: "0.06em",
-                      }}
-                    >
-                      Total Trades
-                    </div>
-                    <div
-                      style={{
-                        fontFamily: "Syne, sans-serif",
-                        fontSize: 20,
-                        fontWeight: 700,
-                        color: "#F2F0EB",
-                      }}
-                    >
-                      {(portfolio?.openPositions?.length ?? 0) + (portfolio?.tradeHistory?.length ?? 0)}
-                    </div>
-                  </div>
-                  <div>
-                    <div
-                      style={{
-                        fontSize: 11,
-                        color: "#888888",
-                        marginBottom: 6,
-                        textTransform: "uppercase",
-                        letterSpacing: "0.06em",
-                      }}
-                    >
-                      Open Positions
-                    </div>
-                    <div
-                      style={{
-                        fontFamily: "Syne, sans-serif",
-                        fontSize: 20,
-                        fontWeight: 700,
-                        color: "#F2F0EB",
-                      }}
-                    >
-                      {openTrades.length}
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Trade History */}
-              <div
-                style={{
-                  background: "#111111",
-                  border: "1px solid #222222",
-                  borderRadius: 12,
-                  padding: 24,
-                  flex: 1,
-                }}
-              >
-                <div
-                  style={{
-                    fontSize: 11,
-                    fontWeight: 600,
-                    textTransform: "uppercase",
-                    letterSpacing: "0.08em",
-                    color: "#A0A0A0",
-                    marginBottom: 16,
-                  }}
-                >
-                  Trade History
-                </div>
-                {closedTrades.length === 0 ? (
-                  <div style={{ color: "#888888", fontSize: 13 }}>No closed trades yet.</div>
-                ) : (
-                  <div style={{ overflowX: "auto" }}>
-                    <table
-                      style={{
-                        width: "100%",
-                        borderCollapse: "collapse",
-                        fontSize: 13,
-                        fontFamily: "'Inter', monospace",
-                      }}
-                    >
-                      <thead>
-                        <tr>
-                          <th style={{ textAlign: "left", padding: "8px 10px", color: "#888888", fontWeight: 500, borderBottom: "1px solid #222222", fontSize: 11, textTransform: "uppercase", letterSpacing: "0.06em" }}>Symbol</th>
-                          <th style={{ textAlign: "left", padding: "8px 10px", color: "#888888", fontWeight: 500, borderBottom: "1px solid #222222", fontSize: 11, textTransform: "uppercase", letterSpacing: "0.06em" }}>Side</th>
-                          <th style={{ textAlign: "left", padding: "8px 10px", color: "#888888", fontWeight: 500, borderBottom: "1px solid #222222", fontSize: 11, textTransform: "uppercase", letterSpacing: "0.06em" }}>Qty</th>
-                          <th style={{ textAlign: "left", padding: "8px 10px", color: "#888888", fontWeight: 500, borderBottom: "1px solid #222222", fontSize: 11, textTransform: "uppercase", letterSpacing: "0.06em" }}>Entry</th>
-                          <th style={{ textAlign: "left", padding: "8px 10px", color: "#888888", fontWeight: 500, borderBottom: "1px solid #222222", fontSize: 11, textTransform: "uppercase", letterSpacing: "0.06em" }}>Exit</th>
-                          <th style={{ textAlign: "left", padding: "8px 10px", color: "#888888", fontWeight: 500, borderBottom: "1px solid #222222", fontSize: 11, textTransform: "uppercase", letterSpacing: "0.06em" }}>P&L</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {closedTrades.map((trade, idx) => (
-                          <tr key={trade.id} style={{ background: idx % 2 === 0 ? "#111111" : "#0F0F0F" }}>
-                            <td style={{ padding: "8px 10px", fontWeight: 600 }}>{trade.symbol}</td>
-                            <td style={{ padding: "8px 10px", color: trade.side === "buy" ? "#22C55E" : "#EF4444", textTransform: "uppercase", fontWeight: 600 }}>{trade.side}</td>
-                            <td style={{ padding: "8px 10px", fontVariantNumeric: "tabular-nums" }}>{trade.quantity}</td>
-                            <td style={{ padding: "8px 10px", fontVariantNumeric: "tabular-nums" }}>₹{trade.entryPrice.toFixed(2)}</td>
-                            <td style={{ padding: "8px 10px", fontVariantNumeric: "tabular-nums" }}>{trade.exitPrice ? `₹${trade.exitPrice.toFixed(2)}` : "-"}</td>
-                            <td
-                              style={{
-                                padding: "8px 10px",
-                                fontWeight: 600,
-                                color: (trade.pnl ?? 0) >= 0 ? "#22C55E" : "#EF4444",
-                                fontVariantNumeric: "tabular-nums",
-                              }}
-                            >
-                              {(trade.pnl ?? 0) >= 0 ? "+" : ""}₹{(trade.pnl ?? 0).toFixed(2)}
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                )}
-              </div>
+            <div>
+              <label className="label">Take Profit (optional)</label>
+              <Input
+                type="number"
+                min="0"
+                step="0.01"
+                value={takeProfit}
+                onChange={(e) => setTakeProfit(e.target.value)}
+              />
             </div>
-          </div>
+
+            <Button
+              type="submit"
+              variant={side === "buy" ? "primary" : "danger"}
+              size="lg"
+              className="w-full"
+              loading={placingTrade}
+            >
+              {placingTrade ? "Placing..." : `${side === "buy" ? "Buy" : "Sell"} ${symbol}`}
+            </Button>
+          </form>
         </div>
-      </section>
-    </main>
+      </div>
+
+      <div className="divider" />
+
+      {/* Open Positions */}
+      <div className="mb-8">
+        <SectionHeader
+          title="Open Positions"
+          description={`${openTrades.length} active position${openTrades.length !== 1 ? "s" : ""}`}
+          actions={
+            <Button variant="danger" size="sm" onClick={handleResetPortfolio} loading={resetting}>
+              Reset Portfolio
+            </Button>
+          }
+        />
+        {openTrades.length === 0 ? (
+          <EmptyState
+            title="No open positions"
+            description="Your active trades will appear here. Start by placing an order above."
+          />
+        ) : (
+          <Table>
+            <TableHead>
+              <tr>
+                <th>Symbol</th>
+                <th>Side</th>
+                <th align="right">Entry</th>
+                <th align="right">Current</th>
+                <th align="right">P&L</th>
+                <th align="right">Opened</th>
+                <th align="center">Action</th>
+              </tr>
+            </TableHead>
+            <TableBody>
+              {openTrades.map((trade) => {
+                const currentPrice = FALLBACK_PRICES[trade.symbol] ?? trade.entryPrice;
+                const pnl = trade.side === "buy"
+                  ? (currentPrice - trade.entryPrice) * trade.quantity
+                  : (trade.entryPrice - currentPrice) * trade.quantity;
+                const isProfitable = pnl >= 0;
+                return (
+                  <TableRow key={trade.id}>
+                    <TableCell>
+                      <span className="font-medium">{trade.symbol}</span>
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant={trade.side === "buy" ? "positive" : "negative"}>
+                        {trade.side.toUpperCase()}
+                      </Badge>
+                    </TableCell>
+                    <TableCell align="right" className="font-mono-tabular">₹{trade.entryPrice.toFixed(2)}</TableCell>
+                    <TableCell align="right" className="font-mono-tabular text-text-secondary">₹{currentPrice.toFixed(2)}</TableCell>
+                    <TableCell align="right" className={`font-mono-tabular font-medium ${isProfitable ? "text-positive" : "text-negative"}`}>
+                      {isProfitable ? "+" : ""}₹{pnl.toFixed(2)}
+                    </TableCell>
+                    <TableCell align="right" className="text-text-secondary text-body-sm">
+                      {new Date(trade.openedAt).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
+                    </TableCell>
+                    <TableCell align="center">
+                      <Button variant="danger" size="sm" onClick={() => handleClosePosition(trade.id)}>
+                        Close
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
+            </TableBody>
+          </Table>
+        )}
+      </div>
+
+      <div className="divider" />
+
+      {/* Trade History */}
+      <div>
+        <SectionHeader
+          title="Trade History"
+          description={`${closedTrades.length} recent closed trade${closedTrades.length !== 1 ? "s" : ""}`}
+        />
+        {closedTrades.length === 0 ? (
+          <EmptyState
+            title="No closed trades yet"
+            description="Your trade history will appear here after you close positions."
+          />
+        ) : (
+          <Table>
+            <TableHead>
+              <tr>
+                <th>Symbol</th>
+                <th>Side</th>
+                <th align="right">Entry</th>
+                <th align="right">Exit</th>
+                <th align="right">P&L</th>
+              </tr>
+            </TableHead>
+            <TableBody>
+              {closedTrades.map((trade) => {
+                const pnl = trade.pnl ?? 0;
+                const isProfitable = pnl >= 0;
+                return (
+                  <TableRow key={trade.id}>
+                    <TableCell>
+                      <span className="font-medium">{trade.symbol}</span>
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant={trade.side === "buy" ? "positive" : "negative"}>
+                        {trade.side.toUpperCase()}
+                      </Badge>
+                    </TableCell>
+                    <TableCell align="right" className="font-mono-tabular">₹{trade.entryPrice.toFixed(2)}</TableCell>
+                    <TableCell align="right" className="font-mono-tabular text-text-secondary">
+                      {trade.exitPrice ? `₹${trade.exitPrice.toFixed(2)}` : "—"}
+                    </TableCell>
+                    <TableCell align="right" className={`font-mono-tabular font-medium ${isProfitable ? "text-positive" : "text-negative"}`}>
+                      {isProfitable ? "+" : ""}₹{pnl.toFixed(2)}
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
+            </TableBody>
+          </Table>
+        )}
+      </div>
+    </AppShell>
   );
 }

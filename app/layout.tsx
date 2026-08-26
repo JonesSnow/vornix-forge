@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { ClerkProvider } from "@clerk/nextjs";
 import { Syne, Inter } from "next/font/google";
+import { vornixClerkAppearance } from "@/lib/clerk-appearance";
 import "./globals.css";
 
 const syne = Syne({ subsets: ["latin"], weight: ["600", "700", "800"], variable: "--font-display" });
@@ -22,9 +23,9 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <ClerkProvider>
+    <ClerkProvider appearance={vornixClerkAppearance}>
       <html lang="en" className={`${syne.variable} ${inter.variable}`}>
-        <body className="min-h-screen bg-[#0A0A0A] text-[#F2F0EB] font-sans antialiased">
+        <body className="min-h-screen bg-background text-primary font-sans antialiased">
           {children}
         </body>
       </html>

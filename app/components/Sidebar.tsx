@@ -24,6 +24,7 @@ export default function Sidebar({ activeLabel }: SidebarProps) {
     const raw = localStorage.getItem("vornix_assessment");
     if (raw) {
       try {
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         setAssessment(JSON.parse(raw) as AssessmentStorage);
       } catch {
         setAssessment(null);
@@ -45,17 +46,16 @@ export default function Sidebar({ activeLabel }: SidebarProps) {
   const initial = profileName.charAt(0).toUpperCase();
 
   return (
-    <aside className="fixed inset-y-0 left-0 z-50 w-[220px] bg-[#0A0A0A] border-r border-[#222222] flex flex-col">
-      <div className="p-5">
-        <div
-          className="font-display text-[13px] font-bold tracking-[0.15em] text-[#F2F0EB]"
-          style={{ fontFamily: "var(--font-display)" }}
-        >
+    <aside className="fixed inset-y-0 left-0 z-50 w-[240px] bg-surface border-r border-border flex flex-col">
+      {/* Brand */}
+      <div className="h-16 flex items-center px-6 border-b border-border-subtle">
+        <span className="font-display text-sm font-bold tracking-[0.15em] text-primary">
           VORNIX FORGE
-        </div>
+        </span>
       </div>
 
-      <nav className="flex-1 px-3 space-y-1 overflow-y-auto">
+      {/* Navigation */}
+      <nav className="flex-1 overflow-y-auto px-3 py-4 space-y-1">
         {navItems.map((item) => {
           const isActive = item.label === activeLabel;
           return (
@@ -63,10 +63,11 @@ export default function Sidebar({ activeLabel }: SidebarProps) {
               key={item.label}
               href={item.href}
               className={`
-                flex items-center h-[40px] px-3 rounded-[12px] text-sm font-medium transition-all
-                ${isActive
-                  ? "bg-[#1A1A1A] text-[#E8A020] border-l-2 border-[#E8A020]"
-                  : "text-[#A0A0A0] hover:bg-[#1A1A1A] hover:text-[#F2F0EB]"
+                flex items-center h-10 px-3 rounded-lg text-sm font-medium transition-all
+                ${
+                  isActive
+                    ? "bg-accent-soft text-accent-hover border-l-[3px] border-accent"
+                    : "text-text-secondary hover:bg-surface-elevated hover:text-primary border-l-[3px] border-transparent"
                 }
               `}
             >
@@ -76,17 +77,17 @@ export default function Sidebar({ activeLabel }: SidebarProps) {
         })}
       </nav>
 
-      <div className="p-3 border-t border-[#222222]">
-        <div className="flex items-center gap-3 px-3 py-3 bg-[#111111] border border-[#222222] rounded-xl">
+      {/* User card */}
+      <div className="p-3 border-t border-border-subtle">
+        <div className="flex items-center gap-3 px-3 py-3 bg-surface-elevated border border-border rounded-xl">
           <div
-            className="w-8 h-8 rounded-full bg-[#1A1A1A] border border-[#2A2A2A] flex items-center justify-center text-[#E8A020] font-bold text-sm flex-shrink-0"
-            style={{ fontFamily: "var(--font-display)" }}
+            className="w-8 h-8 rounded-full bg-accent-soft border border-accent-subtle flex items-center justify-center text-accent-hover font-bold text-sm flex-shrink-0 font-display"
           >
             {initial}
           </div>
           <div className="flex-1 min-w-0">
-            <div className="text-sm font-medium text-[#F2F0EB] truncate">{profileName}</div>
-            <div className="text-[11px] font-semibold text-[#E8A020] uppercase tracking-wider">{levelEntry.name}</div>
+            <div className="text-sm font-medium text-primary truncate">{profileName}</div>
+            <div className="text-[11px] font-semibold text-accent-hover uppercase tracking-wider">{levelEntry.name}</div>
           </div>
           <div className="flex-shrink-0">
             <UserButton />
